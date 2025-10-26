@@ -23,7 +23,8 @@ import mochila_app.composeapp.generated.resources.logo
 @Composable
 fun LoginScreen(
     onNavigateToRegister: () -> Unit,
-    onNavigateToRecovery: () -> Unit
+    onNavigateToRecovery: () -> Unit,
+    onNavigateToHome: () -> Unit
 ) {
     val RoxoEscuro = Color(0xFF5336CB)
     val VerdeLima = Color(0xFFC5E300)
@@ -37,6 +38,7 @@ fun LoginScreen(
             .fillMaxSize()
             .background(Color.White)
     ) {
+        // 🔹 Fundo quadriculado
         Image(
             painter = painterResource(Res.drawable.fundo_quadriculado),
             contentDescription = null,
@@ -44,6 +46,7 @@ fun LoginScreen(
             contentScale = ContentScale.Crop
         )
 
+        // 🔹 Fundo com curvas
         Image(
             painter = painterResource(Res.drawable.fundo_curvas),
             contentDescription = null,
@@ -51,6 +54,7 @@ fun LoginScreen(
             contentScale = ContentScale.Crop
         )
 
+        // 🔹 Conteúdo principal
         Column(
             modifier = Modifier
                 .align(Alignment.Center)
@@ -59,6 +63,7 @@ fun LoginScreen(
                 .fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // Logo circular
             Box(
                 modifier = Modifier
                     .size(180.dp)
@@ -136,9 +141,9 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Botão Login
+            // Botão Login → vai para Home
             Button(
-                onClick = { /* TODO: Login */ },
+                onClick = onNavigateToHome,
                 colors = ButtonDefaults.buttonColors(containerColor = VerdeLima),
                 shape = RoundedCornerShape(8.dp),
                 border = BorderStroke(1.dp, Color.Black),

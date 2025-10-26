@@ -6,6 +6,7 @@ import androidx.compose.runtime.*
 import br.com.mochila.ui.screens.LoginScreen
 import br.com.mochila.ui.screens.RegisterScreen
 import br.com.mochila.ui.screens.RecoveryScreen
+import br.com.mochila.ui.screens.HomeScreen
 
 @Composable
 fun App() {
@@ -14,15 +15,32 @@ fun App() {
     MaterialTheme {
         Surface {
             when (currentScreen) {
+
+                // 🔹 Tela de Login
                 "login" -> LoginScreen(
                     onNavigateToRegister = { currentScreen = "register" },
-                    onNavigateToRecovery = { currentScreen = "recovery" }
+                    onNavigateToRecovery = { currentScreen = "recovery" },
+                    onNavigateToHome = { currentScreen = "home" }
                 )
+
+                // 🔹 Tela de Registro
                 "register" -> RegisterScreen(
                     onBackToLogin = { currentScreen = "login" }
                 )
+
+                // 🔹 Tela de Recuperação de Senha
                 "recovery" -> RecoveryScreen(
                     onBackToLogin = { currentScreen = "login" }
+                )
+
+                // 🔹 Tela Home
+                "home" -> HomeScreen(
+                    onNavigateToHome = { currentScreen = "home" },
+                    onNavigateToMenu = { /* TODO: abrir menu lateral */ },
+                    onNavigateToAdd = { /* TODO: adicionar matéria */ },
+                    onNavigateToSubject = { subjectName ->
+                        // TODO: navegar para a tela da matéria (ex: currentScreen = "subject_$subjectName")
+                    }
                 )
             }
         }
