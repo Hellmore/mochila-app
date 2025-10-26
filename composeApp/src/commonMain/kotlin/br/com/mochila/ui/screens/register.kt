@@ -12,7 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.zIndex
+import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.painterResource
 import mochila_app.composeapp.generated.resources.Res
 import mochila_app.composeapp.generated.resources.fundo_quadriculado
@@ -34,6 +34,7 @@ fun RegisterScreen(onBackToLogin: () -> Unit) {
             .fillMaxSize()
             .background(Color.White)
     ) {
+        // Fundo quadriculado
         Image(
             painter = painterResource(Res.drawable.fundo_quadriculado),
             contentDescription = null,
@@ -41,6 +42,7 @@ fun RegisterScreen(onBackToLogin: () -> Unit) {
             contentScale = ContentScale.Crop
         )
 
+        // Curvas coloridas
         Image(
             painter = painterResource(Res.drawable.fundo_curvas),
             contentDescription = null,
@@ -48,6 +50,7 @@ fun RegisterScreen(onBackToLogin: () -> Unit) {
             contentScale = ContentScale.Crop
         )
 
+        // Conteúdo principal
         Column(
             modifier = Modifier
                 .align(Alignment.Center)
@@ -56,6 +59,7 @@ fun RegisterScreen(onBackToLogin: () -> Unit) {
                 .fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // Logo circular
             Box(
                 modifier = Modifier
                     .size(180.dp)
@@ -71,62 +75,81 @@ fun RegisterScreen(onBackToLogin: () -> Unit) {
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            // Campo de e-mail
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
                 placeholder = { Text("Insira o seu e-mail") },
-                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                textStyle = LocalTextStyle.current.copy(fontSize = 14.sp),
+                modifier = Modifier
+                    .fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedContainerColor = Color.White,
                     unfocusedContainerColor = Color.White,
                     disabledContainerColor = Color.White
-                )
+                ),
+                shape = RoundedCornerShape(8.dp)
             )
 
             Spacer(modifier = Modifier.height(12.dp))
 
+            // Campo de usuário
             OutlinedTextField(
                 value = username,
                 onValueChange = { username = it },
                 placeholder = { Text("Insira o seu usuário") },
-                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                textStyle = LocalTextStyle.current.copy(fontSize = 14.sp),
+                modifier = Modifier
+                    .fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedContainerColor = Color.White,
                     unfocusedContainerColor = Color.White,
                     disabledContainerColor = Color.White
-                )
+                ),
+                shape = RoundedCornerShape(8.dp)
             )
 
             Spacer(modifier = Modifier.height(12.dp))
 
+            // Campo de senha
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
                 placeholder = { Text("Crie uma senha") },
-                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                textStyle = LocalTextStyle.current.copy(fontSize = 14.sp),
+                modifier = Modifier
+                    .fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedContainerColor = Color.White,
                     unfocusedContainerColor = Color.White,
                     disabledContainerColor = Color.White
-                )
+                ),
+                shape = RoundedCornerShape(8.dp)
             )
 
             Spacer(modifier = Modifier.height(20.dp))
 
+            // Botão Registrar
             Button(
                 onClick = { /* TODO: Registrar usuário */ },
                 colors = ButtonDefaults.buttonColors(containerColor = RoxoEscuro),
                 shape = RoundedCornerShape(8.dp),
                 border = BorderStroke(1.dp, Color.Black),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(42.dp)
             ) {
-                Text("Registrar", color = Color.White)
+                Text("Registrar", color = Color.White, fontSize = 14.sp)
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
+            // Botão Voltar ao login
             TextButton(onClick = onBackToLogin) {
-                Text("Já tem conta? Faça o Login", color = Color.White)
+                Text("Já tem conta? Faça o Login", color = Color.White, fontSize = 14.sp)
             }
         }
     }
