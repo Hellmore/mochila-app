@@ -11,10 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import org.jetbrains.compose.resources.painterResource
 import mochila_app.composeapp.generated.resources.Res
@@ -23,11 +20,12 @@ import mochila_app.composeapp.generated.resources.fundo_curvas
 import mochila_app.composeapp.generated.resources.logo
 
 @Composable
-fun LoginScreen(onNavigateToRegister: () -> Unit) {
+fun RegisterScreen(onBackToLogin: () -> Unit) {
     val RoxoEscuro = Color(0xFF5336CB)
-    val VerdeLima = Color(0xFFC5E300)
     val RoxoClaro = Color(0xFF7F55CE)
+    val VerdeLima = Color(0xFFC5E300)
 
+    var email by remember { mutableStateOf("") }
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
@@ -74,14 +72,29 @@ fun LoginScreen(onNavigateToRegister: () -> Unit) {
             Spacer(modifier = Modifier.height(24.dp))
 
             OutlinedTextField(
+                value = email,
+                onValueChange = { email = it },
+                placeholder = { Text("Insira o seu e-mail") },
+                modifier = Modifier.fillMaxWidth(),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = Color.White,
+                    unfocusedContainerColor = Color.White,
+                    disabledContainerColor = Color.White
+                )
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            OutlinedTextField(
                 value = username,
                 onValueChange = { username = it },
                 placeholder = { Text("Insira o seu usuário") },
+                modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = Color.White,
                     unfocusedContainerColor = Color.White,
-                    focusedContainerColor = Color.White
-                ),
-                modifier = Modifier.fillMaxWidth()
+                    disabledContainerColor = Color.White
+                )
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -89,48 +102,31 @@ fun LoginScreen(onNavigateToRegister: () -> Unit) {
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
-                placeholder = { Text("Insira a sua senha") },
+                placeholder = { Text("Crie uma senha") },
+                modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = Color.White,
                     unfocusedContainerColor = Color.White,
-                    focusedContainerColor = Color.White
-                ),
-                modifier = Modifier.fillMaxWidth()
+                    disabledContainerColor = Color.White
+                )
             )
 
             Spacer(modifier = Modifier.height(20.dp))
 
             Button(
-                onClick = { /* TODO: Esqueci a senha */ },
+                onClick = { /* TODO: Registrar usuário */ },
                 colors = ButtonDefaults.buttonColors(containerColor = RoxoEscuro),
                 shape = RoundedCornerShape(8.dp),
                 border = BorderStroke(1.dp, Color.Black),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Esqueci a senha", color = Color.White)
+                Text("Registrar", color = Color.White)
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-            Button(
-                onClick = onNavigateToRegister,
-                colors = ButtonDefaults.buttonColors(containerColor = RoxoClaro),
-                shape = RoundedCornerShape(8.dp),
-                border = BorderStroke(1.dp, Color.Black),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Cadastre-se", color = Color.White)
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Button(
-                onClick = { /* TODO: Login */ },
-                colors = ButtonDefaults.buttonColors(containerColor = VerdeLima),
-                shape = RoundedCornerShape(8.dp),
-                border = BorderStroke(1.dp, Color.Black),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Login", color = Color.Black, fontWeight = FontWeight.Bold)
+            TextButton(onClick = onBackToLogin) {
+                Text("Já tem conta? Faça o Login", color = Color.White)
             }
         }
     }
