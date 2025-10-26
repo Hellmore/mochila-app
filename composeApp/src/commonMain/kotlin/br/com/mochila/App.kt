@@ -3,10 +3,7 @@ package br.com.mochila
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
-import br.com.mochila.ui.screens.LoginScreen
-import br.com.mochila.ui.screens.RegisterScreen
-import br.com.mochila.ui.screens.RecoveryScreen
-import br.com.mochila.ui.screens.HomeScreen
+import br.com.mochila.ui.screens.*
 
 @Composable
 fun App() {
@@ -41,6 +38,12 @@ fun App() {
                     onNavigateToSubject = { subjectName ->
                         // TODO: navegar para a tela da matéria (ex: currentScreen = "subject_$subjectName")
                     }
+                )
+
+                // Menu Lateral
+                "menu" -> MenuScreen(
+                    onCloseMenu = { currentScreen = "home" },
+                    onNavigateToHome = { currentScreen = "home" }
                 )
             }
         }

@@ -13,29 +13,28 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.WindowPosition.PlatformDefault.x
 import mochila_app.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.painterResource
 
 @Composable
 fun HomeScreen(
     onNavigateToHome: () -> Unit,
-    onNavigateToMenu: () -> Unit,
+    onNavigateToMenu: () -> Unit, // manter compatibilidade
     onNavigateToAdd: () -> Unit,
     onNavigateToSubject: (String) -> Unit
 ) {
-    // 🎨 Cores
     val RoxoEscuro = Color(0xFF5336CB)
     val RoxoClaro = Color(0xFF7F55CE)
 
-    // 🧠 Estados
     var searchText by remember { mutableStateOf("") }
     var showSearchField by remember { mutableStateOf(false) }
 
     var expanded by remember { mutableStateOf(false) }
     var selectedSemester by remember { mutableStateOf("5º semestre") }
 
-    // Mock de matérias e semestres
+    // 🔹 Controle de exibição do menu lateral
+    var showMenu by remember { mutableStateOf(false) }
+
     val subjects = listOf("Engenharia de Software", "Banco de Dados")
     val semesters = listOf("1º semestre", "2º semestre", "3º semestre", "4º semestre", "5º semestre")
 
@@ -52,18 +51,17 @@ fun HomeScreen(
             contentScale = ContentScale.Crop
         )
 
-        // 📌 Imagem do alfinete — canto superior direito
+        // 📌 Alfinete
         Image(
             painter = painterResource(Res.drawable.pin),
             contentDescription = "Pin decorativo",
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .fillMaxHeight(0.95f)
-                .offset(x = (0).dp),
+                .fillMaxHeight(0.95f),
             contentScale = ContentScale.FillHeight
         )
 
-        // 🎒 Imagem da mochila — canto inferior esquerdo
+        // 🎒 Mochila
         Image(
             painter = painterResource(Res.drawable.mochila),
             contentDescription = "Mochila decorativa",
@@ -82,7 +80,6 @@ fun HomeScreen(
                 .padding(horizontal = 24.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // 👤 Foto e nome do usuário
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
@@ -106,7 +103,7 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 🏷️ Título + filtro + semestre
+            // 🏷️ Título e filtro
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -120,7 +117,6 @@ fun HomeScreen(
                 )
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    // Botão filtro
                     Button(
                         onClick = { showSearchField = !showSearchField },
                         colors = ButtonDefaults.buttonColors(containerColor = RoxoClaro),
@@ -138,7 +134,7 @@ fun HomeScreen(
 
                     Spacer(modifier = Modifier.width(8.dp))
 
-                    // Dropdown de semestre
+                    // Dropdown semestre
                     Box {
                         Button(
                             onClick = { expanded = !expanded },
@@ -155,7 +151,7 @@ fun HomeScreen(
                                 Text(selectedSemester, color = RoxoClaro, fontSize = 13.sp)
                                 Image(
                                     painter = painterResource(Res.drawable.drop),
-                                    contentDescription = "Abrir menu de semestre",
+                                    contentDescription = "Abrir menu",
                                     modifier = Modifier.size(14.dp)
                                 )
                             }
@@ -180,7 +176,7 @@ fun HomeScreen(
                 }
             }
 
-            // 🔍 Campo de busca (opcional)
+            // 🔍 Campo de busca
             if (showSearchField) {
                 Spacer(modifier = Modifier.height(12.dp))
                 OutlinedTextField(
@@ -248,7 +244,8 @@ fun HomeScreen(
                 horizontalArrangement = Arrangement.spacedBy(5.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = onNavigateToMenu) {
+                // Abre o menu lateral
+                IconButton(onClick = { showMenu = true }) {
                     Image(
                         painter = painterResource(Res.drawable.menu),
                         contentDescription = "Menu lateral",
@@ -272,6 +269,17 @@ fun HomeScreen(
                     )
                 }
             }
+        }
+
+        // 🔹 Overlay do menu lateral
+        if (showMenu) {
+            MenuScreen(
+                onCloseMenu = { showMenu = false },
+                onNavigateToHome = {
+                    showMenu = false
+                    onNavigateToHome()
+                }
+            )
         }
     }
 }
