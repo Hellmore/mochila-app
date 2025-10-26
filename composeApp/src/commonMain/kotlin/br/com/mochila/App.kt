@@ -5,6 +5,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import br.com.mochila.ui.screens.LoginScreen
 import br.com.mochila.ui.screens.RegisterScreen
+import br.com.mochila.ui.screens.RecoveryScreen
 
 @Composable
 fun App() {
@@ -13,8 +14,16 @@ fun App() {
     MaterialTheme {
         Surface {
             when (currentScreen) {
-                "login" -> LoginScreen(onNavigateToRegister = { currentScreen = "register" })
-                "register" -> RegisterScreen(onBackToLogin = { currentScreen = "login" })
+                "login" -> LoginScreen(
+                    onNavigateToRegister = { currentScreen = "register" },
+                    onNavigateToRecovery = { currentScreen = "recovery" }
+                )
+                "register" -> RegisterScreen(
+                    onBackToLogin = { currentScreen = "login" }
+                )
+                "recovery" -> RecoveryScreen(
+                    onBackToLogin = { currentScreen = "login" }
+                )
             }
         }
     }
