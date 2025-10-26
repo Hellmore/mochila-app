@@ -69,7 +69,7 @@ fun HomeScreen(
             contentDescription = "Mochila decorativa",
             modifier = Modifier
                 .align(Alignment.BottomStart)
-                .fillMaxWidth(0.65f)   
+                .fillMaxWidth(0.65f)
                 .aspectRatio(1f),
             contentScale = ContentScale.Fit
         )
