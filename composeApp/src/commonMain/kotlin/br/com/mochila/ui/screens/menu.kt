@@ -51,7 +51,7 @@ fun MenuScreen(
             Box(
                 modifier = Modifier
                     .fillMaxHeight()
-                    .fillMaxWidth(0.40f)
+                    .fillMaxWidth(0.20f)
                     .background(RoxoClaro)
                     .clickable(enabled = false) { } // impede fechar ao clicar dentro
             ) {

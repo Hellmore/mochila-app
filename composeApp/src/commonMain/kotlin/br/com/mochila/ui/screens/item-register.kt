@@ -22,7 +22,8 @@ import org.jetbrains.compose.resources.painterResource
 
 @Composable
 fun ItemRegisterScreen(
-    onNavigateToHome: () -> Unit
+    onNavigateToHome: () -> Unit,
+    onNavigateToSubjectRegister: () -> Unit
 ) {
     val RoxoClaro = Color(0xFF7F55CE)
     val RoxoEscuro = Color(0xFF5336CB)
@@ -145,20 +146,25 @@ fun ItemRegisterScreen(
             Spacer(modifier = Modifier.height(20.dp))
 
         // 🔹 Botões principais
-            val botoes = listOf("Nova Matéria", "Novo Evento", "Nova Tarefa", "Nova Falta")
+            val botoes = listOf(
+                "Nova Matéria" to onNavigateToSubjectRegister,
+                "Novo Evento" to { /* TODO */ },
+                "Nova Tarefa" to { /* TODO */ },
+                "Nova Falta" to { /* TODO */ }
+            )
 
             Column(
-                horizontalAlignment = Alignment.CenterHorizontally, // ✅ centraliza os botões
+                horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                botoes.forEach { titulo ->
+                botoes.forEach { (titulo, acao) ->
                     Button(
-                        onClick = { /* TODO: implementar depois */ },
+                        onClick = acao,
                         colors = ButtonDefaults.buttonColors(containerColor = RoxoClaro),
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier
-                            .widthIn(max = 800.dp) // ✅ limite máximo de largura
-                            .fillMaxWidth(0.9f)    // ✅ opcional — ocupa 90% da largura até chegar a 400dp
+                            .widthIn(max = 800.dp)
+                            .fillMaxWidth(0.9f)
                             .padding(vertical = 8.dp)
                             .height(50.dp)
                     ) {
