@@ -13,48 +13,56 @@ fun App() {
         Surface {
             when (currentScreen) {
 
-                // 🔹 Tela de Login
                 "login" -> LoginScreen(
                     onNavigateToRegister = { currentScreen = "register" },
                     onNavigateToRecovery = { currentScreen = "recovery" },
                     onNavigateToHome = { currentScreen = "home" }
                 )
 
-                // 🔹 Tela de Registro
-                "register" -> RegisterScreen(
-                    onBackToLogin = { currentScreen = "login" }
-                )
+                "register" -> RegisterScreen(onBackToLogin = { currentScreen = "login" })
 
-                // 🔹 Tela de Recuperação de Senha
-                "recovery" -> RecoveryScreen(
-                    onBackToLogin = { currentScreen = "login" }
-                )
+                "recovery" -> RecoveryScreen(onBackToLogin = { currentScreen = "login" })
 
-                // 🔹 Tela Home
                 "home" -> HomeScreen(
                     onNavigateToHome = { currentScreen = "home" },
                     onNavigateToMenu = { currentScreen = "menu" },
                     onNavigateToAdd = { currentScreen = "item_register" },
-                    onNavigateToSubject = { subjectName ->
-                        // TODO: tela específica da matéria no futuro
-                    }
+                    onNavigateToSubject = { currentScreen = "subject_detail" }
                 )
 
-                // 🔹 Menu Lateral
                 "menu" -> MenuScreen(
                     onCloseMenu = { currentScreen = "home" },
                     onNavigateToHome = { currentScreen = "home" }
                 )
 
-                // 🔹 Tela Registro de Item
                 "item_register" -> ItemRegisterScreen(
                     onNavigateToHome = { currentScreen = "home" },
                     onNavigateToSubjectRegister = { currentScreen = "subject_register" }
                 )
 
-                // 🔹 Tela Cadastro de Matéria
+                "subject_detail" -> SubjectDetailScreen(
+                    onNavigateToEdit = { currentScreen = "subject_edit" },
+                    onNavigateToAbsenceControl = { /* TODO */ },
+                    onNavigateToItemRegister = { currentScreen = "item_register" },
+                    onNavigateToHome = { currentScreen = "home" }
+                )
+
                 "subject_register" -> SubjectRegisterScreen(
                     onNavigateToHome = { currentScreen = "home" }
+                )
+
+                "subject_edit" -> SubjectRegisterScreen(
+                    onNavigateToHome = { currentScreen = "home" },
+                    isEditing = true,
+                    subjectData = Subject(
+                        nome = "Engenharia de Software",
+                        professor = "Anderson Barbosa",
+                        frequencia = "75%",
+                        dataInicio = "01/08/2025",
+                        dataFim = "15/12/2025",
+                        horasAula = "2h",
+                        semestre = "5º"
+                    )
                 )
             }
         }

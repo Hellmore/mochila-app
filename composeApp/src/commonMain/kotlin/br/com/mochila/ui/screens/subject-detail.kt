@@ -1,9 +1,12 @@
 package br.com.mochila.ui.screens
 
-import androidx.compose.foundation.*
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,21 +20,12 @@ import androidx.compose.ui.unit.sp
 import mochila_app.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.painterResource
 
-data class Subject(
-    val nome: String,
-    val professor: String,
-    val frequencia: String,
-    val dataInicio: String,
-    val dataFim: String,
-    val horasAula: String,
-    val semestre: String
-)
-
 @Composable
-fun SubjectRegisterScreen(
-    onNavigateToHome: () -> Unit,
-    isEditing: Boolean = false,
-    subjectData: Subject? = null
+fun SubjectDetailScreen(
+    onNavigateToEdit: () -> Unit,
+    onNavigateToAbsenceControl: () -> Unit,
+    onNavigateToItemRegister: () -> Unit,
+    onNavigateToHome: () -> Unit
 ) {
     val RoxoEscuro = Color(0xFF5336CB)
     val RoxoClaro = Color(0xFF7F55CE)
@@ -39,14 +33,15 @@ fun SubjectRegisterScreen(
 
     var showMenu by remember { mutableStateOf(false) }
 
-    // Campos de input
-    var nomeMateria by remember { mutableStateOf(subjectData?.nome ?: "") }
-    var professor by remember { mutableStateOf(subjectData?.professor ?: "") }
-    var frequenciaMin by remember { mutableStateOf(subjectData?.frequencia ?: "") }
-    var dataInicio by remember { mutableStateOf(subjectData?.dataInicio ?: "") }
-    var dataFim by remember { mutableStateOf(subjectData?.dataFim ?: "") }
-    var horasPorAula by remember { mutableStateOf(subjectData?.horasAula ?: "") }
-    var semestre by remember { mutableStateOf(subjectData?.semestre ?: "") }
+    val subject = mapOf(
+        "Nome da Matéria" to "Engenharia de Software",
+        "Professor" to "Anderson Barbosa",
+        "Semestre" to "5º",
+        "Frequência Mínima (%)" to "75%",
+        "Data de Início" to "01/08/2025",
+        "Data de Fim" to "15/12/2025",
+        "Horas por Aula" to "2h"
+    )
 
     Box(
         modifier = Modifier
@@ -55,14 +50,14 @@ fun SubjectRegisterScreen(
     ) {
         Image(
             painter = painterResource(Res.drawable.fundo_quadriculado),
-            contentDescription = "Fundo quadriculado",
+            contentDescription = null,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
         )
 
         Image(
             painter = painterResource(Res.drawable.pin),
-            contentDescription = "Pin decorativo",
+            contentDescription = null,
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .fillMaxHeight(0.95f),
@@ -71,7 +66,7 @@ fun SubjectRegisterScreen(
 
         Image(
             painter = painterResource(Res.drawable.mochila),
-            contentDescription = "Mochila decorativa",
+            contentDescription = null,
             modifier = Modifier
                 .align(Alignment.BottomStart)
                 .fillMaxWidth(0.65f)
@@ -111,7 +106,7 @@ fun SubjectRegisterScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                if (isEditing) "Editar Matéria" else "Nova Matéria",
+                "Matéria",
                 color = RoxoEscuro,
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
@@ -120,61 +115,73 @@ fun SubjectRegisterScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            val campos = listOf(
-                Pair("Nome da Matéria", nomeMateria) to { it: String -> nomeMateria = it },
-                Pair("Professor", professor) to { it: String -> professor = it },
-                Pair("Frequência mínima (%)", frequenciaMin) to { it: String -> frequenciaMin = it },
-                Pair("Data de Início", dataInicio) to { it: String -> dataInicio = it },
-                Pair("Data de Fim", dataFim) to { it: String -> dataFim = it },
-                Pair("Horas por Aula", horasPorAula) to { it: String -> horasPorAula = it },
-                Pair("Semestre", semestre) to { it: String -> semestre = it },
-            )
-
-            campos.forEach { (campo, setValue) ->
-                val (placeholder, valor) = campo
-                OutlinedTextField(
-                    value = valor,
-                    onValueChange = setValue,
-                    placeholder = { Text(placeholder, color = Color.Gray, fontSize = 14.sp) },
-                    singleLine = true,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = Color.White,
-                        unfocusedContainerColor = Color.White,
-                        focusedBorderColor = RoxoClaro,
-                        unfocusedBorderColor = RoxoClaro
-                    ),
-                    shape = RoundedCornerShape(8.dp),
+            // 🔹 Campos da matéria
+            subject.forEach { (label, value) ->
+                Column(
                     modifier = Modifier
                         .widthIn(max = 600.dp)
-                        .fillMaxWidth(0.9f)
-                        .align(Alignment.CenterHorizontally)
-                        .padding(vertical = 6.dp)
-                )
+                        .padding(vertical = 4.dp)
+                ) {
+                    Text(
+                        text = "$label:",
+                        color = RoxoEscuro,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    OutlinedTextField(
+                        value = value,
+                        onValueChange = {},
+                        readOnly = true,
+                        singleLine = true,
+                        shape = RoundedCornerShape(8.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = RoxoClaro,
+                            unfocusedBorderColor = RoxoClaro,
+                            focusedContainerColor = Color.White,
+                            unfocusedContainerColor = Color.White
+                        ),
+                        modifier = Modifier
+                            .widthIn(max = 600.dp)
+                            .fillMaxWidth(0.9f)
+                    )
+                }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
+            // 🔹 Botão Editar
             Button(
-                onClick = { onNavigateToHome() },
-                colors = ButtonDefaults.buttonColors(containerColor = VerdeLima),
+                onClick = onNavigateToEdit,
+                colors = ButtonDefaults.buttonColors(containerColor = RoxoClaro),
                 shape = RoundedCornerShape(8.dp),
-                border = BorderStroke(1.dp, Color.Black),
                 modifier = Modifier
                     .widthIn(max = 600.dp)
                     .fillMaxWidth(0.9f)
                     .height(45.dp)
             ) {
-                Text(
-                    if (isEditing) "Salvar alterações" else "Salvar",
-                    color = Color.Black,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp
-                )
+                Text("Editar", color = Color.White, fontWeight = FontWeight.Bold)
             }
 
-            Spacer(modifier = Modifier.height(100.dp))
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // 🔹 Botão Controle de Faltas
+            Button(
+                onClick = onNavigateToAbsenceControl,
+                colors = ButtonDefaults.buttonColors(containerColor = VerdeLima),
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier
+                    .widthIn(max = 600.dp)
+                    .fillMaxWidth(0.9f)
+                    .height(45.dp)
+            ) {
+                Text("Controle de Faltas", color = Color.Black, fontWeight = FontWeight.Bold)
+            }
+
+            // 🔹 Espaço extra para não cobrir menu inferior
+            Spacer(modifier = Modifier.height(120.dp))
         }
 
+        // 🔹 Menu inferior
         Row(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -196,6 +203,14 @@ fun SubjectRegisterScreen(
                     Image(
                         painter = painterResource(Res.drawable.menu),
                         contentDescription = "Menu lateral",
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+
+                IconButton(onClick = onNavigateToItemRegister) {
+                    Image(
+                        painter = painterResource(Res.drawable.add),
+                        contentDescription = "Registrar item",
                         modifier = Modifier.size(16.dp)
                     )
                 }
