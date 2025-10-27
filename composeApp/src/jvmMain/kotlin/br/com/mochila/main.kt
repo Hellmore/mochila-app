@@ -3,13 +3,12 @@ package br.com.mochila
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.rememberWindowState
-import br.com.mochila.ui.screens.LoginScreen
 
 fun main() = application {
     val windowState = rememberWindowState(
-        width = 400.dp,
-        height = 900.dp
+        placement = WindowPlacement.Maximized
     )
 
     Window(
@@ -17,6 +16,6 @@ fun main() = application {
         title = "Mochila Hub",
         state = windowState,
     ) {
-        LoginScreen()
+        App()
     }
 }
