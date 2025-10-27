@@ -34,7 +34,7 @@ fun RegisterScreen(onBackToLogin: () -> Unit) {
             .fillMaxSize()
             .background(Color.White)
     ) {
-        // Fundo quadriculado
+        // 🔹 Fundo quadriculado
         Image(
             painter = painterResource(Res.drawable.fundo_quadriculado),
             contentDescription = null,
@@ -42,7 +42,7 @@ fun RegisterScreen(onBackToLogin: () -> Unit) {
             contentScale = ContentScale.Crop
         )
 
-        // Curvas coloridas
+        // 🔹 Fundo com curvas coloridas
         Image(
             painter = painterResource(Res.drawable.fundo_curvas),
             contentDescription = null,
@@ -50,7 +50,7 @@ fun RegisterScreen(onBackToLogin: () -> Unit) {
             contentScale = ContentScale.Crop
         )
 
-        // Conteúdo principal
+        // 🔹 Conteúdo principal
         Column(
             modifier = Modifier
                 .align(Alignment.Center)
@@ -59,7 +59,17 @@ fun RegisterScreen(onBackToLogin: () -> Unit) {
                 .fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Logo circular
+            // 🔙 Botão Voltar (histórico real)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 40.dp, start = 8.dp, bottom = 16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                BackButton(onBack = onBackToLogin)
+            }
+
+            // 🔸 Logo circular
             Box(
                 modifier = Modifier
                     .size(180.dp)
@@ -75,15 +85,14 @@ fun RegisterScreen(onBackToLogin: () -> Unit) {
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Campo de e-mail
+            // 🔸 Campo de e-mail
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
                 placeholder = { Text("Insira o seu e-mail") },
                 singleLine = true,
                 textStyle = LocalTextStyle.current.copy(fontSize = 14.sp),
-                modifier = Modifier
-                    .fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedContainerColor = Color.White,
                     unfocusedContainerColor = Color.White,
@@ -94,15 +103,14 @@ fun RegisterScreen(onBackToLogin: () -> Unit) {
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Campo de usuário
+            // 🔸 Campo de usuário
             OutlinedTextField(
                 value = username,
                 onValueChange = { username = it },
                 placeholder = { Text("Insira o seu usuário") },
                 singleLine = true,
                 textStyle = LocalTextStyle.current.copy(fontSize = 14.sp),
-                modifier = Modifier
-                    .fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedContainerColor = Color.White,
                     unfocusedContainerColor = Color.White,
@@ -113,15 +121,14 @@ fun RegisterScreen(onBackToLogin: () -> Unit) {
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Campo de senha
+            // 🔸 Campo de senha
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
                 placeholder = { Text("Crie uma senha") },
                 singleLine = true,
                 textStyle = LocalTextStyle.current.copy(fontSize = 14.sp),
-                modifier = Modifier
-                    .fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedContainerColor = Color.White,
                     unfocusedContainerColor = Color.White,
@@ -132,7 +139,7 @@ fun RegisterScreen(onBackToLogin: () -> Unit) {
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Botão Registrar
+            // 🔸 Botão Registrar
             Button(
                 onClick = { /* TODO: Registrar usuário */ },
                 colors = ButtonDefaults.buttonColors(containerColor = RoxoEscuro),
@@ -147,9 +154,9 @@ fun RegisterScreen(onBackToLogin: () -> Unit) {
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Botão Voltar ao login
+            // 🔸 Botão Voltar ao Login (texto simples)
             TextButton(onClick = onBackToLogin) {
-                Text("Já tem conta? Faça o Login", color = Color.White, fontSize = 14.sp)
+                Text("Já tem conta? Faça o Login", color = RoxoClaro, fontSize = 14.sp)
             }
         }
     }
