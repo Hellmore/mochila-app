@@ -23,10 +23,12 @@ import org.jetbrains.compose.resources.painterResource
 @Composable
 fun ItemRegisterScreen(
     onNavigateToHome: () -> Unit,
-    onNavigateToSubjectRegister: () -> Unit
+    onNavigateToSubjectRegister: () -> Unit,
+    onBack: () -> Unit // ✅ adicionamos o onBack para usar o botão voltar histórico
 ) {
     val RoxoClaro = Color(0xFF7F55CE)
     val RoxoEscuro = Color(0xFF5336CB)
+    val VerdeLima = Color(0xFFC5E300)
 
     var showMenu by remember { mutableStateOf(false) }
 
@@ -43,7 +45,7 @@ fun ItemRegisterScreen(
             contentScale = ContentScale.Crop
         )
 
-        // 🌟 Estrela verde — decorativo, no fundo (não interfere no layout)
+        // 🌟 Estrela verde decorativa
         Image(
             painter = painterResource(Res.drawable.star),
             contentDescription = "Decoração estrela",
@@ -54,7 +56,7 @@ fun ItemRegisterScreen(
             contentScale = ContentScale.Fit
         )
 
-        // ⬅️ Chevron — decorativo, canto esquerdo inferior
+        // ⬅️ Chevron decorativo
         Image(
             painter = painterResource(Res.drawable.chevron),
             contentDescription = "Decoração chevron",
@@ -73,15 +75,25 @@ fun ItemRegisterScreen(
                 .padding(horizontal = 24.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // 🔙 Botão Voltar histórico
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 40.dp, start = 8.dp, bottom = 16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                BackButton(onBack = onBack)
+            }
+
             // 🔹 Cabeçalho: usuário + sino
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 60.dp),
+                    .padding(top = 10.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Spacer(modifier = Modifier.width(28.dp)) // reserva espaço à esquerda (chevron)
+                Spacer(modifier = Modifier.width(28.dp))
 
                 // 👤 Usuário
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -118,7 +130,7 @@ fun ItemRegisterScreen(
                         modifier = Modifier
                             .size(55.dp)
                             .clip(CircleShape)
-                            .background(Color(0xFFC5E300)), // ✅ VerdeLima
+                            .background(VerdeLima),
                         contentAlignment = Alignment.Center
                     ) {
                         Image(
@@ -130,22 +142,20 @@ fun ItemRegisterScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(50.dp))
+            Spacer(modifier = Modifier.height(40.dp))
 
-        // 🔹 Título “Registros”
+            // 🔹 Título “Registros”
             Text(
                 text = "Registros",
                 color = RoxoEscuro,
                 fontSize = 35.sp,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally) // ✅ centraliza horizontalmente
+                modifier = Modifier.align(Alignment.CenterHorizontally)
             )
-
 
             Spacer(modifier = Modifier.height(20.dp))
 
-        // 🔹 Botões principais
+            // 🔹 Botões principais
             val botoes = listOf(
                 "Nova Matéria" to onNavigateToSubjectRegister,
                 "Novo Evento" to { /* TODO */ },

@@ -25,7 +25,8 @@ fun SubjectDetailScreen(
     onNavigateToEdit: () -> Unit,
     onNavigateToAbsenceControl: () -> Unit,
     onNavigateToItemRegister: () -> Unit,
-    onNavigateToHome: () -> Unit
+    onNavigateToHome: () -> Unit,
+    onBack: () -> Unit // ✅ Adicionado para o botão voltar
 ) {
     val RoxoEscuro = Color(0xFF5336CB)
     val RoxoClaro = Color(0xFF7F55CE)
@@ -48,6 +49,7 @@ fun SubjectDetailScreen(
             .fillMaxSize()
             .background(Color.White)
     ) {
+        // 🔹 Fundo decorativo
         Image(
             painter = painterResource(Res.drawable.fundo_quadriculado),
             contentDescription = null,
@@ -74,6 +76,7 @@ fun SubjectDetailScreen(
             contentScale = ContentScale.Fit
         )
 
+        // 📚 Conteúdo principal
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -81,6 +84,17 @@ fun SubjectDetailScreen(
                 .padding(horizontal = 24.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // 🔙 Botão voltar
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 40.dp, start = 8.dp, bottom = 16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                BackButton(onBack = onBack)
+            }
+
+            // 👤 Cabeçalho de usuário
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -105,6 +119,7 @@ fun SubjectDetailScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            // 🏷️ Título
             Text(
                 "Matéria",
                 color = RoxoEscuro,
@@ -149,7 +164,7 @@ fun SubjectDetailScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // 🔹 Botão Editar
+            // ✏️ Botão Editar
             Button(
                 onClick = onNavigateToEdit,
                 colors = ButtonDefaults.buttonColors(containerColor = RoxoClaro),
@@ -164,7 +179,7 @@ fun SubjectDetailScreen(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // 🔹 Botão Controle de Faltas
+            // 📅 Botão Controle de Faltas
             Button(
                 onClick = onNavigateToAbsenceControl,
                 colors = ButtonDefaults.buttonColors(containerColor = VerdeLima),
@@ -177,11 +192,10 @@ fun SubjectDetailScreen(
                 Text("Controle de Faltas", color = Color.Black, fontWeight = FontWeight.Bold)
             }
 
-            // 🔹 Espaço extra para não cobrir menu inferior
             Spacer(modifier = Modifier.height(120.dp))
         }
 
-        // 🔹 Menu inferior
+        // 🔹 Menu inferior fixo
         Row(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -225,6 +239,7 @@ fun SubjectDetailScreen(
             }
         }
 
+        // 🔹 Menu lateral
         if (showMenu) {
             MenuScreen(
                 onCloseMenu = { showMenu = false },

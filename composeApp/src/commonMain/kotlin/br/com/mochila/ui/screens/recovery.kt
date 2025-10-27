@@ -17,16 +17,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import mochila_app.composeapp.generated.resources.*
-import mochila_app.composeapp.generated.resources.Res
-import mochila_app.composeapp.generated.resources.fundo_curvas
-import mochila_app.composeapp.generated.resources.fundo_quadriculado
 import org.jetbrains.compose.resources.painterResource
 
 @Composable
 fun RecoveryScreen(onBackToLogin: () -> Unit) {
     val RoxoEscuro = Color(0xFF5336CB)
     val RoxoClaro = Color(0xFF7F55CE)
-    val VerdeLima = Color(0xFFC5E300)
 
     var email by remember { mutableStateOf("") }
     var confirmEmail by remember { mutableStateOf("") }
@@ -44,7 +40,7 @@ fun RecoveryScreen(onBackToLogin: () -> Unit) {
             contentScale = ContentScale.Crop
         )
 
-        // 🔹 Fundo com curvas
+        // 🔹 Fundo com curvas coloridas
         Image(
             painter = painterResource(Res.drawable.fundo_curvas),
             contentDescription = null,
@@ -52,6 +48,7 @@ fun RecoveryScreen(onBackToLogin: () -> Unit) {
             contentScale = ContentScale.Crop
         )
 
+        // 🔹 Conteúdo principal
         Column(
             modifier = Modifier
                 .align(Alignment.Center)
@@ -60,7 +57,17 @@ fun RecoveryScreen(onBackToLogin: () -> Unit) {
                 .fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // 🔹 Logo
+            // 🔙 Botão Voltar (histórico real)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 40.dp, start = 8.dp, bottom = 16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                BackButton(onBack = onBackToLogin)
+            }
+
+            // 🔹 Logo circular
             Box(
                 modifier = Modifier
                     .size(180.dp)
@@ -69,21 +76,13 @@ fun RecoveryScreen(onBackToLogin: () -> Unit) {
             ) {
                 Image(
                     painter = painterResource(Res.drawable.logo),
-                    contentDescription = "Foto de perfil",
-                    modifier = Modifier
-                        .clip(CircleShape),
+                    contentDescription = "Logo Mochila Hub",
+                    modifier = Modifier.clip(CircleShape),
                     contentScale = ContentScale.Crop
                 )
             }
 
             Spacer(modifier = Modifier.height(24.dp))
-//            Text(
-//                "Nome usuário",
-//                color = Color.Gray,
-//                fontSize = 13.sp
-//            )
-//
-//            Spacer(modifier = Modifier.height(24.dp))
 
             // 🔹 Campo de e-mail
             OutlinedTextField(
@@ -102,7 +101,7 @@ fun RecoveryScreen(onBackToLogin: () -> Unit) {
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // 🔹 Campo de confirmação
+            // 🔹 Campo de confirmação de e-mail
             OutlinedTextField(
                 value = confirmEmail,
                 onValueChange = { confirmEmail = it },
@@ -134,9 +133,9 @@ fun RecoveryScreen(onBackToLogin: () -> Unit) {
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // 🔹 Botão Voltar ao login
+            // 🔹 Botão Voltar ao Login (texto simples)
             TextButton(onClick = onBackToLogin) {
-                Text("Voltar ao Login", color = Color.White, fontSize = 14.sp)
+                Text("Voltar ao Login", color = RoxoClaro, fontSize = 14.sp)
             }
         }
     }

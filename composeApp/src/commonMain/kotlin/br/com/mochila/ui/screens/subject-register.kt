@@ -30,6 +30,7 @@ data class Subject(
 @Composable
 fun SubjectRegisterScreen(
     onNavigateToHome: () -> Unit,
+    onBack: () -> Unit, // ✅ novo parâmetro para botão voltar
     isEditing: Boolean = false,
     subjectData: Subject? = null
 ) {
@@ -39,7 +40,7 @@ fun SubjectRegisterScreen(
 
     var showMenu by remember { mutableStateOf(false) }
 
-    // Campos de input
+    // 🧾 Campos de input
     var nomeMateria by remember { mutableStateOf(subjectData?.nome ?: "") }
     var professor by remember { mutableStateOf(subjectData?.professor ?: "") }
     var frequenciaMin by remember { mutableStateOf(subjectData?.frequencia ?: "") }
@@ -53,6 +54,7 @@ fun SubjectRegisterScreen(
             .fillMaxSize()
             .background(Color.White)
     ) {
+        // 🔹 Fundo decorativo
         Image(
             painter = painterResource(Res.drawable.fundo_quadriculado),
             contentDescription = "Fundo quadriculado",
@@ -79,6 +81,7 @@ fun SubjectRegisterScreen(
             contentScale = ContentScale.Fit
         )
 
+        // 📋 Conteúdo principal
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -86,6 +89,17 @@ fun SubjectRegisterScreen(
                 .padding(horizontal = 24.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // 🔙 Botão voltar
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 40.dp, start = 8.dp, bottom = 16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                BackButton(onBack = onBack)
+            }
+
+            // 👤 Cabeçalho de usuário
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -110,6 +124,7 @@ fun SubjectRegisterScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            // 🏷️ Título
             Text(
                 if (isEditing) "Editar Matéria" else "Nova Matéria",
                 color = RoxoEscuro,
@@ -120,6 +135,7 @@ fun SubjectRegisterScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // ✏️ Campos de formulário
             val campos = listOf(
                 Pair("Nome da Matéria", nomeMateria) to { it: String -> nomeMateria = it },
                 Pair("Professor", professor) to { it: String -> professor = it },
@@ -154,6 +170,7 @@ fun SubjectRegisterScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            // 💾 Botão salvar
             Button(
                 onClick = { onNavigateToHome() },
                 colors = ButtonDefaults.buttonColors(containerColor = VerdeLima),
@@ -175,6 +192,7 @@ fun SubjectRegisterScreen(
             Spacer(modifier = Modifier.height(100.dp))
         }
 
+        // 🔹 Menu inferior fixo
         Row(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -210,6 +228,7 @@ fun SubjectRegisterScreen(
             }
         }
 
+        // 🔹 Menu lateral
         if (showMenu) {
             MenuScreen(
                 onCloseMenu = { showMenu = false },
