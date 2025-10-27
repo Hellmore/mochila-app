@@ -15,6 +15,7 @@ fun main() = application {
         onCloseRequest = ::exitApplication,
         title = "Mochila Hub",
         state = windowState,
+//        resizable = false,
     ) {
         App()
     }

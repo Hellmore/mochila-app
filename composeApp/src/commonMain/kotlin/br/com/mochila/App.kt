@@ -33,8 +33,8 @@ fun App() {
                 // 🔹 Tela Home
                 "home" -> HomeScreen(
                     onNavigateToHome = { currentScreen = "home" },
-                    onNavigateToMenu = { /* TODO: abrir menu lateral */ },
-                    onNavigateToAdd = { /* TODO: adicionar matéria */ },
+                    onNavigateToMenu = { currentScreen = "menu" },
+                    onNavigateToAdd = { currentScreen = "item_register" },
                     onNavigateToSubject = { subjectName ->
                         // TODO: navegar para a tela da matéria (ex: currentScreen = "subject_$subjectName")
                     }
@@ -43,6 +43,11 @@ fun App() {
                 // Menu Lateral
                 "menu" -> MenuScreen(
                     onCloseMenu = { currentScreen = "home" },
+                    onNavigateToHome = { currentScreen = "home" }
+                )
+
+                // Tela Registro de Item
+                "item_register" -> ItemRegisterScreen(
                     onNavigateToHome = { currentScreen = "home" }
                 )
             }
