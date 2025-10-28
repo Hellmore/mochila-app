@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "698342067389",
+    "project_id": "mochila-96a6b",
+    "storage_bucket": "mochila-96a6b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:698342067389:android:632495eecf07b16f40bbd4",
+        "android_client_info": {
+          "package_name": "br.com.mochila"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAvIvbxB-5LCdssFEoLAY6ZBVYsKwhdyXI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
