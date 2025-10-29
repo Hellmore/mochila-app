@@ -19,7 +19,7 @@ import org.jetbrains.compose.resources.painterResource
 @Composable
 fun HomeScreen(
     onNavigateToHome: () -> Unit,
-    onNavigateToMenu: () -> Unit, // manter compatibilidade
+    onNavigateToMenu: () -> Unit,
     onNavigateToAdd: () -> Unit,
     onNavigateToSubject: (String) -> Unit
 ) {

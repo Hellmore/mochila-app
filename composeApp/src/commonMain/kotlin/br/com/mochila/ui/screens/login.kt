@@ -14,6 +14,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import br.com.mochila.auth.AuthViewModel
 import org.jetbrains.compose.resources.painterResource
 import mochila_app.composeapp.generated.resources.Res
 import mochila_app.composeapp.generated.resources.fundo_quadriculado
@@ -22,16 +23,17 @@ import mochila_app.composeapp.generated.resources.logo
 
 @Composable
 fun LoginScreen(
+    authViewModel: AuthViewModel,
     onNavigateToRegister: () -> Unit,
-    onNavigateToRecovery: () -> Unit,
-    onNavigateToHome: () -> Unit
+    onNavigateToRecovery: () -> Unit
 ) {
     val RoxoEscuro = Color(0xFF5336CB)
     val VerdeLima = Color(0xFFC5E300)
     val RoxoClaro = Color(0xFF7F55CE)
 
-    var username by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    val isLoading by authViewModel.isLoading
 
     Box(
         modifier = Modifier
@@ -79,11 +81,11 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Campo de Usuário
+            // Campo de E-mail
             OutlinedTextField(
-                value = username,
-                onValueChange = { username = it },
-                placeholder = { Text("Insira o seu usuário") },
+                value = email,
+                onValueChange = { email = it },
+                placeholder = { Text("Insira o seu e-mail") },
                 singleLine = true,
                 textStyle = LocalTextStyle.current.copy(fontSize = 14.sp),
                 colors = OutlinedTextFieldDefaults.colors(
@@ -141,9 +143,10 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Botão Login → vai para Home
+            // Botão Login
             Button(
-                onClick = onNavigateToHome,
+                onClick = { authViewModel.signIn(email, password) },
+                enabled = !isLoading,
                 colors = ButtonDefaults.buttonColors(containerColor = VerdeLima),
                 shape = RoundedCornerShape(8.dp),
                 border = BorderStroke(1.dp, Color.Black),
@@ -151,12 +154,16 @@ fun LoginScreen(
                     .fillMaxWidth()
                     .height(42.dp)
             ) {
-                Text(
-                    "Login",
-                    color = Color.Black,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp
-                )
+                if (isLoading) {
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Color.Black)
+                } else {
+                    Text(
+                        "Login",
+                        color = Color.Black,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp
+                    )
+                }
             }
         }
     }
