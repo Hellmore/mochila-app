@@ -17,14 +17,16 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import br.com.mochila.auth.AuthViewModel
 import mochila_app.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.painterResource
 
 @Composable
 fun ItemRegisterScreen(
+    authViewModel: AuthViewModel,
     onNavigateToHome: () -> Unit,
     onNavigateToSubjectRegister: () -> Unit,
-    onBack: () -> Unit // ✅ adicionamos o onBack para usar o botão voltar histórico
+    onBack: () -> Unit
 ) {
     val RoxoClaro = Color(0xFF7F55CE)
     val RoxoEscuro = Color(0xFF5336CB)
@@ -37,7 +39,6 @@ fun ItemRegisterScreen(
             .fillMaxSize()
             .background(Color.White)
     ) {
-        // 🟣 Fundo notebook
         Image(
             painter = painterResource(Res.drawable.notebook),
             contentDescription = "Fundo caderno",
@@ -45,7 +46,6 @@ fun ItemRegisterScreen(
             contentScale = ContentScale.Crop
         )
 
-        // 🌟 Estrela verde decorativa
         Image(
             painter = painterResource(Res.drawable.star),
             contentDescription = "Decoração estrela",
@@ -56,7 +56,6 @@ fun ItemRegisterScreen(
             contentScale = ContentScale.Fit
         )
 
-        // ⬅️ Chevron decorativo
         Image(
             painter = painterResource(Res.drawable.chevron),
             contentDescription = "Decoração chevron",
@@ -67,7 +66,6 @@ fun ItemRegisterScreen(
             contentScale = ContentScale.Fit
         )
 
-        // 📚 Conteúdo principal
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -75,7 +73,6 @@ fun ItemRegisterScreen(
                 .padding(horizontal = 24.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // 🔙 Botão Voltar histórico
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -85,7 +82,6 @@ fun ItemRegisterScreen(
                 BackButton(onBack = onBack)
             }
 
-            // 🔹 Cabeçalho: usuário + sino
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -95,7 +91,6 @@ fun ItemRegisterScreen(
             ) {
                 Spacer(modifier = Modifier.width(28.dp))
 
-                // 👤 Usuário
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Box(
                         modifier = Modifier
@@ -113,13 +108,12 @@ fun ItemRegisterScreen(
                     }
                     Spacer(modifier = Modifier.height(10.dp))
                     Text(
-                        "Nome usuário",
+                        authViewModel.currentUser.value?.email ?: "Usuário",
                         color = Color.Gray,
-                        fontSize = 22.sp
+                        fontSize = 18.sp
                     )
                 }
 
-                // 🔔 Sino clicável com círculo VerdeLima
                 IconButton(
                     onClick = { /* TODO: abrir tela de notificações futuramente */ },
                     modifier = Modifier
@@ -144,7 +138,6 @@ fun ItemRegisterScreen(
 
             Spacer(modifier = Modifier.height(40.dp))
 
-            // 🔹 Título “Registros”
             Text(
                 text = "Registros",
                 color = RoxoEscuro,
@@ -155,7 +148,6 @@ fun ItemRegisterScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // 🔹 Botões principais
             val botoes = listOf(
                 "Nova Matéria" to onNavigateToSubjectRegister,
                 "Novo Evento" to { /* TODO */ },
@@ -186,7 +178,6 @@ fun ItemRegisterScreen(
             Spacer(modifier = Modifier.height(100.dp))
         }
 
-        // 🔹 Menu inferior fixo
         Row(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -204,7 +195,6 @@ fun ItemRegisterScreen(
                 horizontalArrangement = Arrangement.spacedBy(5.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // 📋 Menu lateral (abre sobre a tela atual)
                 IconButton(onClick = { showMenu = true }) {
                     Image(
                         painter = painterResource(Res.drawable.menu),
@@ -213,7 +203,6 @@ fun ItemRegisterScreen(
                     )
                 }
 
-                // 🏠 Voltar para home
                 IconButton(onClick = onNavigateToHome) {
                     Image(
                         painter = painterResource(Res.drawable.home),
@@ -224,9 +213,9 @@ fun ItemRegisterScreen(
             }
         }
 
-        // 🔹 Overlay do menu lateral
         if (showMenu) {
             MenuScreen(
+                authViewModel = authViewModel,
                 onCloseMenu = { showMenu = false },
                 onNavigateToHome = {
                     showMenu = false

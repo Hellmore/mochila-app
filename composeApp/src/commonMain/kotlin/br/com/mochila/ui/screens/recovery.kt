@@ -16,16 +16,20 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import br.com.mochila.auth.AuthViewModel
 import mochila_app.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.painterResource
 
 @Composable
-fun RecoveryScreen(onBackToLogin: () -> Unit) {
+fun RecoveryScreen(
+    authViewModel: AuthViewModel,
+    onBackToLogin: () -> Unit
+) {
     val RoxoEscuro = Color(0xFF5336CB)
     val RoxoClaro = Color(0xFF7F55CE)
 
     var email by remember { mutableStateOf("") }
-    var confirmEmail by remember { mutableStateOf("") }
+    val isLoading by authViewModel.isLoading
 
     Box(
         modifier = Modifier
@@ -99,28 +103,12 @@ fun RecoveryScreen(onBackToLogin: () -> Unit) {
                 shape = RoundedCornerShape(8.dp)
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // 🔹 Campo de confirmação de e-mail
-            OutlinedTextField(
-                value = confirmEmail,
-                onValueChange = { confirmEmail = it },
-                placeholder = { Text("Insira o seu e-mail novamente") },
-                singleLine = true,
-                textStyle = LocalTextStyle.current.copy(fontSize = 14.sp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White
-                ),
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(8.dp)
-            )
-
             Spacer(modifier = Modifier.height(20.dp))
 
             // 🔹 Botão Enviar e-mail de recuperação
             Button(
-                onClick = { /* TODO: Enviar e-mail */ },
+                onClick = { authViewModel.sendPasswordReset(email) },
+                enabled = !isLoading,
                 colors = ButtonDefaults.buttonColors(containerColor = RoxoEscuro),
                 shape = RoundedCornerShape(8.dp),
                 border = BorderStroke(1.dp, Color.Black),
@@ -128,7 +116,11 @@ fun RecoveryScreen(onBackToLogin: () -> Unit) {
                     .fillMaxWidth()
                     .height(42.dp)
             ) {
-                Text("Enviar e-mail de Recuperação", color = Color.White, fontSize = 14.sp)
+                if (isLoading) {
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Color.White)
+                } else {
+                    Text("Enviar e-mail de Recuperação", color = Color.White, fontSize = 14.sp)
+                }
             }
 
             Spacer(modifier = Modifier.height(12.dp))

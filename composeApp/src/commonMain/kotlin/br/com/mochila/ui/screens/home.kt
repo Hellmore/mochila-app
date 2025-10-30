@@ -13,18 +13,20 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import br.com.mochila.auth.AuthViewModel
 import mochila_app.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.painterResource
 
 @Composable
 fun HomeScreen(
+    authViewModel: AuthViewModel,
     onNavigateToHome: () -> Unit,
-    onNavigateToMenu: () -> Unit, // manter compatibilidade
+    onNavigateToMenu: () -> Unit,
     onNavigateToAdd: () -> Unit,
     onNavigateToSubject: (String) -> Unit
 ) {
-    val RoxoEscuro = Color(0xFF5336CB)
-    val RoxoClaro = Color(0xFF7F55CE)
+    val roxoEscuro = Color(0xFF5336CB)
+    val roxoClaro = Color(0xFF7F55CE)
 
     var searchText by remember { mutableStateOf("") }
     var showSearchField by remember { mutableStateOf(false) }
@@ -32,18 +34,16 @@ fun HomeScreen(
     var expanded by remember { mutableStateOf(false) }
     var selectedSemester by remember { mutableStateOf("5º semestre") }
 
-    // 🔹 Controle de exibição do menu lateral
     var showMenu by remember { mutableStateOf(false) }
 
     val subjects = listOf("Engenharia de Software", "Banco de Dados")
     val semesters = listOf("1º semestre", "2º semestre", "3º semestre", "4º semestre", "5º semestre")
 
-    BoxWithConstraints(
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
     ) {
-        // 🟣 Fundo quadriculado
         Image(
             painter = painterResource(Res.drawable.fundo_quadriculado),
             contentDescription = null,
@@ -51,7 +51,6 @@ fun HomeScreen(
             contentScale = ContentScale.Crop
         )
 
-        // 📌 Alfinete
         Image(
             painter = painterResource(Res.drawable.pin),
             contentDescription = "Pin decorativo",
@@ -61,7 +60,6 @@ fun HomeScreen(
             contentScale = ContentScale.FillHeight
         )
 
-        // 🎒 Mochila
         Image(
             painter = painterResource(Res.drawable.mochila),
             contentDescription = "Mochila decorativa",
@@ -72,7 +70,6 @@ fun HomeScreen(
             contentScale = ContentScale.Fit
         )
 
-        // 🧾 Conteúdo principal
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -88,7 +85,7 @@ fun HomeScreen(
                     modifier = Modifier
                         .size(80.dp)
                         .clip(CircleShape)
-                        .background(RoxoClaro)
+                        .background(roxoClaro)
                 ) {
                     Image(
                         painter = painterResource(Res.drawable.user),
@@ -98,12 +95,11 @@ fun HomeScreen(
                     )
                 }
                 Spacer(modifier = Modifier.width(15.dp))
-                Text("Nome usuário", color = Color.Gray, fontSize = 14.sp)
+                Text(authViewModel.currentUser.value?.email ?: "Usuário", color = Color.Gray, fontSize = 14.sp)
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 🏷️ Título e filtro
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -111,7 +107,7 @@ fun HomeScreen(
             ) {
                 Text(
                     "Matérias",
-                    color = RoxoEscuro,
+                    color = roxoEscuro,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -119,7 +115,7 @@ fun HomeScreen(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Button(
                         onClick = { showSearchField = !showSearchField },
-                        colors = ButtonDefaults.buttonColors(containerColor = RoxoClaro),
+                        colors = ButtonDefaults.buttonColors(containerColor = roxoClaro),
                         shape = RoundedCornerShape(12.dp),
                         contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
                     ) {
@@ -134,13 +130,12 @@ fun HomeScreen(
 
                     Spacer(modifier = Modifier.width(8.dp))
 
-                    // Dropdown semestre
                     Box {
                         Button(
                             onClick = { expanded = !expanded },
                             colors = ButtonDefaults.buttonColors(containerColor = Color.White),
                             shape = RoundedCornerShape(8.dp),
-                            border = BorderStroke(1.dp, RoxoClaro),
+                            border = BorderStroke(1.dp, roxoClaro),
                             modifier = Modifier.width(140.dp)
                         ) {
                             Row(
@@ -148,7 +143,7 @@ fun HomeScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Text(selectedSemester, color = RoxoClaro, fontSize = 13.sp)
+                                Text(selectedSemester, color = roxoClaro, fontSize = 13.sp)
                                 Image(
                                     painter = painterResource(Res.drawable.drop),
                                     contentDescription = "Abrir menu",
@@ -176,7 +171,6 @@ fun HomeScreen(
                 }
             }
 
-            // 🔍 Campo de busca
             if (showSearchField) {
                 Spacer(modifier = Modifier.height(12.dp))
                 OutlinedTextField(
@@ -194,7 +188,6 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 📚 Lista de matérias
             subjects.filter {
                 it.contains(searchText, ignoreCase = true)
             }.forEach { subject ->
@@ -204,7 +197,7 @@ fun HomeScreen(
                         .fillMaxWidth()
                         .padding(vertical = 8.dp),
                     shape = RoundedCornerShape(8.dp),
-                    border = BorderStroke(1.dp, RoxoClaro),
+                    border = BorderStroke(1.dp, roxoClaro),
                     colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.White),
                     contentPadding = PaddingValues(horizontal = 24.dp, vertical = 20.dp)
                 ) {
@@ -213,7 +206,7 @@ fun HomeScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(subject, color = RoxoClaro, fontSize = 14.sp)
+                        Text(subject, color = roxoClaro, fontSize = 14.sp)
                         Image(
                             painter = painterResource(Res.drawable.direita),
                             contentDescription = "Abrir matéria",
@@ -226,7 +219,6 @@ fun HomeScreen(
             Spacer(modifier = Modifier.height(80.dp))
         }
 
-        // 🔹 Menu inferior fixo
         Row(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -237,14 +229,13 @@ fun HomeScreen(
             Row(
                 modifier = Modifier
                     .background(
-                        color = RoxoEscuro.copy(alpha = 0.95f),
+                        color = roxoEscuro.copy(alpha = 0.95f),
                         shape = RoundedCornerShape(8.dp)
                     )
                     .padding(horizontal = 20.dp),
                 horizontalArrangement = Arrangement.spacedBy(5.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Abre o menu lateral
                 IconButton(onClick = { showMenu = true }) {
                     Image(
                         painter = painterResource(Res.drawable.menu),
@@ -271,9 +262,9 @@ fun HomeScreen(
             }
         }
 
-        // 🔹 Overlay do menu lateral
         if (showMenu) {
             MenuScreen(
+                authViewModel = authViewModel,
                 onCloseMenu = { showMenu = false },
                 onNavigateToHome = {
                     showMenu = false

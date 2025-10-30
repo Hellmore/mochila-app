@@ -3,99 +3,113 @@ package br.com.mochila
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
+import br.com.mochila.auth.AuthViewModel
 import br.com.mochila.ui.screens.*
 
 @Composable
 fun App() {
-    // 🔹 Pilha de telas
-    var screenStack by remember { mutableStateOf(listOf("login")) }
+    val authViewModel = remember { AuthViewModel() }
+    val currentUser by authViewModel.currentUser.collectAsState()
 
-    // 🔹 Tela atual
+    MaterialTheme {
+        Surface {
+            if (currentUser == null) {
+                AuthNavigation(authViewModel)
+            } else {
+                MainNavigation(authViewModel)
+            }
+        }
+    }
+}
+
+@Composable
+private fun AuthNavigation(authViewModel: AuthViewModel) {
+    var screenStack by remember { mutableStateOf(listOf("login")) }
     val currentScreen = screenStack.last()
 
-    // 🔹 Navegar para nova tela (sem duplicar)
     fun navigateTo(screen: String) {
         if (screenStack.last() != screen) {
             screenStack = screenStack + screen
         }
     }
 
-    // 🔹 Voltar uma tela
     fun goBack() {
         if (screenStack.size > 1) {
             screenStack = screenStack.dropLast(1)
         }
     }
 
-    MaterialTheme {
-        Surface {
-            when (currentScreen) {
+    when (currentScreen) {
+        "login" -> LoginScreen(
+            authViewModel = authViewModel,
+            onNavigateToRegister = { navigateTo("register") },
+            onNavigateToRecovery = { navigateTo("recovery") }
+        )
+        "register" -> RegisterScreen(
+            authViewModel = authViewModel,
+            onBackToLogin = { goBack() }
+        )
+        "recovery" -> RecoveryScreen(
+            authViewModel = authViewModel,
+            onBackToLogin = { goBack() }
+        )
+    }
+}
 
-                // 🔸 Tela de Login
-                "login" -> LoginScreen(
-                    onNavigateToRegister = { navigateTo("register") },
-                    onNavigateToRecovery = { navigateTo("recovery") },
-                    onNavigateToHome = { navigateTo("home") }
-                )
+@Composable
+private fun MainNavigation(authViewModel: AuthViewModel) {
+    var screenStack by remember { mutableStateOf(listOf("home")) }
+    val currentScreen = screenStack.last()
 
-                // 🔸 Tela de Cadastro
-                "register" -> RegisterScreen(onBackToLogin = { goBack() })
-
-                // 🔸 Tela de Recuperação
-                "recovery" -> RecoveryScreen(onBackToLogin = { goBack() })
-
-                // 🔸 Tela Home
-                "home" -> HomeScreen(
-                    onNavigateToHome = { /* Evita empilhar home novamente */ },
-                    onNavigateToMenu = { navigateTo("menu") },
-                    onNavigateToAdd = { navigateTo("item_register") },
-                    onNavigateToSubject = { navigateTo("subject_detail") }
-                )
-
-                // 🔸 Menu lateral (modal)
-                "menu" -> MenuScreen(
-                    onCloseMenu = { goBack() },
-                    onNavigateToHome = { navigateTo("home") }
-                )
-
-                // 🔸 Tela de Registro de Itens
-                "item_register" -> ItemRegisterScreen(
-                    onNavigateToHome = { navigateTo("home") },
-                    onNavigateToSubjectRegister = { navigateTo("subject_register") },
-                    onBack = { goBack() }
-                )
-
-                // 🔸 Tela de Cadastro de Matéria
-                "subject_register" -> SubjectRegisterScreen(
-                    onNavigateToHome = { navigateTo("home") },
-                    onBack = { goBack() }
-                )
-
-                // 🔸 Tela de Detalhes da Matéria
-                "subject_detail" -> SubjectDetailScreen(
-                    onNavigateToEdit = { navigateTo("subject_edit") },
-                    onNavigateToAbsenceControl = { /* TODO: tela de faltas */ },
-                    onNavigateToItemRegister = { navigateTo("item_register") },
-                    onNavigateToHome = { navigateTo("home") },
-                    onBack = { goBack() }
-                )
-
-                // 🔸 Tela de Edição de Matéria
-                "subject_edit" -> SubjectRegisterScreen(
-                    onNavigateToHome = { navigateTo("home") },
-                    onBack = { goBack() },
-                    isEditing = true,
-                    subjectData = Subject(
-                        nome = "Engenharia de Software",
-                        professor = "Anderson Barbosa",
-                        frequencia = "75%",
-                        dataInicio = "01/08/2025",
-                        dataFim = "15/12/2025",
-                        horasAula = "2h",
-                        semestre = "5º"
-                    )
-                )
-            }
+    fun navigateTo(screen: String) {
+        if (screenStack.last() != screen) {
+            screenStack = screenStack + screen
         }
+    }
+
+    fun goBack() {
+        if (screenStack.size > 1) {
+            screenStack = screenStack.dropLast(1)
+        }
+    }
+
+    when (currentScreen) {
+        "home" -> HomeScreen(
+            authViewModel = authViewModel,
+            onNavigateToHome = { /* Evita empilhar home novamente */ },
+            onNavigateToMenu = { navigateTo("menu") },
+            onNavigateToSubject = { navigateTo("subject_detail") },
+            onNavigateToAdd = { navigateTo("item_register") }
+        )
+        "menu" -> MenuScreen(
+            authViewModel = authViewModel, 
+            onCloseMenu = { goBack() },
+            onNavigateToHome = { navigateTo("home") }
+        )
+        "item_register" -> ItemRegisterScreen(
+            authViewModel = authViewModel,
+            onNavigateToHome = { navigateTo("home") },
+            onNavigateToSubjectRegister = { navigateTo("subject_register") },
+            onBack = { goBack() }
+        )
+        "subject_register" -> SubjectRegisterScreen(
+            authViewModel = authViewModel,
+            onNavigateToHome = { navigateTo("home") },
+            onBack = { goBack() }
+        )
+        "subject_detail" -> SubjectDetailScreen(
+            authViewModel = authViewModel, 
+            onNavigateToEdit = { navigateTo("subject_edit") },
+            onNavigateToAbsenceControl = { /* TODO: tela de faltas */ },
+            onNavigateToItemRegister = { navigateTo("item_register") },
+            onNavigateToHome = { navigateTo("home") },
+            onBack = { goBack() }
+        )
+        "subject_edit" -> SubjectRegisterScreen(
+            authViewModel = authViewModel,
+            onNavigateToHome = { navigateTo("home") },
+            onBack = { goBack() },
+            isEditing = true
+        )
     }
 }

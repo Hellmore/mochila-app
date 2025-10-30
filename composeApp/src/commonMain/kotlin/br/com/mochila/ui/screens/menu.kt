@@ -17,26 +17,26 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import br.com.mochila.auth.AuthViewModel
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import mochila_app.composeapp.generated.resources.*
 
 @Composable
 fun MenuScreen(
+    authViewModel: AuthViewModel,
     onCloseMenu: () -> Unit,
     onNavigateToHome: () -> Unit
 ) {
     val RoxoClaro = Color(0xFF7F55CE)
     val RoxoEscuro = Color(0xFF5336CB)
 
-    // 🔹 Camada de fundo semitransparente — fecha o menu ao clicar fora
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black.copy(alpha = 0.3f))
             .clickable(onClick = onCloseMenu)
     ) {
-        // 🔹 Painel lateral animado
         AnimatedVisibility(
             visible = true,
             enter = slideInHorizontally(
@@ -51,9 +51,9 @@ fun MenuScreen(
             Box(
                 modifier = Modifier
                     .fillMaxHeight()
-                    .fillMaxWidth(0.20f)
+                    .width(300.dp)
                     .background(RoxoClaro)
-                    .clickable(enabled = false) { } // impede fechar ao clicar dentro
+                    .clickable(enabled = false) { }
             ) {
                 Column(
                     modifier = Modifier
@@ -63,7 +63,6 @@ fun MenuScreen(
                     verticalArrangement = Arrangement.SpaceBetween
                 ) {
                     Column(horizontalAlignment = Alignment.Start) {
-                        // 🔹 Foto e nome do usuário
                         Box(
                             modifier = Modifier
                                 .size(80.dp)
@@ -81,15 +80,15 @@ fun MenuScreen(
 
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            "Nome usuário",
+                            authViewModel.currentUser.value?.email ?: "Usuário",
                             color = Color.White.copy(alpha = 0.9f),
-                            fontSize = 26.sp
+                            fontSize = 20.sp
                         )
 
                         Spacer(modifier = Modifier.height(24.dp))
 
-                        // 🔹 Itens do menu
                         MenuItem("Configurações da conta", Res.drawable.config) { /* TODO */ }
+                        MenuItem("Sair") { authViewModel.signOut() }
                         MenuItem("Plano de faltas") { /* TODO */ }
                         MenuItem("Matérias") {
                             onCloseMenu()
@@ -100,7 +99,6 @@ fun MenuScreen(
                         MenuItem("Assine o PLUS!", Res.drawable.plus) { /* TODO */ }
                     }
 
-                    // 🔹 Botão inferior para fechar o menu
                     IconButton(
                         onClick = onCloseMenu,
                         modifier = Modifier.align(Alignment.Start)
@@ -137,7 +135,6 @@ private fun MenuItem(
             fontSize = 15.sp
         )
 
-        // Espaço fixo entre texto e ícone — não depende do tamanho da tela
         if (iconRes != null) {
             Spacer(modifier = Modifier.width(8.dp))
             Image(
@@ -148,4 +145,3 @@ private fun MenuItem(
         }
     }
 }
-

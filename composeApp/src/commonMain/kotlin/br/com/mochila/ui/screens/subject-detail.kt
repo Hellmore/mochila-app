@@ -17,16 +17,18 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import br.com.mochila.auth.AuthViewModel
 import mochila_app.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.painterResource
 
 @Composable
 fun SubjectDetailScreen(
+    authViewModel: AuthViewModel, // ✨ Parâmetro adicionado
     onNavigateToEdit: () -> Unit,
     onNavigateToAbsenceControl: () -> Unit,
     onNavigateToItemRegister: () -> Unit,
     onNavigateToHome: () -> Unit,
-    onBack: () -> Unit // ✅ Adicionado para o botão voltar
+    onBack: () -> Unit
 ) {
     val RoxoEscuro = Color(0xFF5336CB)
     val RoxoClaro = Color(0xFF7F55CE)
@@ -114,7 +116,7 @@ fun SubjectDetailScreen(
                     )
                 }
                 Spacer(modifier = Modifier.width(15.dp))
-                Text("Nome usuário", color = Color.Gray, fontSize = 16.sp)
+                Text(authViewModel.currentUser.value?.email ?: "Usuário", color = Color.Gray, fontSize = 16.sp)
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -242,6 +244,7 @@ fun SubjectDetailScreen(
         // 🔹 Menu lateral
         if (showMenu) {
             MenuScreen(
+                authViewModel = authViewModel, // ✨ Passando o ViewModel
                 onCloseMenu = { showMenu = false },
                 onNavigateToHome = {
                     showMenu = false
