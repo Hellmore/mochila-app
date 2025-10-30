@@ -24,7 +24,7 @@ import org.jetbrains.compose.resources.painterResource
 fun ItemRegisterScreen(
     onNavigateToHome: () -> Unit,
     onNavigateToSubjectRegister: () -> Unit,
-    onBack: () -> Unit // ✅ adicionamos o onBack para usar o botão voltar histórico
+    onBack: () -> Unit
 ) {
     val RoxoClaro = Color(0xFF7F55CE)
     val RoxoEscuro = Color(0xFF5336CB)
@@ -115,7 +115,7 @@ fun ItemRegisterScreen(
                     Text(
                         "Nome usuário",
                         color = Color.Gray,
-                        fontSize = 22.sp
+                        fontSize = 18.sp
                     )
                 }
 

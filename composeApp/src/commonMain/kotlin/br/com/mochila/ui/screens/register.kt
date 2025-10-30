@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import br.com.mochila.auth.AuthViewModel
 import org.jetbrains.compose.resources.painterResource
 import mochila_app.composeapp.generated.resources.Res
 import mochila_app.composeapp.generated.resources.fundo_quadriculado
@@ -20,14 +21,16 @@ import mochila_app.composeapp.generated.resources.fundo_curvas
 import mochila_app.composeapp.generated.resources.logo
 
 @Composable
-fun RegisterScreen(onBackToLogin: () -> Unit) {
+fun RegisterScreen(
+    authViewModel: AuthViewModel,
+    onBackToLogin: () -> Unit
+) {
     val RoxoEscuro = Color(0xFF5336CB)
     val RoxoClaro = Color(0xFF7F55CE)
-    val VerdeLima = Color(0xFFC5E300)
 
     var email by remember { mutableStateOf("") }
-    var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    val isLoading by authViewModel.isLoading
 
     Box(
         modifier = Modifier
@@ -103,24 +106,6 @@ fun RegisterScreen(onBackToLogin: () -> Unit) {
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // 🔸 Campo de usuário
-            OutlinedTextField(
-                value = username,
-                onValueChange = { username = it },
-                placeholder = { Text("Insira o seu usuário") },
-                singleLine = true,
-                textStyle = LocalTextStyle.current.copy(fontSize = 14.sp),
-                modifier = Modifier.fillMaxWidth(),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White,
-                    disabledContainerColor = Color.White
-                ),
-                shape = RoundedCornerShape(8.dp)
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
             // 🔸 Campo de senha
             OutlinedTextField(
                 value = password,
@@ -141,7 +126,8 @@ fun RegisterScreen(onBackToLogin: () -> Unit) {
 
             // 🔸 Botão Registrar
             Button(
-                onClick = { /* TODO: Registrar usuário */ },
+                onClick = { authViewModel.signUp(email, password) },
+                enabled = !isLoading,
                 colors = ButtonDefaults.buttonColors(containerColor = RoxoEscuro),
                 shape = RoundedCornerShape(8.dp),
                 border = BorderStroke(1.dp, Color.Black),
@@ -149,7 +135,11 @@ fun RegisterScreen(onBackToLogin: () -> Unit) {
                     .fillMaxWidth()
                     .height(42.dp)
             ) {
-                Text("Registrar", color = Color.White, fontSize = 14.sp)
+                if (isLoading) {
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Color.White)
+                } else {
+                    Text("Registrar", color = Color.White, fontSize = 14.sp)
+                }
             }
 
             Spacer(modifier = Modifier.height(12.dp))
