@@ -34,7 +34,7 @@ fun App() {
                 // 🔸 Tela de Login
                 "login" -> LoginScreen(
                     onNavigateToRegister = { navigateTo("register") },
-                    onNavigateToRecovery = { navigateTo("recovery") },
+//                    onNavigateToRecovery = { navigateTo("recovery") },
                     onNavigateToHome = { navigateTo("home") }
                 )
 
