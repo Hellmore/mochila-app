@@ -30,7 +30,8 @@ data class Subject(
 @Composable
 fun SubjectRegisterScreen(
     onNavigateToHome: () -> Unit,
-    onBack: () -> Unit, // ✅ novo parâmetro para botão voltar
+    onBack: () -> Unit,
+    onLogout: () -> Unit,
     isEditing: Boolean = false,
     subjectData: Subject? = null
 ) {
@@ -228,13 +229,17 @@ fun SubjectRegisterScreen(
             }
         }
 
-        // 🔹 Menu lateral
+        // 🔹 Overlay do menu lateral
         if (showMenu) {
             MenuScreen(
                 onCloseMenu = { showMenu = false },
                 onNavigateToHome = {
                     showMenu = false
                     onNavigateToHome()
+                },
+                onLogout = {
+                    showMenu = false
+                    onLogout()
                 }
             )
         }

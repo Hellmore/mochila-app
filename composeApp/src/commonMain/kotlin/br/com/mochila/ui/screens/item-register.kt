@@ -24,7 +24,8 @@ import org.jetbrains.compose.resources.painterResource
 fun ItemRegisterScreen(
     onNavigateToHome: () -> Unit,
     onNavigateToSubjectRegister: () -> Unit,
-    onBack: () -> Unit // ✅ adicionamos o onBack para usar o botão voltar histórico
+    onBack: () -> Unit,
+    onLogout: () -> Unit // ✅ Adicionado para permitir logout pelo menu
 ) {
     val RoxoClaro = Color(0xFF7F55CE)
     val RoxoEscuro = Color(0xFF5336CB)
@@ -231,6 +232,10 @@ fun ItemRegisterScreen(
                 onNavigateToHome = {
                     showMenu = false
                     onNavigateToHome()
+                },
+                onLogout = {
+                    showMenu = false
+                    onLogout() // ✅ Encerra sessão e volta para login
                 }
             )
         }
