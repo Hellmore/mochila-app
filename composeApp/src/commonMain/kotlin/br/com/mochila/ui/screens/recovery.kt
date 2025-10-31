@@ -135,7 +135,7 @@ fun RecoveryScreen(onBackToLogin: () -> Unit) {
 
             // 🔹 Botão Voltar ao Login (texto simples)
             TextButton(onClick = onBackToLogin) {
-                Text("Voltar ao Login", color = RoxoClaro, fontSize = 14.sp)
+                Text("Voltar ao Login", color = Color.White, fontSize = 14.sp)
             }
         }
     }

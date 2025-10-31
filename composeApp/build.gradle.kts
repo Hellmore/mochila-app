@@ -1,5 +1,6 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.gradle.language.jvm.tasks.ProcessResources
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -15,9 +16,9 @@ kotlin {
             jvmTarget.set(JvmTarget.JVM_11)
         }
     }
-    
+
     jvm()
-    
+
     sourceSets {
         androidMain.dependencies {
             implementation(compose.preview)
@@ -32,6 +33,9 @@ kotlin {
             implementation(compose.components.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
+
+            // 🔹 Driver SQLite
+            implementation("org.xerial:sqlite-jdbc:3.45.3.0")
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -83,5 +87,16 @@ compose.desktop {
             packageName = "br.com.mochila"
             packageVersion = "1.0.0"
         }
+    }
+}
+
+// ✅ Garante que arquivos como db_init.sql sejam empacotados nos recursos
+tasks.withType<ProcessResources> {
+    from("src/commonMain/composeResources") {
+        include("**/*.sql")
+        include("**/*.txt")
+        include("**/*.json")
+        include("**/*.db")
+        into("") // mantém a estrutura de pastas
     }
 }
