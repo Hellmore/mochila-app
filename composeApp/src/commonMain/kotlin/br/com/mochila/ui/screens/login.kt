@@ -9,6 +9,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.*
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -92,7 +93,14 @@ fun LoginScreen(
                 .align(Alignment.Center)
                 .padding(horizontal = 24.dp)
                 .widthIn(max = 600.dp)
-                .fillMaxWidth(),
+                .fillMaxWidth()
+                // ✅ Aciona o login ao pressionar Enter
+                .onKeyEvent {
+                    if (it.type == KeyEventType.KeyDown && it.key == Key.Enter) {
+                        login()
+                        true
+                    } else false
+                },
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Logo circular
@@ -150,14 +158,14 @@ fun LoginScreen(
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
-            // Botões
+            // ✅ Ordem ajustada: Login primeiro
             Button(
-                onClick = onNavigateToRecovery,
-                colors = ButtonDefaults.buttonColors(containerColor = RoxoEscuro),
+                onClick = { login() },
+                colors = ButtonDefaults.buttonColors(containerColor = VerdeLima),
                 shape = RoundedCornerShape(8.dp),
                 modifier = Modifier.fillMaxWidth().height(42.dp)
             ) {
-                Text("Esqueci a senha", color = Color.White, fontSize = 14.sp)
+                Text("Login", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 15.sp)
             }
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -174,12 +182,12 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             Button(
-                onClick = { login() },
-                colors = ButtonDefaults.buttonColors(containerColor = VerdeLima),
+                onClick = onNavigateToRecovery,
+                colors = ButtonDefaults.buttonColors(containerColor = RoxoEscuro),
                 shape = RoundedCornerShape(8.dp),
                 modifier = Modifier.fillMaxWidth().height(42.dp)
             ) {
-                Text("Login", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                Text("Esqueci a senha", color = Color.White, fontSize = 14.sp)
             }
         }
     }
