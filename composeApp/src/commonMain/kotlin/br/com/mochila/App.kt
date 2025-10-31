@@ -27,6 +27,11 @@ fun App() {
         }
     }
 
+    // 🔹 Logout — limpa a pilha e volta para login
+    fun logout() {
+        screenStack = listOf("login")
+    }
+
     MaterialTheme {
         Surface {
             when (currentScreen) {
@@ -34,7 +39,7 @@ fun App() {
                 // 🔸 Tela de Login
                 "login" -> LoginScreen(
                     onNavigateToRegister = { navigateTo("register") },
-//                    onNavigateToRecovery = { navigateTo("recovery") },
+                    onNavigateToRecovery = { navigateTo("recovery") },
                     onNavigateToHome = { navigateTo("home") }
                 )
 
@@ -49,41 +54,47 @@ fun App() {
                     onNavigateToHome = { /* Evita empilhar home novamente */ },
                     onNavigateToMenu = { navigateTo("menu") },
                     onNavigateToAdd = { navigateTo("item_register") },
-                    onNavigateToSubject = { navigateTo("subject_detail") }
+                    onNavigateToSubject = { navigateTo("subject_detail") },
+                    onLogout = { logout() }
                 )
 
                 // 🔸 Menu lateral (modal)
                 "menu" -> MenuScreen(
                     onCloseMenu = { goBack() },
-                    onNavigateToHome = { navigateTo("home") }
+                    onNavigateToHome = { navigateTo("home") },
+                    onLogout = { logout() }
                 )
 
                 // 🔸 Tela de Registro de Itens
                 "item_register" -> ItemRegisterScreen(
                     onNavigateToHome = { navigateTo("home") },
                     onNavigateToSubjectRegister = { navigateTo("subject_register") },
-                    onBack = { goBack() }
+                    onBack = { goBack() },
+                    onLogout = { logout() }
                 )
 
                 // 🔸 Tela de Cadastro de Matéria
                 "subject_register" -> SubjectRegisterScreen(
                     onNavigateToHome = { navigateTo("home") },
-                    onBack = { goBack() }
+                    onBack = { goBack() },
+                    onLogout = { logout() }
                 )
 
                 // 🔸 Tela de Detalhes da Matéria
                 "subject_detail" -> SubjectDetailScreen(
                     onNavigateToEdit = { navigateTo("subject_edit") },
-                    onNavigateToAbsenceControl = { /* TODO: tela de faltas */ },
+                    onNavigateToAbsenceControl = { /* TODO */ },
                     onNavigateToItemRegister = { navigateTo("item_register") },
                     onNavigateToHome = { navigateTo("home") },
-                    onBack = { goBack() }
+                    onBack = { goBack() },
+                    onLogout = { logout() }
                 )
 
                 // 🔸 Tela de Edição de Matéria
                 "subject_edit" -> SubjectRegisterScreen(
                     onNavigateToHome = { navigateTo("home") },
                     onBack = { goBack() },
+                    onLogout = { logout() }, // ✅ adicionado
                     isEditing = true,
                     subjectData = Subject(
                         nome = "Engenharia de Software",

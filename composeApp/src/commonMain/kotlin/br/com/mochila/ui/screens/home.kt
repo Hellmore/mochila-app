@@ -19,9 +19,10 @@ import org.jetbrains.compose.resources.painterResource
 @Composable
 fun HomeScreen(
     onNavigateToHome: () -> Unit,
-    onNavigateToMenu: () -> Unit, // manter compatibilidade
+    onNavigateToMenu: () -> Unit,
     onNavigateToAdd: () -> Unit,
-    onNavigateToSubject: (String) -> Unit
+    onNavigateToSubject: (String) -> Unit,
+    onLogout: () -> Unit
 ) {
     val RoxoEscuro = Color(0xFF5336CB)
     val RoxoClaro = Color(0xFF7F55CE)
@@ -278,6 +279,10 @@ fun HomeScreen(
                 onNavigateToHome = {
                     showMenu = false
                     onNavigateToHome()
+                },
+                onLogout = {
+                    showMenu = false
+                    onLogout()
                 }
             )
         }

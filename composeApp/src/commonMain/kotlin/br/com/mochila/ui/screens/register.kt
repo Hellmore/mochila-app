@@ -14,6 +14,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import mochila_app.composeapp.generated.resources.*
 import br.com.mochila.data.DatabaseHelper
@@ -29,29 +31,42 @@ fun RegisterScreen(onBackToLogin: () -> Unit) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var message by remember { mutableStateOf<String?>(null) }
+    var success by remember { mutableStateOf(false) }
+
+    val scope = rememberCoroutineScope()
 
     fun register() {
         val conn = DatabaseHelper.connect()
         if (conn != null) {
             try {
                 val stmt: PreparedStatement = conn.prepareStatement(
-                    "INSERT INTO usuario (nome, email) VALUES (?, ?)"
+                    "INSERT INTO usuario (nome, email, senha) VALUES (?, ?, ?)"
                 )
-                stmt.setString(1, username) // temporário até o campo senha ser adicionado no banco
+                stmt.setString(1, username)
                 stmt.setString(2, email)
+                stmt.setString(3, password)
                 stmt.executeUpdate()
                 stmt.close()
 
                 message = "Usuário cadastrado com sucesso!"
+                success = true
                 println("✅ Usuário cadastrado: $email")
+
+                // ⏳ Espera 1,5s e redireciona automaticamente para Login
+                scope.launch {
+                    delay(1500)
+                    onBackToLogin()
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
                 message = "Erro ao cadastrar usuário. Verifique se o e-mail já existe."
+                success = false
             } finally {
                 DatabaseHelper.close()
             }
         } else {
             message = "Erro ao conectar ao banco."
+            success = false
         }
     }
 
@@ -174,7 +189,11 @@ fun RegisterScreen(onBackToLogin: () -> Unit) {
 
             // 🔹 Mensagem de feedback
             message?.let {
-                Text(it, color = if (it.contains("sucesso")) Color.Green else Color.Red, fontSize = 13.sp)
+                Text(
+                    it,
+                    color = if (success) Color(0xFF00C853) else Color.Red,
+                    fontSize = 13.sp
+                )
                 Spacer(modifier = Modifier.height(8.dp))
             }
 

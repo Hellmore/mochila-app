@@ -39,18 +39,20 @@ fun LoginScreen(
         if (conn != null) {
             try {
                 val stmt: PreparedStatement = conn.prepareStatement(
-                    "SELECT * FROM usuario WHERE email = ? AND nome = ?"
+                    "SELECT * FROM usuario WHERE email = ? AND senha = ?"
                 )
                 stmt.setString(1, email)
-                stmt.setString(2, password) // ⚠️ temporário — será substituído pelo campo de senha real
+                stmt.setString(2, password)
                 val rs: ResultSet = stmt.executeQuery()
 
                 if (rs.next()) {
                     println("✅ Login bem-sucedido para $email")
+                    errorMessage = null
                     onNavigateToHome()
                 } else {
                     errorMessage = "Usuário ou senha inválidos."
                 }
+
                 rs.close()
                 stmt.close()
             } catch (e: Exception) {

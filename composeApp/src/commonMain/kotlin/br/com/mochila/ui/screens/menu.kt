@@ -24,7 +24,8 @@ import mochila_app.composeapp.generated.resources.*
 @Composable
 fun MenuScreen(
     onCloseMenu: () -> Unit,
-    onNavigateToHome: () -> Unit
+    onNavigateToHome: () -> Unit,
+    onLogout: () -> Unit // ✅ novo parâmetro para sair do sistema
 ) {
     val RoxoClaro = Color(0xFF7F55CE)
     val RoxoEscuro = Color(0xFF5336CB)
@@ -100,16 +101,30 @@ fun MenuScreen(
                         MenuItem("Assine o PLUS!", Res.drawable.plus) { /* TODO */ }
                     }
 
-                    // 🔹 Botão inferior para fechar o menu
-                    IconButton(
-                        onClick = onCloseMenu,
-                        modifier = Modifier.align(Alignment.Start)
+                    // 🔹 Rodapé do menu
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.Start
                     ) {
-                        Image(
-                            painter = painterResource(Res.drawable.esquerda),
-                            contentDescription = "Fechar menu",
-                            modifier = Modifier.size(28.dp)
-                        )
+                        // ✅ Botão de logout
+                        MenuItem("Sair da conta") {
+                            onCloseMenu()
+                            onLogout() // volta para tela de login
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        // 🔹 Botão para fechar o menu
+                        IconButton(
+                            onClick = onCloseMenu,
+                            modifier = Modifier.align(Alignment.Start)
+                        ) {
+                            Image(
+                                painter = painterResource(Res.drawable.esquerda),
+                                contentDescription = "Fechar menu",
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -137,7 +152,6 @@ private fun MenuItem(
             fontSize = 15.sp
         )
 
-        // Espaço fixo entre texto e ícone — não depende do tamanho da tela
         if (iconRes != null) {
             Spacer(modifier = Modifier.width(8.dp))
             Image(
@@ -148,4 +162,3 @@ private fun MenuItem(
         }
     }
 }
-
