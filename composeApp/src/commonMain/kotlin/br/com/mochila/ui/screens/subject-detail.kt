@@ -26,7 +26,8 @@ fun SubjectDetailScreen(
     onNavigateToAbsenceControl: () -> Unit,
     onNavigateToItemRegister: () -> Unit,
     onNavigateToHome: () -> Unit,
-    onBack: () -> Unit // ✅ Adicionado para o botão voltar
+    onBack: () -> Unit,
+    onLogout: () -> Unit // ✅ adicionado
 ) {
     val RoxoEscuro = Color(0xFF5336CB)
     val RoxoClaro = Color(0xFF7F55CE)
@@ -246,6 +247,10 @@ fun SubjectDetailScreen(
                 onNavigateToHome = {
                     showMenu = false
                     onNavigateToHome()
+                },
+                onLogout = {
+                    showMenu = false
+                    onLogout() // ✅ garante retorno à tela de login
                 }
             )
         }
