@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS usuario (
     id_usuario INTEGER PRIMARY KEY AUTOINCREMENT,
     nome TEXT NOT NULL,
     email TEXT UNIQUE NOT NULL,
+    senha TEXT NOT NULL,
     criado_em DATETIME DEFAULT CURRENT_TIMESTAMP,
     atualizado_em DATETIME DEFAULT CURRENT_TIMESTAMP
 );
@@ -36,7 +37,7 @@ CREATE TABLE IF NOT EXISTS evento (
     titulo TEXT NOT NULL,
     descricao TEXT,
     data_evento DATETIME NOT NULL,
-    status TEXT NOT NULL CHECK(status IN ('Agendado','Em andamento','Finalizadoo','Cancelado')) DEFAULT 'Agendado',
+    status TEXT NOT NULL CHECK(status IN ('Agendado','Em andamento','Finalizado','Cancelado')) DEFAULT 'Agendado',
     criado_em DATETIME DEFAULT CURRENT_TIMESTAMP,
     atualizado_em DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (id_usuario) REFERENCES usuario (id_usuario)
@@ -48,7 +49,7 @@ CREATE TABLE IF NOT EXISTS tarefa (
     id_usuario INTEGER NOT NULL,
     titulo TEXT NOT NULL,
     descricao TEXT NOT NULL,
-    status TEXT NOT NULL CHECK(status IN ('Pendente','Em andamento', 'Cancelada', 'Concluida')) DEFAULT 'Pendente',
+    status TEXT NOT NULL CHECK(status IN ('Pendente','Em andamento','Cancelada','Concluida')) DEFAULT 'Pendente',
     blockers TEXT,
     data_limite DATETIME,
     criado_em DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -148,8 +149,6 @@ CREATE TABLE IF NOT EXISTS pagamento (
 
 ------------------------------------------------
 -- Tabelas de Log
-
-
 ------------------------------------------------
 CREATE TABLE IF NOT EXISTS log_acao (
     id_acao INTEGER PRIMARY KEY AUTOINCREMENT,
