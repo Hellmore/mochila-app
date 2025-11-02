@@ -24,6 +24,7 @@ kotlin {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
         }
+
         commonMain.dependencies {
             implementation(compose.runtime)
             implementation(compose.foundation)
@@ -36,10 +37,15 @@ kotlin {
 
             // 🔹 Driver SQLite
             implementation("org.xerial:sqlite-jdbc:3.45.3.0")
+
+            // ✅ Biblioteca multiplataforma para datas (usada nos calendários)
+            implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
         }
+
         commonTest.dependencies {
             implementation(libs.kotlin.test)
         }
+
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutinesSwing)
@@ -58,16 +64,19 @@ android {
         versionCode = 1
         versionName = "1.0"
     }
+
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+
     buildTypes {
         getByName("release") {
             isMinifyEnabled = false
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -90,7 +99,7 @@ compose.desktop {
     }
 }
 
-// ✅ Garante que arquivos como db_init.sql sejam empacotados nos recursos
+// ✅ Inclui os arquivos de recursos no build final (SQL, JSON, etc.)
 tasks.withType<ProcessResources> {
     from("src/commonMain/composeResources") {
         include("**/*.sql")
