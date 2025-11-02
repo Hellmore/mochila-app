@@ -19,6 +19,7 @@ import org.jetbrains.compose.resources.painterResource
 import br.com.mochila.data.DatabaseHelper
 import java.sql.PreparedStatement
 
+// 🔹 Representação da disciplina (matéria)
 data class Subject(
     val id: Int = 0,
     val nome: String,
@@ -44,7 +45,7 @@ fun SubjectRegisterScreen(
 
     var showMenu by remember { mutableStateOf(false) }
 
-    // 🧾 Campos
+    // 🧾 Campos de entrada
     var nomeMateria by remember { mutableStateOf(subjectData?.nome ?: "") }
     var professor by remember { mutableStateOf(subjectData?.professor ?: "") }
     var frequenciaMin by remember { mutableStateOf(subjectData?.frequencia ?: "") }
@@ -56,9 +57,9 @@ fun SubjectRegisterScreen(
     var message by remember { mutableStateOf<String?>(null) }
     var success by remember { mutableStateOf(false) }
 
-    // ID do usuário logado (pode ser salvo globalmente depois)
-    val idUsuario = 1
+    val idUsuario = 1 // ID fixo do usuário logado (ajustável futuramente)
 
+    // 🔸 Salvar nova matéria ou atualizar existente
     fun salvarMateria() {
         val conn = DatabaseHelper.connect()
         if (conn != null) {
@@ -66,25 +67,29 @@ fun SubjectRegisterScreen(
                 val sql = if (isEditing) {
                     """
                     UPDATE disciplina 
-                    SET nome = ?, data_inicio = ?, data_fim = ?, hora_aula = ?, 
-                        frequencia_minima = ?, id_usuario = ?, atualizado_em = CURRENT_TIMESTAMP 
+                    SET nome = ?, professor = ?, data_inicio = ?, data_fim = ?, hora_aula = ?, 
+                        frequencia_minima = ?, semestre = ?, id_usuario = ?, atualizado_em = CURRENT_TIMESTAMP 
                     WHERE id_disciplina = ?
                     """
                 } else {
                     """
-                    INSERT INTO disciplina (nome, data_inicio, data_fim, hora_aula, frequencia_minima, id_usuario)
-                    VALUES (?, ?, ?, ?, ?, ?)
+                    INSERT INTO disciplina (nome, professor, data_inicio, data_fim, hora_aula, 
+                        frequencia_minima, semestre, id_usuario)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                     """
                 }
 
                 val stmt: PreparedStatement = conn.prepareStatement(sql)
                 stmt.setString(1, nomeMateria)
-                stmt.setString(2, dataInicio)
-                stmt.setString(3, dataFim)
-                stmt.setString(4, horasPorAula)
-                stmt.setString(5, frequenciaMin)
-                stmt.setInt(6, idUsuario)
-                if (isEditing) stmt.setInt(7, subjectData!!.id)
+                stmt.setString(2, professor)
+                stmt.setString(3, dataInicio)
+                stmt.setString(4, dataFim)
+                stmt.setString(5, horasPorAula)
+                stmt.setString(6, frequenciaMin)
+                stmt.setString(7, semestre)
+                stmt.setInt(8, idUsuario)
+
+                if (isEditing) stmt.setInt(9, subjectData!!.id)
 
                 val rows = stmt.executeUpdate()
                 stmt.close()
@@ -113,6 +118,7 @@ fun SubjectRegisterScreen(
         }
     }
 
+    // 🔸 Excluir disciplina existente
     fun excluirMateria() {
         if (!isEditing || subjectData == null) return
         val conn = DatabaseHelper.connect()
@@ -146,7 +152,7 @@ fun SubjectRegisterScreen(
             .fillMaxSize()
             .background(Color.White)
     ) {
-        // 🔹 Fundo decorativo
+        // Fundo decorativo
         Image(
             painter = painterResource(Res.drawable.fundo_quadriculado),
             contentDescription = "Fundo quadriculado",
@@ -171,7 +177,7 @@ fun SubjectRegisterScreen(
             contentScale = ContentScale.Fit
         )
 
-        // 📋 Conteúdo principal
+        // Conteúdo principal
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -179,7 +185,7 @@ fun SubjectRegisterScreen(
                 .padding(horizontal = 24.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // 🔝 Cabeçalho superior
+            // Cabeçalho
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
