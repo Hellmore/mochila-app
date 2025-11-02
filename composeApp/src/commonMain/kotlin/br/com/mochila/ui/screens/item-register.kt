@@ -25,7 +25,7 @@ fun ItemRegisterScreen(
     onNavigateToHome: () -> Unit,
     onNavigateToSubjectRegister: () -> Unit,
     onBack: () -> Unit,
-    onLogout: () -> Unit // ✅ Adicionado para permitir logout pelo menu
+    onLogout: () -> Unit
 ) {
     val RoxoClaro = Color(0xFF7F55CE)
     val RoxoEscuro = Color(0xFF5336CB)
@@ -52,7 +52,7 @@ fun ItemRegisterScreen(
             contentDescription = "Decoração estrela",
             modifier = Modifier
                 .align(Alignment.TopCenter)
-                .offset(x = (600).dp, y = -150.dp)
+                .offset(x = 600.dp, y = (-150).dp)
                 .size(600.dp),
             contentScale = ContentScale.Fit
         )
@@ -76,7 +76,7 @@ fun ItemRegisterScreen(
                 .padding(horizontal = 24.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // 🔙 Botão Voltar histórico
+            // 🔙 Botão Voltar
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -86,61 +86,33 @@ fun ItemRegisterScreen(
                 BackButton(onBack = onBack)
             }
 
-            // 🔹 Cabeçalho: usuário + sino
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 10.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            // 👤 Cabeçalho centralizado: imagem + nome
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Spacer(modifier = Modifier.width(28.dp))
-
-                // 👤 Usuário
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Box(
+                Box(
+                    modifier = Modifier
+                        .size(150.dp)
+                        .clip(CircleShape)
+                        .background(RoxoEscuro),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        painter = painterResource(Res.drawable.user),
+                        contentDescription = "Usuário",
+                        contentScale = ContentScale.Crop,
                         modifier = Modifier
                             .size(150.dp)
                             .clip(CircleShape)
-                            .background(RoxoEscuro),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Image(
-                            painter = painterResource(Res.drawable.user),
-                            contentDescription = "Usuário",
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.size(150.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Text(
-                        "Nome usuário",
-                        color = Color.Gray,
-                        fontSize = 22.sp
                     )
                 }
-
-                // 🔔 Sino clicável com círculo VerdeLima
-                IconButton(
-                    onClick = { /* TODO: abrir tela de notificações futuramente */ },
-                    modifier = Modifier
-                        .size(70.dp)
-                        .padding(end = 35.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(55.dp)
-                            .clip(CircleShape)
-                            .background(VerdeLima),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Image(
-                            painter = painterResource(Res.drawable.bell),
-                            contentDescription = "Notificações",
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
-                }
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    "Nome usuário",
+                    color = Color.Gray,
+                    fontSize = 22.sp
+                )
             }
 
             Spacer(modifier = Modifier.height(40.dp))
@@ -205,7 +177,6 @@ fun ItemRegisterScreen(
                 horizontalArrangement = Arrangement.spacedBy(5.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // 📋 Menu lateral (abre sobre a tela atual)
                 IconButton(onClick = { showMenu = true }) {
                     Image(
                         painter = painterResource(Res.drawable.menu),
@@ -214,7 +185,6 @@ fun ItemRegisterScreen(
                     )
                 }
 
-                // 🏠 Voltar para home
                 IconButton(onClick = onNavigateToHome) {
                     Image(
                         painter = painterResource(Res.drawable.home),
@@ -235,7 +205,7 @@ fun ItemRegisterScreen(
                 },
                 onLogout = {
                     showMenu = false
-                    onLogout() // ✅ Encerra sessão e volta para login
+                    onLogout()
                 }
             )
         }

@@ -33,7 +33,6 @@ fun HomeScreen(
     var expanded by remember { mutableStateOf(false) }
     var selectedSemester by remember { mutableStateOf("5º semestre") }
 
-    // 🔹 Controle de exibição do menu lateral
     var showMenu by remember { mutableStateOf(false) }
 
     val subjects = listOf("Engenharia de Software", "Banco de Dados")
@@ -81,25 +80,36 @@ fun HomeScreen(
                 .padding(horizontal = 24.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // 🔝 Cabeçalho superior com título à esquerda e usuário à direita
             Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 40.dp, start = 8.dp, end = 16.dp, bottom = 16.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
+                Text(
+                    text = "Mochila Hub",
+                    color = RoxoEscuro,
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold
+                )
+
+                // 👤 Ícone do usuário no canto superior direito
                 Box(
                     modifier = Modifier
-                        .size(80.dp)
+                        .size(60.dp)
                         .clip(CircleShape)
-                        .background(RoxoClaro)
+                        .background(RoxoClaro),
+                    contentAlignment = Alignment.Center
                 ) {
                     Image(
                         painter = painterResource(Res.drawable.user),
-                        contentDescription = "Foto de perfil",
-                        modifier = Modifier.clip(CircleShape),
-                        contentScale = ContentScale.Crop
+                        contentDescription = "Usuário",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.clip(CircleShape)
                     )
                 }
-                Spacer(modifier = Modifier.width(15.dp))
-                Text("Nome usuário", color = Color.Gray, fontSize = 14.sp)
             }
 
             Spacer(modifier = Modifier.height(16.dp))
