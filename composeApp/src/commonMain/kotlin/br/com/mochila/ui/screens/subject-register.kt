@@ -16,8 +16,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import mochila_app.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.painterResource
+import br.com.mochila.data.DatabaseHelper
+import java.sql.PreparedStatement
 
 data class Subject(
+    val id: Int = 0,
     val nome: String,
     val professor: String,
     val frequencia: String,
@@ -41,7 +44,7 @@ fun SubjectRegisterScreen(
 
     var showMenu by remember { mutableStateOf(false) }
 
-    // 🧾 Campos de input
+    // 🧾 Campos
     var nomeMateria by remember { mutableStateOf(subjectData?.nome ?: "") }
     var professor by remember { mutableStateOf(subjectData?.professor ?: "") }
     var frequenciaMin by remember { mutableStateOf(subjectData?.frequencia ?: "") }
@@ -50,6 +53,94 @@ fun SubjectRegisterScreen(
     var horasPorAula by remember { mutableStateOf(subjectData?.horasAula ?: "") }
     var semestre by remember { mutableStateOf(subjectData?.semestre ?: "") }
 
+    var message by remember { mutableStateOf<String?>(null) }
+    var success by remember { mutableStateOf(false) }
+
+    // ID do usuário logado (pode ser salvo globalmente depois)
+    val idUsuario = 1
+
+    fun salvarMateria() {
+        val conn = DatabaseHelper.connect()
+        if (conn != null) {
+            try {
+                val sql = if (isEditing) {
+                    """
+                    UPDATE disciplina 
+                    SET nome = ?, data_inicio = ?, data_fim = ?, hora_aula = ?, 
+                        frequencia_minima = ?, id_usuario = ?, atualizado_em = CURRENT_TIMESTAMP 
+                    WHERE id_disciplina = ?
+                    """
+                } else {
+                    """
+                    INSERT INTO disciplina (nome, data_inicio, data_fim, hora_aula, frequencia_minima, id_usuario)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                    """
+                }
+
+                val stmt: PreparedStatement = conn.prepareStatement(sql)
+                stmt.setString(1, nomeMateria)
+                stmt.setString(2, dataInicio)
+                stmt.setString(3, dataFim)
+                stmt.setString(4, horasPorAula)
+                stmt.setString(5, frequenciaMin)
+                stmt.setInt(6, idUsuario)
+                if (isEditing) stmt.setInt(7, subjectData!!.id)
+
+                val rows = stmt.executeUpdate()
+                stmt.close()
+
+                if (rows > 0) {
+                    message = if (isEditing)
+                        "Matéria atualizada com sucesso!"
+                    else
+                        "Matéria cadastrada com sucesso!"
+                    success = true
+                    onNavigateToHome()
+                } else {
+                    message = "Nenhuma alteração realizada."
+                    success = false
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                message = "Erro ao salvar matéria."
+                success = false
+            } finally {
+                DatabaseHelper.close()
+            }
+        } else {
+            message = "Erro ao conectar ao banco."
+            success = false
+        }
+    }
+
+    fun excluirMateria() {
+        if (!isEditing || subjectData == null) return
+        val conn = DatabaseHelper.connect()
+        if (conn != null) {
+            try {
+                val stmt = conn.prepareStatement("DELETE FROM disciplina WHERE id_disciplina = ?")
+                stmt.setInt(1, subjectData.id)
+                val rows = stmt.executeUpdate()
+                stmt.close()
+                if (rows > 0) {
+                    message = "Matéria excluída com sucesso!"
+                    success = true
+                    onNavigateToHome()
+                } else {
+                    message = "Erro ao excluir matéria."
+                    success = false
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                message = "Erro ao excluir matéria."
+                success = false
+            } finally {
+                DatabaseHelper.close()
+            }
+        }
+    }
+
+    // 🎨 Layout
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -62,7 +153,6 @@ fun SubjectRegisterScreen(
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
         )
-
         Image(
             painter = painterResource(Res.drawable.pin),
             contentDescription = "Pin decorativo",
@@ -71,7 +161,6 @@ fun SubjectRegisterScreen(
                 .fillMaxHeight(0.95f),
             contentScale = ContentScale.FillHeight
         )
-
         Image(
             painter = painterResource(Res.drawable.mochila),
             contentDescription = "Mochila decorativa",
@@ -90,7 +179,7 @@ fun SubjectRegisterScreen(
                 .padding(horizontal = 24.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // 🔝 Cabeçalho superior com botão voltar à esquerda e usuário à direita
+            // 🔝 Cabeçalho superior
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -98,10 +187,7 @@ fun SubjectRegisterScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                // 🔙 Botão voltar
                 BackButton(onBack = onBack)
-
-                // 👤 Ícone de usuário no canto superior direito
                 Box(
                     modifier = Modifier
                         .size(60.dp)
@@ -118,15 +204,11 @@ fun SubjectRegisterScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // 🏷️ Título
             Text(
                 if (isEditing) "Editar Matéria" else "Nova Matéria",
                 color = RoxoEscuro,
                 fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.align(Alignment.CenterHorizontally)
+                fontWeight = FontWeight.Bold
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -159,16 +241,24 @@ fun SubjectRegisterScreen(
                     modifier = Modifier
                         .widthIn(max = 600.dp)
                         .fillMaxWidth(0.9f)
-                        .align(Alignment.CenterHorizontally)
                         .padding(vertical = 6.dp)
                 )
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(12.dp))
+
+            message?.let {
+                Text(
+                    it,
+                    color = if (success) Color(0xFF00C853) else Color.Red,
+                    fontSize = 13.sp
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
 
             // 💾 Botão salvar
             Button(
-                onClick = { onNavigateToHome() },
+                onClick = { salvarMateria() },
                 colors = ButtonDefaults.buttonColors(containerColor = VerdeLima),
                 shape = RoundedCornerShape(8.dp),
                 border = BorderStroke(1.dp, Color.Black),
@@ -183,6 +273,22 @@ fun SubjectRegisterScreen(
                     fontWeight = FontWeight.Bold,
                     fontSize = 15.sp
                 )
+            }
+
+            // 🗑️ Botão excluir (somente edição)
+            if (isEditing) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Button(
+                    onClick = { excluirMateria() },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F)),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier
+                        .widthIn(max = 600.dp)
+                        .fillMaxWidth(0.9f)
+                        .height(45.dp)
+                ) {
+                    Text("Excluir", color = Color.White, fontWeight = FontWeight.Bold)
+                }
             }
 
             Spacer(modifier = Modifier.height(100.dp))
@@ -213,7 +319,6 @@ fun SubjectRegisterScreen(
                         modifier = Modifier.size(16.dp)
                     )
                 }
-
                 IconButton(onClick = onNavigateToHome) {
                     Image(
                         painter = painterResource(Res.drawable.home),
@@ -224,7 +329,6 @@ fun SubjectRegisterScreen(
             }
         }
 
-        // 🔹 Overlay do menu lateral
         if (showMenu) {
             MenuScreen(
                 onCloseMenu = { showMenu = false },
