@@ -90,24 +90,21 @@ fun SubjectRegisterScreen(
                 .padding(horizontal = 24.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // 🔙 Botão voltar
+            // 🔝 Cabeçalho superior com botão voltar à esquerda e usuário à direita
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 40.dp, start = 8.dp, bottom = 16.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .padding(top = 40.dp, start = 8.dp, end = 16.dp, bottom = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
+                // 🔙 Botão voltar
                 BackButton(onBack = onBack)
-            }
 
-            // 👤 Cabeçalho de usuário
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+                // 👤 Ícone de usuário no canto superior direito
                 Box(
                     modifier = Modifier
-                        .size(80.dp)
+                        .size(60.dp)
                         .clip(CircleShape)
                         .background(RoxoClaro),
                     contentAlignment = Alignment.Center
@@ -119,11 +116,9 @@ fun SubjectRegisterScreen(
                         modifier = Modifier.clip(CircleShape)
                     )
                 }
-                Spacer(modifier = Modifier.width(15.dp))
-                Text("Nome usuário", color = Color.Gray, fontSize = 16.sp)
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             // 🏷️ Título
             Text(

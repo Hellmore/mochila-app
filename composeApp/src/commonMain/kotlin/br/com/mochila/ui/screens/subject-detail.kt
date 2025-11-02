@@ -27,7 +27,7 @@ fun SubjectDetailScreen(
     onNavigateToItemRegister: () -> Unit,
     onNavigateToHome: () -> Unit,
     onBack: () -> Unit,
-    onLogout: () -> Unit // ✅ adicionado
+    onLogout: () -> Unit
 ) {
     val RoxoEscuro = Color(0xFF5336CB)
     val RoxoClaro = Color(0xFF7F55CE)
@@ -85,40 +85,39 @@ fun SubjectDetailScreen(
                 .padding(horizontal = 24.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // 🔙 Botão voltar
+            // 🔝 Cabeçalho superior com botão voltar à esquerda e usuário à direita
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 40.dp, start = 8.dp, bottom = 16.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .padding(top = 40.dp, start = 8.dp, end = 16.dp, bottom = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
+                // 🔙 Botão voltar (mantido no canto superior esquerdo)
                 BackButton(onBack = onBack)
-            }
 
-            // 👤 Cabeçalho de usuário
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(80.dp)
-                        .clip(CircleShape)
-                        .background(RoxoClaro),
-                    contentAlignment = Alignment.Center
+                // 👤 Cabeçalho de usuário (movido para o canto superior direito)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Image(
-                        painter = painterResource(Res.drawable.user),
-                        contentDescription = "Usuário",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.clip(CircleShape)
-                    )
+                    Box(
+                        modifier = Modifier
+                            .size(60.dp)
+                            .clip(CircleShape)
+                            .background(RoxoClaro),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Image(
+                            painter = painterResource(Res.drawable.user),
+                            contentDescription = "Usuário",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.clip(CircleShape)
+                        )
+                    }
                 }
-                Spacer(modifier = Modifier.width(15.dp))
-                Text("Nome usuário", color = Color.Gray, fontSize = 16.sp)
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             // 🏷️ Título
             Text(
@@ -250,7 +249,7 @@ fun SubjectDetailScreen(
                 },
                 onLogout = {
                     showMenu = false
-                    onLogout() // ✅ garante retorno à tela de login
+                    onLogout()
                 }
             )
         }
