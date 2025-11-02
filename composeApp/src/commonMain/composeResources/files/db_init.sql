@@ -58,14 +58,19 @@ CREATE TABLE IF NOT EXISTS tarefa (
         ON DELETE CASCADE ON UPDATE CASCADE
 );
 
+------------------------------------------------
+-- 🔹 Atualização principal: Tabela de disciplinas (matérias)
+------------------------------------------------
 CREATE TABLE IF NOT EXISTS disciplina (
     id_disciplina INTEGER PRIMARY KEY AUTOINCREMENT,
     id_usuario INTEGER NOT NULL,
     nome TEXT NOT NULL,
+    professor TEXT,
     frequencia_minima INTEGER NOT NULL,
     data_inicio DATETIME NOT NULL,
     data_fim DATETIME NOT NULL,
     hora_aula INTEGER NOT NULL,
+    semestre TEXT,
     criado_em DATETIME DEFAULT CURRENT_TIMESTAMP,
     atualizado_em DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (id_usuario) REFERENCES usuario (id_usuario)
@@ -187,92 +192,13 @@ CREATE TABLE IF NOT EXISTS log_pagamento (
 ------------------------------------------------
 -- Triggers de atualização automática
 ------------------------------------------------
-CREATE TRIGGER update_usuario_timestamp
-AFTER UPDATE ON usuario
-FOR EACH ROW
-BEGIN
-    UPDATE usuario SET atualizado_em = CURRENT_TIMESTAMP WHERE id_usuario = NEW.id_usuario;
-END;
-
-CREATE TRIGGER update_aluno_timestamp
-AFTER UPDATE ON aluno
-FOR EACH ROW
-BEGIN
-    UPDATE aluno SET atualizado_em = CURRENT_TIMESTAMP WHERE id_aluno = NEW.id_aluno;
-END;
-
-CREATE TRIGGER update_administrador_timestamp
-AFTER UPDATE ON administrador
-FOR EACH ROW
-BEGIN
-    UPDATE administrador SET atualizado_em = CURRENT_TIMESTAMP WHERE id_adm = NEW.id_adm;
-END;
-
-CREATE TRIGGER update_evento_timestamp
-AFTER UPDATE ON evento
-FOR EACH ROW
-BEGIN
-    UPDATE evento SET atualizado_em = CURRENT_TIMESTAMP WHERE id_evento = NEW.id_evento;
-END;
-
-CREATE TRIGGER update_tarefa_timestamp
-AFTER UPDATE ON tarefa
-FOR EACH ROW
-BEGIN
-    UPDATE tarefa SET atualizado_em = CURRENT_TIMESTAMP WHERE id_tarefa = NEW.id_tarefa;
-END;
-
-CREATE TRIGGER update_disciplina_timestamp
+CREATE TRIGGER IF NOT EXISTS update_disciplina_timestamp
 AFTER UPDATE ON disciplina
 FOR EACH ROW
 BEGIN
-    UPDATE disciplina SET atualizado_em = CURRENT_TIMESTAMP WHERE id_disciplina = NEW.id_disciplina;
-END;
-
-CREATE TRIGGER update_falta_timestamp
-AFTER UPDATE ON falta
-FOR EACH ROW
-BEGIN
-    UPDATE falta SET atualizado_em = CURRENT_TIMESTAMP WHERE id_falta = NEW.id_falta;
-END;
-
-CREATE TRIGGER update_modulo_timestamp
-AFTER UPDATE ON modulo
-FOR EACH ROW
-BEGIN
-    UPDATE modulo SET atualizado_em = CURRENT_TIMESTAMP WHERE id_modulo = NEW.id_modulo;
-END;
-
-CREATE TRIGGER update_assinatura_timestamp
-AFTER UPDATE ON assinatura
-FOR EACH ROW
-BEGIN
-    UPDATE assinatura SET atualizado_em = CURRENT_TIMESTAMP WHERE id_assinatura = NEW.id_assinatura;
-END;
-
-CREATE TRIGGER update_notificacao_timestamp
-AFTER UPDATE ON notificacao
-FOR EACH ROW
-BEGIN
-    UPDATE notificacao SET atualizado_em = CURRENT_TIMESTAMP WHERE id_notificacao = NEW.id_notificacao;
-END;
-
-CREATE TRIGGER update_pagamento_timestamp
-AFTER UPDATE ON pagamento
-FOR EACH ROW
-BEGIN
-    UPDATE pagamento SET atualizado_em = CURRENT_TIMESTAMP WHERE id_pagamento = NEW.id_pagamento;
-END;
-
-CREATE TRIGGER IF NOT EXISTS trg_pagamento_confirmado
-AFTER UPDATE ON pagamento
-FOR EACH ROW
-WHEN NEW.status = 'Pago' AND (OLD.status IS NULL OR OLD.status != 'Pago')
-BEGIN
-    UPDATE assinatura
-    SET status = 'Ativa',
-        atualizado_em = CURRENT_TIMESTAMP
-    WHERE id_assinatura = NEW.id_assinatura;
+    UPDATE disciplina
+    SET atualizado_em = CURRENT_TIMESTAMP
+    WHERE id_disciplina = NEW.id_disciplina;
 END;
 
 ------------------------------------------------

@@ -15,6 +15,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import mochila_app.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.painterResource
+import br.com.mochila.data.DatabaseHelper
+import java.sql.ResultSet
 
 @Composable
 fun HomeScreen(
@@ -29,21 +31,67 @@ fun HomeScreen(
 
     var searchText by remember { mutableStateOf("") }
     var showSearchField by remember { mutableStateOf(false) }
-
     var expanded by remember { mutableStateOf(false) }
-    var selectedSemester by remember { mutableStateOf("5º semestre") }
-
+    var selectedSemester by remember { mutableStateOf("Todos") }
     var showMenu by remember { mutableStateOf(false) }
 
-    val subjects = listOf("Engenharia de Software", "Banco de Dados")
-    val semesters = listOf("1º semestre", "2º semestre", "3º semestre", "4º semestre", "5º semestre")
+    // Lista de matérias e semestres existentes no banco
+    var subjects by remember { mutableStateOf<List<Map<String, String>>>(emptyList()) }
+    var semesters by remember { mutableStateOf<List<String>>(emptyList()) }
+
+    // 🔹 Carregar matérias do banco
+    LaunchedEffect(selectedSemester) {
+        val conn = DatabaseHelper.connect()
+        if (conn != null) {
+            try {
+                val stmt = conn.createStatement()
+
+                // Carrega lista de semestres únicos
+                val rsSem = stmt.executeQuery("SELECT DISTINCT semestre FROM disciplina WHERE semestre IS NOT NULL AND semestre <> '' ORDER BY semestre")
+                val semList = mutableListOf<String>()
+                while (rsSem.next()) {
+                    semList.add(rsSem.getString("semestre"))
+                }
+                semesters = semList
+                rsSem.close()
+
+                // Monta a query com filtro por semestre (se necessário)
+                val sql = if (selectedSemester == "Todos") {
+                    "SELECT id_disciplina, nome, professor, semestre FROM disciplina ORDER BY semestre, nome"
+                } else {
+                    "SELECT id_disciplina, nome, professor, semestre FROM disciplina WHERE semestre = '${selectedSemester}' ORDER BY nome"
+                }
+
+                val rs: ResultSet = stmt.executeQuery(sql)
+                val lista = mutableListOf<Map<String, String>>()
+                while (rs.next()) {
+                    lista.add(
+                        mapOf(
+                            "id" to rs.getInt("id_disciplina").toString(),
+                            "nome" to (rs.getString("nome") ?: ""),
+                            "professor" to (rs.getString("professor") ?: ""),
+                            "semestre" to (rs.getString("semestre") ?: "")
+                        )
+                    )
+                }
+                subjects = lista
+
+                rs.close()
+                stmt.close()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
+                DatabaseHelper.close()
+            }
+        }
+    }
 
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
     ) {
-        // 🟣 Fundo quadriculado
+        // Fundo quadriculado
         Image(
             painter = painterResource(Res.drawable.fundo_quadriculado),
             contentDescription = null,
@@ -51,7 +99,7 @@ fun HomeScreen(
             contentScale = ContentScale.Crop
         )
 
-        // 📌 Alfinete
+        // Pin e mochila decorativos
         Image(
             painter = painterResource(Res.drawable.pin),
             contentDescription = "Pin decorativo",
@@ -60,8 +108,6 @@ fun HomeScreen(
                 .fillMaxHeight(0.95f),
             contentScale = ContentScale.FillHeight
         )
-
-        // 🎒 Mochila
         Image(
             painter = painterResource(Res.drawable.mochila),
             contentDescription = "Mochila decorativa",
@@ -72,7 +118,7 @@ fun HomeScreen(
             contentScale = ContentScale.Fit
         )
 
-        // 🧾 Conteúdo principal
+        // Conteúdo principal
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -80,7 +126,7 @@ fun HomeScreen(
                 .padding(horizontal = 24.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // 🔝 Cabeçalho superior com título à esquerda e usuário à direita
+            // Cabeçalho
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -94,8 +140,6 @@ fun HomeScreen(
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold
                 )
-
-                // 👤 Ícone do usuário no canto superior direito
                 Box(
                     modifier = Modifier
                         .size(60.dp)
@@ -128,6 +172,7 @@ fun HomeScreen(
                 )
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
+                    // 🔍 Botão para mostrar/ocultar campo de busca
                     Button(
                         onClick = { showSearchField = !showSearchField },
                         colors = ButtonDefaults.buttonColors(containerColor = RoxoClaro),
@@ -173,6 +218,13 @@ fun HomeScreen(
                             onDismissRequest = { expanded = false },
                             modifier = Modifier.background(Color.White)
                         ) {
+                            DropdownMenuItem(
+                                text = { Text("Todos") },
+                                onClick = {
+                                    selectedSemester = "Todos"
+                                    expanded = false
+                                }
+                            )
                             semesters.forEach { semester ->
                                 DropdownMenuItem(
                                     text = { Text(semester) },
@@ -198,38 +250,62 @@ fun HomeScreen(
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedContainerColor = Color.White,
-                        unfocusedContainerColor = Color.White
-                    )
+                        unfocusedContainerColor = Color.White,
+                        focusedBorderColor = RoxoClaro,
+                        unfocusedBorderColor = RoxoClaro
+                    ),
+                    shape = RoundedCornerShape(8.dp)
                 )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 📚 Lista de matérias
-            subjects.filter {
-                it.contains(searchText, ignoreCase = true)
-            }.forEach { subject ->
-                OutlinedButton(
-                    onClick = { onNavigateToSubject(subject) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    shape = RoundedCornerShape(8.dp),
-                    border = BorderStroke(1.dp, RoxoClaro),
-                    colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.White),
-                    contentPadding = PaddingValues(horizontal = 24.dp, vertical = 20.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+            // 📚 Lista de matérias cadastradas
+            val filteredSubjects = subjects.filter {
+                it["nome"]!!.contains(searchText, ignoreCase = true)
+            }
+
+            if (filteredSubjects.isEmpty()) {
+                Text(
+                    "Nenhuma matéria encontrada.",
+                    color = Color.Gray,
+                    fontSize = 14.sp
+                )
+            } else {
+                filteredSubjects.forEach { subject ->
+                    OutlinedButton(
+                        onClick = { onNavigateToSubject(subject["id"] ?: "") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 6.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        border = BorderStroke(1.dp, RoxoClaro),
+                        colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.White),
+                        contentPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp)
                     ) {
-                        Text(subject, color = RoxoClaro, fontSize = 14.sp)
-                        Image(
-                            painter = painterResource(Res.drawable.direita),
-                            contentDescription = "Abrir matéria",
-                            modifier = Modifier.size(18.dp)
-                        )
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(2.dp)
+                        ) {
+                            Text(
+                                subject["nome"] ?: "",
+                                color = RoxoClaro,
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            if (!subject["professor"].isNullOrBlank())
+                                Text(
+                                    "Professor: ${subject["professor"]}",
+                                    color = Color.Gray,
+                                    fontSize = 13.sp
+                                )
+                            if (!subject["semestre"].isNullOrBlank())
+                                Text(
+                                    "Semestre: ${subject["semestre"]}",
+                                    color = Color.Gray,
+                                    fontSize = 13.sp
+                                )
+                        }
                     }
                 }
             }
@@ -255,7 +331,6 @@ fun HomeScreen(
                 horizontalArrangement = Arrangement.spacedBy(5.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Abre o menu lateral
                 IconButton(onClick = { showMenu = true }) {
                     Image(
                         painter = painterResource(Res.drawable.menu),
@@ -282,7 +357,7 @@ fun HomeScreen(
             }
         }
 
-        // 🔹 Overlay do menu lateral
+        // Overlay do menu lateral
         if (showMenu) {
             MenuScreen(
                 onCloseMenu = { showMenu = false },
