@@ -15,17 +15,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import br.com.mochila.data.UsuarioRepository
 import mochila_app.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.painterResource
-import br.com.mochila.data.DatabaseHelper
-import java.sql.PreparedStatement
-import java.sql.ResultSet
 
 @Composable
 fun LoginScreen(
     onNavigateToRegister: () -> Unit,
     onNavigateToRecovery: () -> Unit,
-    onNavigateToHome: () -> Unit
+    onLoginSuccess: (userId: Int) -> Unit // ✅ Retorna o ID do usuário
 ) {
     val RoxoEscuro = Color(0xFF5336CB)
     val VerdeLima = Color(0xFFC5E300)
@@ -35,35 +33,21 @@ fun LoginScreen(
     var password by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
+    // 🔸 Usa o repositório para validar o login
     fun login() {
-        val conn = DatabaseHelper.connect()
-        if (conn != null) {
-            try {
-                val stmt: PreparedStatement = conn.prepareStatement(
-                    "SELECT * FROM usuario WHERE email = ? AND senha = ?"
-                )
-                stmt.setString(1, email)
-                stmt.setString(2, password)
-                val rs: ResultSet = stmt.executeQuery()
+        if (email.isBlank() || password.isBlank()) {
+            errorMessage = "E-mail e senha não podem estar em branco."
+            return
+        }
 
-                if (rs.next()) {
-                    println("✅ Login bem-sucedido para $email")
-                    errorMessage = null
-                    onNavigateToHome()
-                } else {
-                    errorMessage = "Usuário ou senha inválidos."
-                }
+        val userId = UsuarioRepository.validarLogin(email, password)
 
-                rs.close()
-                stmt.close()
-            } catch (e: Exception) {
-                e.printStackTrace()
-                errorMessage = "Erro ao acessar o banco."
-            } finally {
-                DatabaseHelper.close()
-            }
+        if (userId != null) {
+            println("✅ Login bem-sucedido para $email (ID: $userId)")
+            errorMessage = null
+            onLoginSuccess(userId) // Retorna o ID para o App.kt
         } else {
-            errorMessage = "Erro ao conectar ao banco."
+            errorMessage = "Usuário ou senha inválidos."
         }
     }
 
