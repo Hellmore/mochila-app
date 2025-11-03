@@ -7,29 +7,34 @@ import br.com.mochila.ui.screens.*
 
 @Composable
 fun App() {
-    // 🔹 Pilha de telas
+    // 🔹 Gerenciamento de estado centralizado
+    var currentUserId by remember { mutableStateOf<Int?>(null) }
     var screenStack by remember { mutableStateOf(listOf("login")) }
 
-    // 🔹 Tela atual
     val currentScreen = screenStack.last()
 
-    // 🔹 Navegar para nova tela (sem duplicar)
     fun navigateTo(screen: String) {
         if (screenStack.last() != screen) {
             screenStack = screenStack + screen
         }
     }
 
-    // 🔹 Voltar uma tela
     fun goBack() {
         if (screenStack.size > 1) {
             screenStack = screenStack.dropLast(1)
         }
     }
 
-    // 🔹 Logout — limpa a pilha e volta para login
+    // 🔹 Logout - Limpa o usuário e volta para a tela de login
     fun logout() {
+        currentUserId = null
         screenStack = listOf("login")
+    }
+
+    // 🔹 Callback de sucesso do login
+    fun onLoginSuccess(userId: Int) {
+        currentUserId = userId
+        navigateTo("home")
     }
 
     MaterialTheme {
@@ -40,7 +45,7 @@ fun App() {
                 "login" -> LoginScreen(
                     onNavigateToRegister = { navigateTo("register") },
                     onNavigateToRecovery = { navigateTo("recovery") },
-                    onNavigateToHome = { navigateTo("home") }
+                    onLoginSuccess = { userId -> onLoginSuccess(userId) } // ✅ Passa o ID
                 )
 
                 // 🔸 Tela de Cadastro
@@ -49,14 +54,19 @@ fun App() {
                 // 🔸 Tela de Recuperação
                 "recovery" -> RecoveryScreen(onBackToLogin = { goBack() })
 
-                // 🔸 Tela Home
-                "home" -> HomeScreen(
-                    onNavigateToHome = { /* Evita empilhar home novamente */ },
-                    onNavigateToMenu = { navigateTo("menu") },
-                    onNavigateToAdd = { navigateTo("item_register") },
-                    onNavigateToSubject = { navigateTo("subject_detail") },
-                    onLogout = { logout() }
-                )
+                // 🔸 Tela Home - Agora recebe o ID do usuário
+                "home" -> {
+                    currentUserId?.let {
+                        HomeScreen(
+                            userId = it,
+                            onNavigateToHome = { },
+                            onNavigateToMenu = { navigateTo("menu") },
+                            onNavigateToAdd = { navigateTo("item_register") },
+                            onNavigateToSubject = { navigateTo("subject_detail") }, // TODO: Passar dados da matéria
+                            onLogout = { logout() }
+                        )
+                    } ?: logout() // Se não houver usuário, volta para o login
+                }
 
                 // 🔸 Menu lateral (modal)
                 "menu" -> MenuScreen(
@@ -74,38 +84,52 @@ fun App() {
                 )
 
                 // 🔸 Tela de Cadastro de Matéria
-                "subject_register" -> SubjectRegisterScreen(
-                    onNavigateToHome = { navigateTo("home") },
-                    onBack = { goBack() },
-                    onLogout = { logout() }
-                )
+                "subject_register" -> {
+                    currentUserId?.let {
+                        SubjectRegisterScreen(
+                            userId = it,
+                            onNavigateToHome = { navigateTo("home") },
+                            onBack = { goBack() },
+                            onLogout = { logout() }
+                        )
+                    } ?: logout()
+                }
 
                 // 🔸 Tela de Detalhes da Matéria
-                "subject_detail" -> SubjectDetailScreen(
-                    onNavigateToEdit = { navigateTo("subject_edit") },
-                    onNavigateToAbsenceControl = { /* TODO */ },
-                    onNavigateToItemRegister = { navigateTo("item_register") },
-                    onNavigateToHome = { navigateTo("home") },
-                    onBack = { goBack() },
-                    onLogout = { logout() }
-                )
+                "subject_detail" -> {
+                     currentUserId?.let { 
+                        SubjectDetailScreen(
+                            onNavigateToEdit = { navigateTo("subject_edit") },
+                            onNavigateToAbsenceControl = { /* TODO */ },
+                            onNavigateToItemRegister = { navigateTo("item_register") },
+                            onNavigateToHome = { navigateTo("home") },
+                            onBack = { goBack() },
+                            onLogout = { logout() }
+                        )
+                    } ?: logout()
+                }
 
                 // 🔸 Tela de Edição de Matéria
-                "subject_edit" -> SubjectRegisterScreen(
-                    onNavigateToHome = { navigateTo("home") },
-                    onBack = { goBack() },
-                    onLogout = { logout() }, // ✅ adicionado
-                    isEditing = true,
-                    subjectData = Subject(
-                        nome = "Engenharia de Software",
-                        professor = "Anderson Barbosa",
-                        frequencia = "75%",
-                        dataInicio = "01/08/2025",
-                        dataFim = "15/12/2025",
-                        horasAula = "2h",
-                        semestre = "5º"
-                    )
-                )
+                "subject_edit" -> {
+                    currentUserId?.let {
+                        SubjectRegisterScreen(
+                            userId = it,
+                            onNavigateToHome = { navigateTo("home") },
+                            onBack = { goBack() },
+                            onLogout = { logout() },
+                            isEditing = true,
+                            subjectData = Subject(
+                                nome = "Engenharia de Software",
+                                professor = "Anderson Barbosa",
+                                frequencia = "75%",
+                                dataInicio = "01/08/2025",
+                                dataFim = "15/12/2025",
+                                horasAula = "2h",
+                                semestre = "5º"
+                            )
+                        )
+                    } ?: logout()
+                }
             }
         }
     }

@@ -14,10 +14,11 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import mochila_app.composeapp.generated.resources.*
-import org.jetbrains.compose.resources.painterResource
+import br.com.mochila.data.MateriaRepository
 import br.com.mochila.data.DatabaseHelper
 import java.sql.PreparedStatement
+import mochila_app.composeapp.generated.resources.*
+import org.jetbrains.compose.resources.painterResource
 
 // 🔹 Representação da disciplina (matéria)
 data class Subject(
@@ -33,6 +34,7 @@ data class Subject(
 
 @Composable
 fun SubjectRegisterScreen(
+    userId: Int, // ✅ ID do usuário logado
     onNavigateToHome: () -> Unit,
     onBack: () -> Unit,
     onLogout: () -> Unit,
@@ -57,63 +59,44 @@ fun SubjectRegisterScreen(
     var message by remember { mutableStateOf<String?>(null) }
     var success by remember { mutableStateOf(false) }
 
-    val idUsuario = 1 // ID fixo do usuário logado (ajustável futuramente)
-
     // 🔸 Salvar nova matéria ou atualizar existente
     fun salvarMateria() {
-        val conn = DatabaseHelper.connect()
-        if (conn != null) {
-            try {
-                val sql = if (isEditing) {
-                    """
-                    UPDATE disciplina 
-                    SET nome = ?, professor = ?, data_inicio = ?, data_fim = ?, hora_aula = ?, 
-                        frequencia_minima = ?, semestre = ?, id_usuario = ?, atualizado_em = CURRENT_TIMESTAMP 
-                    WHERE id_disciplina = ?
-                    """
-                } else {
-                    """
-                    INSERT INTO disciplina (nome, professor, data_inicio, data_fim, hora_aula, 
-                        frequencia_minima, semestre, id_usuario)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                    """
-                }
+        val frequenciaMinInt = frequenciaMin.toIntOrNull()
+        val horasPorAulaInt = horasPorAula.toIntOrNull()
 
-                val stmt: PreparedStatement = conn.prepareStatement(sql)
-                stmt.setString(1, nomeMateria)
-                stmt.setString(2, professor)
-                stmt.setString(3, dataInicio)
-                stmt.setString(4, dataFim)
-                stmt.setString(5, horasPorAula)
-                stmt.setString(6, frequenciaMin)
-                stmt.setString(7, semestre)
-                stmt.setInt(8, idUsuario)
+        if (nomeMateria.isBlank() || frequenciaMinInt == null || horasPorAulaInt == null) {
+            message = "Preencha todos os campos obrigatórios corretamente."
+            success = false
+            return
+        }
 
-                if (isEditing) stmt.setInt(9, subjectData!!.id)
-
-                val rows = stmt.executeUpdate()
-                stmt.close()
-
-                if (rows > 0) {
-                    message = if (isEditing)
-                        "Matéria atualizada com sucesso!"
-                    else
-                        "Matéria cadastrada com sucesso!"
-                    success = true
-                    onNavigateToHome()
-                } else {
-                    message = "Nenhuma alteração realizada."
-                    success = false
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                message = "Erro ao salvar matéria."
-                success = false
-            } finally {
-                DatabaseHelper.close()
-            }
+        val operacaoBemSucedida = if (isEditing) {
+            MateriaRepository.atualizarMateria(
+                idUsuario = userId,
+                idDisciplina = subjectData!!.id,
+                nome = nomeMateria,
+                frequenciaMinima = frequenciaMinInt,
+                dataInicio = dataInicio,
+                dataFim = dataFim,
+                horaAula = horasPorAulaInt
+            )
         } else {
-            message = "Erro ao conectar ao banco."
+            MateriaRepository.insertMateria(
+                idUsuario = userId,
+                nome = nomeMateria,
+                frequenciaMinima = frequenciaMinInt,
+                dataInicio = dataInicio,
+                dataFim = dataFim,
+                horaAula = horasPorAulaInt
+            )
+        }
+
+        if (operacaoBemSucedida) {
+            message = if (isEditing) "Matéria atualizada com sucesso!" else "Matéria cadastrada com sucesso!"
+            success = true
+            onNavigateToHome()
+        } else {
+            message = "Erro ao salvar matéria."
             success = false
         }
     }
@@ -121,28 +104,16 @@ fun SubjectRegisterScreen(
     // 🔸 Excluir disciplina existente
     fun excluirMateria() {
         if (!isEditing || subjectData == null) return
-        val conn = DatabaseHelper.connect()
-        if (conn != null) {
-            try {
-                val stmt = conn.prepareStatement("DELETE FROM disciplina WHERE id_disciplina = ?")
-                stmt.setInt(1, subjectData.id)
-                val rows = stmt.executeUpdate()
-                stmt.close()
-                if (rows > 0) {
-                    message = "Matéria excluída com sucesso!"
-                    success = true
-                    onNavigateToHome()
-                } else {
-                    message = "Erro ao excluir matéria."
-                    success = false
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                message = "Erro ao excluir matéria."
-                success = false
-            } finally {
-                DatabaseHelper.close()
-            }
+
+        val operacaoBemSucedida = MateriaRepository.deletarMateria(userId, subjectData.id)
+
+        if (operacaoBemSucedida) {
+            message = "Matéria excluída com sucesso!"
+            success = true
+            onNavigateToHome()
+        } else {
+            message = "Erro ao excluir matéria."
+            success = false
         }
     }
 

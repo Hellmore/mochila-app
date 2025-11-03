@@ -33,7 +33,13 @@ object DatabaseHelper {
                 val script = resourceUrl?.readText()
                 if (script != null) {
                     val stmt = conn.createStatement()
-                    stmt.executeUpdate(script)
+                    // Executa o script SQL em lote, separando os comandos
+                    script.split(';').forEach { sqlStatement ->
+                        if (sqlStatement.trim().isNotEmpty()) {
+                            stmt.addBatch(sqlStatement)
+                        }
+                    }
+                    stmt.executeBatch()
                     stmt.close()
                     println("✅ Banco inicializado com sucesso!")
                 } else {
