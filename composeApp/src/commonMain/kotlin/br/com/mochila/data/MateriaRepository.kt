@@ -37,7 +37,7 @@ object MateriaRepository {
             stmt.setInt(6, horaAula)
             stmt.executeUpdate()
             stmt.close()
-            println("✅ Disciplina cadastrada: $nome")
+            println("✅ Disciplina cadastrada: $nome para o usuário ID=$idUsuario")
             true
         } catch (e: Exception) {
             println("⚠️ Erro ao inserir disciplina: ${e.message}")
@@ -47,12 +47,13 @@ object MateriaRepository {
         }
     }
 
-    fun listarMaterias(): List<Materia> {
+    fun listarMaterias(idUsuario: Int): List<Materia> {
         val conn = DatabaseHelper.connect() ?: return emptyList()
         val materias = mutableListOf<Materia>()
         return try {
-            val sql = "SELECT * FROM disciplina"
+            val sql = "SELECT * FROM disciplina WHERE id_usuario = ?"
             val stmt = conn.prepareStatement(sql)
+            stmt.setInt(1, idUsuario)
             val rs: ResultSet = stmt.executeQuery()
 
             while (rs.next()) {
@@ -70,7 +71,7 @@ object MateriaRepository {
 
             rs.close()
             stmt.close()
-            println("📚 ${materias.size} disciplinas carregadas do banco.")
+            println("📚 ${materias.size} disciplinas carregadas para o usuário ID=$idUsuario.")
             materias
         } catch (e: Exception) {
             println("⚠️ Erro ao listar disciplinas: ${e.message}")
@@ -81,6 +82,7 @@ object MateriaRepository {
     }
 
     fun atualizarMateria(
+        idUsuario: Int,
         idDisciplina: Int,
         nome: String,
         frequenciaMinima: Int,
@@ -93,7 +95,7 @@ object MateriaRepository {
             val sql = """
                 UPDATE disciplina
                 SET nome = ?, frequencia_minima = ?, data_inicio = ?, data_fim = ?, hora_aula = ?, atualizado_em = CURRENT_TIMESTAMP
-                WHERE id_disciplina = ?
+                WHERE id_disciplina = ? AND id_usuario = ?
             """
             val stmt = conn.prepareStatement(sql)
             stmt.setString(1, nome)
@@ -102,6 +104,7 @@ object MateriaRepository {
             stmt.setString(4, dataFim)
             stmt.setInt(5, horaAula)
             stmt.setInt(6, idDisciplina)
+            stmt.setInt(7, idUsuario)
             val rows = stmt.executeUpdate()
             stmt.close()
             rows > 0
@@ -113,15 +116,16 @@ object MateriaRepository {
         }
     }
 
-    fun deletarMateria(idDisciplina: Int): Boolean {
+    fun deletarMateria(idUsuario: Int, idDisciplina: Int): Boolean {
         val conn = DatabaseHelper.connect() ?: return false
         return try {
-            val sql = "DELETE FROM disciplina WHERE id_disciplina = ?"
+            val sql = "DELETE FROM disciplina WHERE id_disciplina = ? AND id_usuario = ?"
             val stmt = conn.prepareStatement(sql)
             stmt.setInt(1, idDisciplina)
+            stmt.setInt(2, idUsuario)
             val rows = stmt.executeUpdate()
             stmt.close()
-            println("🗑️ Disciplina removida ID=$idDisciplina")
+            println("🗑️ Disciplina removida ID=$idDisciplina pelo usuário ID=$idUsuario")
             rows > 0
         } catch (e: Exception) {
             println("⚠️ Erro ao deletar disciplina: ${e.message}")
