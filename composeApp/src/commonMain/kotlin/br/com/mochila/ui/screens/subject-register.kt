@@ -15,8 +15,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.com.mochila.data.MateriaRepository
-import br.com.mochila.data.DatabaseHelper
-import java.sql.PreparedStatement
 import mochila_app.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.painterResource
 
@@ -34,18 +32,17 @@ data class Subject(
 
 @Composable
 fun SubjectRegisterScreen(
-    userId: Int, // ✅ ID do usuário logado
+    userId: Int,
     onNavigateToHome: () -> Unit,
     onBack: () -> Unit,
     onLogout: () -> Unit,
+    onOpenMenu: () -> Unit, // ✅ Parâmetro para abrir o menu
     isEditing: Boolean = false,
     subjectData: Subject? = null
 ) {
     val RoxoEscuro = Color(0xFF5336CB)
     val RoxoClaro = Color(0xFF7F55CE)
     val VerdeLima = Color(0xFFC5E300)
-
-    var showMenu by remember { mutableStateOf(false) }
 
     // 🧾 Campos de entrada
     var nomeMateria by remember { mutableStateOf(subjectData?.nome ?: "") }
@@ -289,7 +286,7 @@ fun SubjectRegisterScreen(
                 horizontalArrangement = Arrangement.spacedBy(5.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = { showMenu = true }) {
+                IconButton(onClick = onOpenMenu) {
                     Image(
                         painter = painterResource(Res.drawable.menu),
                         contentDescription = "Menu lateral",
@@ -304,20 +301,6 @@ fun SubjectRegisterScreen(
                     )
                 }
             }
-        }
-
-        if (showMenu) {
-            MenuScreen(
-                onCloseMenu = { showMenu = false },
-                onNavigateToHome = {
-                    showMenu = false
-                    onNavigateToHome()
-                },
-                onLogout = {
-                    showMenu = false
-                    onLogout()
-                }
-            )
         }
     }
 }
