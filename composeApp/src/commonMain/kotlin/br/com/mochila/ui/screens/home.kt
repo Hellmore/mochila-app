@@ -9,8 +9,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -29,9 +27,9 @@ import org.jetbrains.compose.resources.painterResource
 
 @Composable
 fun HomeScreen(
-    userId: Int, // ✅ ID do usuário logado
+    userId: Int,
     onNavigateToHome: () -> Unit,
-    onNavigateToMenu: () -> Unit,
+    onOpenMenu: () -> Unit, // ✅ Parâmetro padronizado
     onNavigateToAdd: () -> Unit,
     onNavigateToSubject: () -> Unit,
     onLogout: () -> Unit
@@ -39,9 +37,6 @@ fun HomeScreen(
     val RoxoEscuro = Color(0xFF5336CB)
     val RoxoClaro = Color(0xFF7F55CE)
 
-    var showMenu by remember { mutableStateOf(false) }
-
-    // 🔹 Busca as matérias apenas para o usuário logado
     val materias by remember(userId) { mutableStateOf(MateriaRepository.listarMaterias(userId)) }
 
     Box(
@@ -128,7 +123,7 @@ fun HomeScreen(
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = onNavigateToMenu) {
+                IconButton(onClick = onOpenMenu) { // ✅ Usa a função correta
                     Image(
                         painter = painterResource(Res.drawable.menu),
                         contentDescription = "Menu lateral",
@@ -149,16 +144,6 @@ fun HomeScreen(
                         modifier = Modifier.size(24.dp)
                     )
                 }
-            }
-
-            // Dropdown do menu
-            DropdownMenu(
-                expanded = showMenu,
-                onDismissRequest = { showMenu = false }
-            ) {
-                DropdownMenuItem(text = { Text("Meu Perfil") }, onClick = { /*TODO*/ })
-                DropdownMenuItem(text = { Text("Configurações") }, onClick = { /*TODO*/ })
-                DropdownMenuItem(text = { Text("Sair") }, onClick = onLogout)
             }
         }
     }
