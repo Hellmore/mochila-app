@@ -29,7 +29,7 @@ import org.jetbrains.compose.resources.painterResource
 fun HomeScreen(
     userId: Int,
     onNavigateToHome: () -> Unit,
-    onOpenMenu: () -> Unit, // ✅ Parâmetro corrigido para onOpenMenu
+    onOpenMenu: () -> Unit, // ✅ Parâmetro corrigido
     onNavigateToAdd: () -> Unit,
     onNavigateToSubject: () -> Unit,
     onLogout: () -> Unit
@@ -119,7 +119,7 @@ fun HomeScreen(
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = onOpenMenu) { // ✅ Lógica corrigida para usar onOpenMenu
+                IconButton(onClick = onOpenMenu) { // ✅ Lógica corrigida
                     Image(
                         painter = painterResource(Res.drawable.menu),
                         contentDescription = "Menu lateral",
