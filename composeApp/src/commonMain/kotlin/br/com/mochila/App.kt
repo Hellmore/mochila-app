@@ -7,6 +7,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import br.com.mochila.ui.screens.*
+import br.com.mochila.ui.screens.Subject // ✅ Importação adicionada
 
 @Composable
 fun App() {
