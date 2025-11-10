@@ -11,10 +11,9 @@ import br.com.mochila.ui.screens.Subject // ✅ Importação adicionada
 
 @Composable
 fun App() {
-    // 🔹 Gerenciamento de estado centralizado
     var currentUserId by remember { mutableStateOf<Int?>(null) }
     var screenStack by remember { mutableStateOf(listOf("login")) }
-    var isMenuVisible by remember { mutableStateOf(false) } // ✅ Estado do menu
+    var isMenuVisible by remember { mutableStateOf(false) }
 
     val currentScreen = screenStack.last()
 
@@ -22,6 +21,7 @@ fun App() {
         if (screenStack.last() != screen) {
             screenStack = screenStack + screen
         }
+        isMenuVisible = false
     }
 
     fun goBack() {
@@ -33,14 +33,12 @@ fun App() {
     fun openMenu() { isMenuVisible = true }
     fun closeMenu() { isMenuVisible = false }
 
-    // 🔹 Logout - Limpa o usuário, fecha o menu e volta para a tela de login
     fun logout() {
         currentUserId = null
         isMenuVisible = false
         screenStack = listOf("login")
     }
 
-    // 🔹 Callback de sucesso do login
     fun onLoginSuccess(userId: Int) {
         currentUserId = userId
         navigateTo("home")
@@ -49,47 +47,51 @@ fun App() {
     MaterialTheme {
         Surface {
             Box(modifier = Modifier.fillMaxSize()) {
-                // 🔹 Conteúdo principal da tela
                 when (currentScreen) {
 
                     "login" -> LoginScreen(
                         onNavigateToRegister = { navigateTo("register") },
                         onNavigateToRecovery = { navigateTo("recovery") },
-                        onLoginSuccess = { userId -> onLoginSuccess(userId) }
+                        onLoginSuccess = ::onLoginSuccess
                     )
 
-                    "register" -> RegisterScreen(onBackToLogin = { goBack() })
+                    "register" -> RegisterScreen(onBackToLogin = ::goBack)
 
-                    "recovery" -> RecoveryScreen(onBackToLogin = { goBack() })
+                    "recovery" -> RecoveryScreen(onBackToLogin = ::goBack)
 
                     "home" -> {
                         currentUserId?.let {
                             HomeScreen(
                                 userId = it,
-                                onNavigateToHome = { },
-                                onOpenMenu = { openMenu() }, // ✅ Parâmetro corrigido
+                                onNavigateToHome = { navigateTo("home") },
+                                onOpenMenu = ::openMenu,
                                 onNavigateToAdd = { navigateTo("item_register") },
                                 onNavigateToSubject = { navigateTo("subject_detail") },
-                                onLogout = { logout() }
+                                onLogout = ::logout
                             )
                         } ?: logout()
                     }
 
-                    "item_register" -> ItemRegisterScreen(
-                        onNavigateToHome = { navigateTo("home") },
-                        onNavigateToSubjectRegister = { navigateTo("subject_register") },
-                        onBack = { goBack() },
-                        onLogout = { logout() }
-                    )
+                    "item_register" -> {
+                        currentUserId?.let {
+                            ItemRegisterScreen(
+                                onNavigateToHome = { navigateTo("home") },
+                                onNavigateToSubjectRegister = { navigateTo("subject_register") },
+                                onBack = ::goBack,
+                                onLogout = ::logout,
+                                onOpenMenu = ::openMenu
+                            )
+                        } ?: logout()
+                    }
 
                     "subject_register" -> {
                         currentUserId?.let {
                             SubjectRegisterScreen(
                                 userId = it,
                                 onNavigateToHome = { navigateTo("home") },
-                                onBack = { goBack() },
-                                onLogout = { logout() },
-                                onOpenMenu = { openMenu() } // ✅ Parâmetro adicionado
+                                onBack = ::goBack,
+                                onLogout = ::logout,
+                                onOpenMenu = ::openMenu
                             )
                         } ?: logout()
                     }
@@ -98,11 +100,12 @@ fun App() {
                         currentUserId?.let {
                             SubjectDetailScreen(
                                 onNavigateToEdit = { navigateTo("subject_edit") },
-                                onNavigateToAbsenceControl = { /* TODO */ },
+                                onNavigateToAbsenceControl = { },
                                 onNavigateToItemRegister = { navigateTo("item_register") },
                                 onNavigateToHome = { navigateTo("home") },
-                                onBack = { goBack() },
-                                onLogout = { logout() }
+                                onBack = ::goBack,
+                                onLogout = ::logout,
+                                onOpenMenu = ::openMenu
                             )
                         } ?: logout()
                     }
@@ -112,33 +115,40 @@ fun App() {
                             SubjectRegisterScreen(
                                 userId = it,
                                 onNavigateToHome = { navigateTo("home") },
-                                onBack = { goBack() },
-                                onLogout = { logout() },
-                                onOpenMenu = { openMenu() }, // ✅ Parâmetro adicionado
+                                onBack = ::goBack,
+                                onLogout = ::logout,
+                                onOpenMenu = ::openMenu,
                                 isEditing = true,
                                 subjectData = Subject(
+                                    id = 1,
                                     nome = "Engenharia de Software",
-                                    professor = "Anderson Barbosa",
-                                    frequencia = "75%",
-                                    dataInicio = "01/08/2025",
-                                    dataFim = "15/12/2025",
-                                    horasAula = "2h",
+                                    professor = "A. Barbosa",
+                                    frequencia = "75",
+                                    dataInicio = "01/08/25",
+                                    dataFim = "15/12/25",
+                                    horasAula = "2",
                                     semestre = "5º"
                                 )
                             )
                         } ?: logout()
                     }
+
+                    "profile" -> {
+                        currentUserId?.let {
+                            ProfileScreen(
+                                userId = it,
+                                onBack = ::goBack
+                            )
+                        } ?: logout()
+                    }
                 }
 
-                // 🔹 Menu renderizado sobre a tela atual
                 if (isMenuVisible) {
                     MenuScreen(
-                        onCloseMenu = { closeMenu() }, // ✅ Apenas fecha o menu
-                        onNavigateToHome = {
-                            closeMenu()
-                            navigateTo("home")
-                        },
-                        onLogout = { logout() }
+                        onCloseMenu = ::closeMenu,
+                        onNavigateToHome = { navigateTo("home") },
+                        onNavigateToProfile = { navigateTo("profile") }, // ✅ Parâmetro adicionado
+                        onLogout = ::logout
                     )
                 }
             }

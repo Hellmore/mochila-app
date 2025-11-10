@@ -29,7 +29,7 @@ import org.jetbrains.compose.resources.painterResource
 fun HomeScreen(
     userId: Int,
     onNavigateToHome: () -> Unit,
-    onOpenMenu: () -> Unit, // ✅ Parâmetro padronizado
+    onOpenMenu: () -> Unit, // ✅ Parâmetro corrigido
     onNavigateToAdd: () -> Unit,
     onNavigateToSubject: () -> Unit,
     onLogout: () -> Unit
@@ -44,7 +44,6 @@ fun HomeScreen(
             .fillMaxSize()
             .background(Color.White)
     ) {
-        // Imagem de fundo
         Image(
             painter = painterResource(Res.drawable.fundo_quadriculado),
             contentDescription = null,
@@ -57,7 +56,6 @@ fun HomeScreen(
                 .fillMaxSize()
                 .padding(top = 16.dp)
         ) {
-            // Cabeçalho
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -82,7 +80,6 @@ fun HomeScreen(
                 }
             }
 
-            // Lista de matérias
             if (materias.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(
@@ -105,7 +102,6 @@ fun HomeScreen(
             }
         }
 
-        // Menu inferior
         Row(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -123,7 +119,7 @@ fun HomeScreen(
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = onOpenMenu) { // ✅ Usa a função correta
+                IconButton(onClick = onOpenMenu) { // ✅ Lógica corrigida
                     Image(
                         painter = painterResource(Res.drawable.menu),
                         contentDescription = "Menu lateral",
