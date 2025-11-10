@@ -7,7 +7,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import br.com.mochila.ui.screens.*
-import br.com.mochila.ui.screens.Subject // ✅ Importação mantida para a tela de edição
 
 @Composable
 fun App() {
@@ -78,7 +77,8 @@ fun App() {
                                 onNavigateToHome = { navigateTo("home") },
                                 onNavigateToSubjectRegister = { navigateTo("subject_register") },
                                 onBack = ::goBack,
-                                onLogout = ::logout
+                                onLogout = ::logout,
+                                onOpenMenu = ::openMenu
                             )
                         } ?: logout()
                     }
@@ -103,7 +103,8 @@ fun App() {
                                 onNavigateToItemRegister = { navigateTo("item_register") },
                                 onNavigateToHome = { navigateTo("home") },
                                 onBack = ::goBack,
-                                onLogout = ::logout
+                                onLogout = ::logout,
+                                onOpenMenu = ::openMenu
                             )
                         } ?: logout()
                     }
@@ -120,13 +121,22 @@ fun App() {
                                 subjectData = Subject(
                                     id = 1,
                                     nome = "Engenharia de Software",
-                                    professor = "Anderson Barbosa",
+                                    professor = "A. Barbosa",
                                     frequencia = "75",
-                                    dataInicio = "01/08/2025",
-                                    dataFim = "15/12/2025",
+                                    dataInicio = "01/08/25",
+                                    dataFim = "15/12/25",
                                     horasAula = "2",
                                     semestre = "5º"
                                 )
+                            )
+                        } ?: logout()
+                    }
+
+                    "profile" -> {
+                        currentUserId?.let {
+                            ProfileScreen(
+                                userId = it,
+                                onBack = ::goBack
                             )
                         } ?: logout()
                     }
@@ -136,6 +146,7 @@ fun App() {
                     MenuScreen(
                         onCloseMenu = ::closeMenu,
                         onNavigateToHome = { navigateTo("home") },
+                        onNavigateToProfile = { navigateTo("profile") }, // ✅ Parâmetro adicionado
                         onLogout = ::logout
                     )
                 }
