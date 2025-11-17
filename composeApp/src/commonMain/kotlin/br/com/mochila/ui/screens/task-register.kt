@@ -14,115 +14,93 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import br.com.mochila.data.MateriaRepository
+import br.com.mochila.data.TarefaRepository
 import mochila_app.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.painterResource
-data class Subject(
-    val id: Int = 0,
-    val nome: String,
-    val professor: String,
-    val frequencia: String,
-    val dataInicio: String,
-    val dataFim: String,
-    val horasAula: String,
-    val semestre: String
-)
 
 @Composable
-fun SubjectRegisterScreen(
+fun TaskRegisterScreen(
     userId: Int,
     onNavigateToHome: () -> Unit,
     onBack: () -> Unit,
     onLogout: () -> Unit,
     onOpenMenu: () -> Unit,
     isEditing: Boolean = false,
-    subjectData: Subject? = null
+    taskId: Int? = null
 ) {
     val RoxoEscuro = Color(0xFF5336CB)
     val RoxoClaro = Color(0xFF7F55CE)
     val VerdeLima = Color(0xFFC5E300)
 
-    // 🧾 Campos de entrada
-    var nomeMateria by remember { mutableStateOf(subjectData?.nome ?: "") }
-    var professor by remember { mutableStateOf(subjectData?.professor ?: "") }
-    var frequenciaMin by remember { mutableStateOf(subjectData?.frequencia ?: "") }
-    var dataInicio by remember { mutableStateOf(subjectData?.dataInicio ?: "") }
-    var dataFim by remember { mutableStateOf(subjectData?.dataFim ?: "") }
-    var horasPorAula by remember { mutableStateOf(subjectData?.horasAula ?: "") }
-    var semestre by remember { mutableStateOf(subjectData?.semestre ?: "") }
+    val existingTask = remember(taskId) { taskId?.let { TarefaRepository.buscarPorId(it) } }
+
+    var titulo by remember { mutableStateOf(existingTask?.titulo ?: "") }
+    var descricao by remember { mutableStateOf(existingTask?.descricao ?: "") }
+    var status by remember { mutableStateOf(existingTask?.status ?: "Pendente") }
+    var blockers by remember { mutableStateOf(existingTask?.blockers ?: "") }
+    var dataLimite by remember { mutableStateOf(existingTask?.data_limite ?: "") }
 
     var message by remember { mutableStateOf<String?>(null) }
     var success by remember { mutableStateOf(false) }
 
-    // 🔸 Salvar nova matéria ou atualizar existente
-    fun salvarMateria() {
-        val frequenciaMinInt = frequenciaMin.filter { it.isDigit() }.toIntOrNull()
-        val horasPorAulaInt = horasPorAula.filter { it.isDigit() }.toIntOrNull()
-
-        if (nomeMateria.isBlank() || professor.isBlank() || frequenciaMinInt == null || horasPorAulaInt == null) {
-            message = "Preencha todos os campos obrigatórios corretamente."
+    fun salvarTarefa() {
+        if (titulo.isBlank() || descricao.isBlank()) {
+            message = "Título e descrição são obrigatórios."
             success = false
             return
         }
 
-        val operacaoBemSucedida = if (isEditing) {
-            MateriaRepository.atualizarMateria(
+        val operacaoBemSucedida = if (isEditing && taskId != null) {
+            TarefaRepository.atualizarTarefa(
+                idTarefa = taskId,
                 idUsuario = userId,
-                idDisciplina = subjectData!!.id,
-                nome = nomeMateria,
-                professor = professor,
-                frequenciaMinima = frequenciaMinInt,
-                dataInicio = dataInicio,
-                dataFim = dataFim,
-                horaAula = horasPorAulaInt,
-                semestre = semestre
+                titulo = titulo,
+                descricao = descricao,
+                status = status,
+                blockers = blockers,
+                dataLimite = dataLimite
             )
         } else {
-            MateriaRepository.insertMateria(
+            TarefaRepository.insertTarefa(
                 idUsuario = userId,
-                nome = nomeMateria,
-                professor = professor,
-                frequenciaMinima = frequenciaMinInt,
-                dataInicio = dataInicio,
-                dataFim = dataFim,
-                horaAula = horasPorAulaInt,
-                semestre = semestre
+                titulo = titulo,
+                descricao = descricao,
+                status = status,
+                blockers = blockers,
+                dataLimite = dataLimite
             )
         }
 
         if (operacaoBemSucedida) {
-            message = if (isEditing) "Matéria atualizada com sucesso!" else "Matéria cadastrada com sucesso!"
+            message = if (isEditing) "Tarefa atualizada com sucesso!" else "Tarefa cadastrada com sucesso!"
             success = true
             onNavigateToHome()
         } else {
-            message = "Erro ao salvar matéria."
+            message = "Erro ao salvar tarefa."
             success = false
         }
     }
 
-    // 🔸 Excluir disciplina existente
-    fun excluirMateria() {
-        if (!isEditing || subjectData == null) return
+    fun excluirTarefa() {
+        if (!isEditing || taskId == null) return
 
-        val operacaoBemSucedida = MateriaRepository.deletarMateria(userId, subjectData.id)
-
+        val operacaoBemSucedida = TarefaRepository.deletarTarefa(taskId, userId)
         if (operacaoBemSucedida) {
-            message = "Matéria excluída com sucesso!"
+            message = "Tarefa excluída com sucesso!"
             success = true
             onNavigateToHome()
         } else {
-            message = "Erro ao excluir matéria."
+            message = "Erro ao excluir tarefa."
             success = false
         }
     }
 
-    // 🎨 Layout
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
     ) {
-        // Fundo decorativo
+        // 🔹 Fundo decorativo
         Image(
             painter = painterResource(Res.drawable.fundo_quadriculado),
             contentDescription = "Fundo quadriculado",
@@ -147,7 +125,6 @@ fun SubjectRegisterScreen(
             contentScale = ContentScale.Fit
         )
 
-        // Conteúdo principal
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -181,7 +158,7 @@ fun SubjectRegisterScreen(
             }
 
             Text(
-                if (isEditing) "Editar Matéria" else "Nova Matéria",
+                if (isEditing) "Editar Tarefa" else "Nova Tarefa",
                 color = RoxoEscuro,
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold
@@ -190,13 +167,11 @@ fun SubjectRegisterScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             val campos = listOf(
-                Pair("Nome da Matéria", nomeMateria) to { it: String -> nomeMateria = it },
-                Pair("Professor", professor) to { it: String -> professor = it },
-                Pair("Frequência mínima (%)", frequenciaMin) to { it: String -> frequenciaMin = it },
-                Pair("Data de Início", dataInicio) to { it: String -> dataInicio = it },
-                Pair("Data de Fim", dataFim) to { it: String -> dataFim = it },
-                Pair("Horas por Aula", horasPorAula) to { it: String -> horasPorAula = it },
-                Pair("Semestre", semestre) to { it: String -> semestre = it },
+                Pair("Título", titulo) to { it: String -> titulo = it },
+                Pair("Descrição", descricao) to { it: String -> descricao = it },
+                Pair("Status (Pendente, Em andamento, Concluída)", status) to { it: String -> status = it },
+                Pair("Blockers", blockers) to { it: String -> blockers = it },
+                Pair("Data limite (AAAA-MM-DD)", dataLimite) to { it: String -> dataLimite = it }
             )
 
             campos.forEach { (campo, setValue) ->
@@ -233,7 +208,7 @@ fun SubjectRegisterScreen(
 
             // 💾 Botão salvar
             Button(
-                onClick = { salvarMateria() },
+                onClick = { salvarTarefa() },
                 colors = ButtonDefaults.buttonColors(containerColor = VerdeLima),
                 shape = RoundedCornerShape(8.dp),
                 border = BorderStroke(1.dp, Color.Black),
@@ -243,7 +218,7 @@ fun SubjectRegisterScreen(
                     .height(45.dp)
             ) {
                 Text(
-                    if (isEditing) "Salvar alterações" else "Salvar",
+                    if (isEditing) "Salvar alterações" else "Cadastrar Tarefa",
                     color = Color.Black,
                     fontWeight = FontWeight.Bold,
                     fontSize = 15.sp
@@ -254,7 +229,7 @@ fun SubjectRegisterScreen(
             if (isEditing) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Button(
-                    onClick = { excluirMateria() },
+                    onClick = { excluirTarefa() },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F)),
                     shape = RoundedCornerShape(8.dp),
                     modifier = Modifier

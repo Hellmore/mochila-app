@@ -1,6 +1,5 @@
 package br.com.mochila.ui.screens
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -9,7 +8,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,27 +24,53 @@ import org.jetbrains.compose.resources.painterResource
 fun ItemRegisterScreen(
     onNavigateToHome: () -> Unit,
     onNavigateToSubjectRegister: () -> Unit,
+    onNavigateToTaskRegister: () -> Unit,
+    onNavigateToTasksList: () -> Unit,
     onBack: () -> Unit,
-    onLogout: () -> Unit,
-    onOpenMenu: () -> Unit // ✅ Parâmetro adicionado
+    onLogout: () -> Unit
 ) {
-    val RoxoEscuro = Color(0xFF5336CB)
     val RoxoClaro = Color(0xFF7F55CE)
+    val RoxoEscuro = Color(0xFF5336CB)
+    val VerdeLima = Color(0xFFC5E300)
 
-    var selectedTabIndex by remember { mutableStateOf(0) }
+    var showMenu by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
     ) {
+        // 🟣 Fundo notebook
         Image(
-            painter = painterResource(Res.drawable.fundo_quadriculado),
-            contentDescription = null,
+            painter = painterResource(Res.drawable.notebook),
+            contentDescription = "Fundo caderno",
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
         )
 
+        // 🌟 Estrela verde decorativa
+        Image(
+            painter = painterResource(Res.drawable.star),
+            contentDescription = "Decoração estrela",
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .offset(x = 600.dp, y = (-150).dp)
+                .size(600.dp),
+            contentScale = ContentScale.Fit
+        )
+
+        // ⬅️ Chevron decorativo
+        Image(
+            painter = painterResource(Res.drawable.chevron),
+            contentDescription = "Decoração chevron",
+            modifier = Modifier
+                .align(Alignment.CenterStart)
+                .offset(x = (-100).dp, y = 260.dp)
+                .size(600.dp),
+            contentScale = ContentScale.Fit
+        )
+
+        // 📚 Conteúdo principal
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -54,144 +78,144 @@ fun ItemRegisterScreen(
                 .padding(horizontal = 24.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // 🔙 Botão Voltar
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 40.dp, start = 8.dp, end = 16.dp, bottom = 16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                    .padding(top = 40.dp, start = 8.dp, bottom = 16.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 BackButton(onBack = onBack)
+            }
+
+            // 👤 Cabeçalho centralizado: imagem + nome
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.fillMaxWidth()
+            ) {
                 Box(
                     modifier = Modifier
-                        .size(60.dp)
+                        .size(150.dp)
                         .clip(CircleShape)
-                        .background(RoxoClaro),
+                        .background(RoxoEscuro),
                     contentAlignment = Alignment.Center
                 ) {
                     Image(
                         painter = painterResource(Res.drawable.user),
                         contentDescription = "Usuário",
                         contentScale = ContentScale.Crop,
-                        modifier = Modifier.clip(CircleShape)
+                        modifier = Modifier
+                            .size(150.dp)
+                            .clip(CircleShape)
                     )
                 }
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    "Nome usuário",
+                    color = Color.Gray,
+                    fontSize = 22.sp
+                )
             }
 
+            Spacer(modifier = Modifier.height(40.dp))
+
+            // 🔹 Título “Registros”
             Text(
-                "Novo Lembrete",
+                text = "Registros",
                 color = RoxoEscuro,
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold
+                fontSize = 35.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.align(Alignment.CenterHorizontally)
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-            TabRow(
-                selectedTabIndex = selectedTabIndex,
-                containerColor = Color.Transparent,
-                contentColor = RoxoEscuro,
-                indicator = { tabPositions ->
-                    TabRowDefaults.SecondaryIndicator(
-                        modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex]),
-                        color = RoxoEscuro
-                    )
-                }
+            // 🔹 Botões principais
+            val botoes = listOf(
+                "Nova Matéria" to onNavigateToSubjectRegister,
+                "Novo Evento" to { /* TODO */ },
+                "Nova Tarefa" to onNavigateToTaskRegister,
+                "Nova Falta" to { /* TODO */ }
+            )
+
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Tab(selected = selectedTabIndex == 0, onClick = { selectedTabIndex = 0 }) {
-                    Text("Evento", modifier = Modifier.padding(12.dp))
+                botoes.forEach { (titulo, acao) ->
+                    Button(
+                        onClick = acao,
+                        colors = ButtonDefaults.buttonColors(containerColor = RoxoClaro),
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier
+                            .widthIn(max = 800.dp)
+                            .fillMaxWidth(0.9f)
+                            .padding(vertical = 8.dp)
+                            .height(50.dp)
+                    ) {
+                        Text(titulo, color = Color.White, fontSize = 15.sp)
+                    }
                 }
-                Tab(selected = selectedTabIndex == 1, onClick = { selectedTabIndex = 1 }) {
-                    Text("Tarefa", modifier = Modifier.padding(12.dp))
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            when (selectedTabIndex) {
-                0 -> EventoForm(onNavigateToHome)
-                1 -> TarefaForm(onNavigateToHome)
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-            TextButton(onClick = onNavigateToSubjectRegister) {
-                Text("Não encontrou a matéria? Cadastre uma nova", color = RoxoClaro)
             }
 
             Spacer(modifier = Modifier.height(100.dp))
         }
-        
-        // TODO: Adicionar um menu inferior que use onOpenMenu se necessário
-    }
-}
 
-@Composable
-fun EventoForm(onSave: () -> Unit) {
-    val RoxoClaro = Color(0xFF7F55CE)
-    val VerdeLima = Color(0xFFC5E300)
-
-    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        OutlinedTextField(
-            value = "",
-            onValueChange = {},
-            label = { Text("Título do Evento") },
-            shape = RoundedCornerShape(8.dp),
-            colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = RoxoClaro, unfocusedBorderColor = RoxoClaro)
-        )
-        OutlinedTextField(
-            value = "",
-            onValueChange = {},
-            label = { Text("Data do Evento") },
-            shape = RoundedCornerShape(8.dp),
-            colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = RoxoClaro, unfocusedBorderColor = RoxoClaro)
-        )
-        Button(
-            onClick = onSave,
-            colors = ButtonDefaults.buttonColors(containerColor = VerdeLima),
-            shape = RoundedCornerShape(8.dp),
-            border = BorderStroke(1.dp, Color.Black),
-            modifier = Modifier.fillMaxWidth(0.9f).height(45.dp)
+        // 🔹 Menu inferior fixo
+        Row(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .padding(bottom = 20.dp),
+            horizontalArrangement = Arrangement.Center
         ) {
-            Text("Salvar Evento", color = Color.Black, fontWeight = FontWeight.Bold)
+            Row(
+                modifier = Modifier
+                    .background(
+                        color = RoxoClaro.copy(alpha = 0.95f),
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    .padding(horizontal = 20.dp),
+                horizontalArrangement = Arrangement.spacedBy(5.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = { showMenu = true }) {
+                    Image(
+                        painter = painterResource(Res.drawable.menu),
+                        contentDescription = "Menu lateral",
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+
+                IconButton(onClick = onNavigateToHome) {
+                    Image(
+                        painter = painterResource(Res.drawable.home),
+                        contentDescription = "Home",
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            }
         }
-    }
-}
 
-@Composable
-fun TarefaForm(onSave: () -> Unit) {
-    val RoxoClaro = Color(0xFF7F55CE)
-    val VerdeLima = Color(0xFFC5E300)
+        if (showMenu) {
+            MenuScreen(
+                onCloseMenu = { showMenu = false },
 
-    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        OutlinedTextField(
-            value = "",
-            onValueChange = {},
-            label = { Text("Título da Tarefa") },
-            shape = RoundedCornerShape(8.dp),
-            colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = RoxoClaro, unfocusedBorderColor = RoxoClaro)
-        )
-        OutlinedTextField(
-            value = "",
-            onValueChange = {},
-            label = { Text("Data Limite") },
-            shape = RoundedCornerShape(8.dp),
-            colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = RoxoClaro, unfocusedBorderColor = RoxoClaro)
-        )
-        OutlinedTextField(
-            value = "",
-            onValueChange = {},
-            label = { Text("Blockers") },
-            shape = RoundedCornerShape(8.dp),
-            colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = RoxoClaro, unfocusedBorderColor = RoxoClaro)
-        )
-        Button(
-            onClick = onSave,
-            colors = ButtonDefaults.buttonColors(containerColor = VerdeLima),
-            shape = RoundedCornerShape(8.dp),
-            border = BorderStroke(1.dp, Color.Black),
-            modifier = Modifier.fillMaxWidth(0.9f).height(45.dp)
-        ) {
-            Text("Salvar Tarefa", color = Color.Black, fontWeight = FontWeight.Bold)
+                onNavigateToHome = {
+                    showMenu = false
+                    onNavigateToHome()
+                },
+
+                onNavigateToTasksList = {
+                    showMenu = false
+                    onNavigateToTasksList()
+                },
+
+                onLogout = {
+                    showMenu = false
+                    onLogout()
+                }
+            )
         }
     }
 }

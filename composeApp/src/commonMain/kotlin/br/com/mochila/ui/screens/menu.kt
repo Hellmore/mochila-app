@@ -25,29 +25,37 @@ import mochila_app.composeapp.generated.resources.*
 fun MenuScreen(
     onCloseMenu: () -> Unit,
     onNavigateToHome: () -> Unit,
-    onNavigateToProfile: () -> Unit, // ✅ Parâmetro para a tela de perfil
+    onNavigateToTasksList: () -> Unit,
     onLogout: () -> Unit
 ) {
     val RoxoClaro = Color(0xFF7F55CE)
     val RoxoEscuro = Color(0xFF5336CB)
 
+    // 🔹 Camada de fundo semitransparente — fecha o menu ao clicar fora
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black.copy(alpha = 0.3f))
-            .clickable { onCloseMenu() }
+            .clickable(onClick = onCloseMenu)
     ) {
+        // 🔹 Painel lateral animado
         AnimatedVisibility(
             visible = true,
-            enter = slideInHorizontally(initialOffsetX = { -it }, animationSpec = tween(400)) + fadeIn(tween(400)),
-            exit = slideOutHorizontally(targetOffsetX = { -it }, animationSpec = tween(400)) + fadeOut(tween(400))
+            enter = slideInHorizontally(
+                initialOffsetX = { -it },
+                animationSpec = tween(durationMillis = 400)
+            ) + fadeIn(animationSpec = tween(400)),
+            exit = slideOutHorizontally(
+                targetOffsetX = { -it },
+                animationSpec = tween(durationMillis = 400)
+            ) + fadeOut(animationSpec = tween(400))
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxHeight()
-                    .fillMaxWidth(0.75f)
+                    .fillMaxWidth(0.20f)
                     .background(RoxoClaro)
-                    .clickable(enabled = false) { }
+                    .clickable(enabled = false) { } // impede fechar ao clicar dentro
             ) {
                 Column(
                     modifier = Modifier
@@ -57,8 +65,12 @@ fun MenuScreen(
                     verticalArrangement = Arrangement.SpaceBetween
                 ) {
                     Column(horizontalAlignment = Alignment.Start) {
+                        // 🔹 Foto e nome do usuário
                         Box(
-                            modifier = Modifier.size(80.dp).clip(CircleShape).background(RoxoEscuro),
+                            modifier = Modifier
+                                .size(80.dp)
+                                .clip(CircleShape)
+                                .background(RoxoEscuro),
                             contentAlignment = Alignment.Center
                         ) {
                             Image(
@@ -68,30 +80,45 @@ fun MenuScreen(
                                 modifier = Modifier.size(80.dp)
                             )
                         }
+
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text("Nome usuário", color = Color.White.copy(alpha = 0.9f), fontSize = 26.sp)
+                        Text(
+                            "Nome usuário",
+                            color = Color.White.copy(alpha = 0.9f),
+                            fontSize = 26.sp
+                        )
+
                         Spacer(modifier = Modifier.height(24.dp))
 
-                        // ✅ Item de menu com link para o perfil
-                        MenuItem("Configurações da conta", Res.drawable.config) { 
-                            onCloseMenu()
-                            onNavigateToProfile()
-                        }
-                        MenuItem("Matérias", Res.drawable.home) {
+                        // 🔹 Itens do menu
+                        MenuItem("Configurações da conta", Res.drawable.config) { /* TODO */ }
+                        MenuItem("Plano de faltas") { /* TODO */ }
+                        MenuItem("Matérias") {
                             onCloseMenu()
                             onNavigateToHome()
                         }
+                        MenuItem("Eventos") { /* TODO */ }
+                        MenuItem("Lista de Tarefas") {
+                            onCloseMenu()
+                            onNavigateToTasksList()
+                        }
+                        MenuItem("Assine o PLUS!", Res.drawable.plus) { /* TODO */ }
                     }
 
+                    // 🔹 Rodapé do menu
                     Column(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalAlignment = Alignment.Start
                     ) {
+                        // ✅ Botão de logout
                         MenuItem("Sair da conta") {
                             onCloseMenu()
-                            onLogout()
+                            onLogout() // volta para tela de login
                         }
+
                         Spacer(modifier = Modifier.height(12.dp))
+
+                        // 🔹 Botão para fechar o menu
                         IconButton(
                             onClick = onCloseMenu,
                             modifier = Modifier.align(Alignment.Start)
@@ -118,25 +145,24 @@ private fun MenuItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 12.dp)
+            .padding(vertical = 8.dp)
             .clickable(onClick = onClick),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Start
     ) {
-        if (iconRes != null) {
-            Image(
-                painter = painterResource(iconRes),
-                contentDescription = null,
-                modifier = Modifier.size(24.dp)
-            )
-            Spacer(modifier = Modifier.width(16.dp))
-        } else {
-            Spacer(modifier = Modifier.width(40.dp)) // Alinha com os outros itens
-        }
         Text(
             text = text,
             color = Color.White,
-            fontSize = 18.sp
+            fontSize = 15.sp
         )
+
+        if (iconRes != null) {
+            Spacer(modifier = Modifier.width(8.dp))
+            Image(
+                painter = painterResource(iconRes),
+                contentDescription = null,
+                modifier = Modifier.size(16.dp)
+            )
+        }
     }
 }
