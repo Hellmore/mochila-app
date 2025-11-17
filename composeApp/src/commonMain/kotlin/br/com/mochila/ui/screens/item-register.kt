@@ -24,6 +24,8 @@ import org.jetbrains.compose.resources.painterResource
 fun ItemRegisterScreen(
     onNavigateToHome: () -> Unit,
     onNavigateToSubjectRegister: () -> Unit,
+    onNavigateToTaskRegister: () -> Unit,
+    onNavigateToTasksList: () -> Unit,
     onBack: () -> Unit,
     onLogout: () -> Unit
 ) {
@@ -132,7 +134,7 @@ fun ItemRegisterScreen(
             val botoes = listOf(
                 "Nova Matéria" to onNavigateToSubjectRegister,
                 "Novo Evento" to { /* TODO */ },
-                "Nova Tarefa" to { /* TODO */ },
+                "Nova Tarefa" to onNavigateToTaskRegister,
                 "Nova Falta" to { /* TODO */ }
             )
 
@@ -195,14 +197,20 @@ fun ItemRegisterScreen(
             }
         }
 
-        // 🔹 Overlay do menu lateral
         if (showMenu) {
             MenuScreen(
                 onCloseMenu = { showMenu = false },
+
                 onNavigateToHome = {
                     showMenu = false
                     onNavigateToHome()
                 },
+
+                onNavigateToTasksList = {
+                    showMenu = false
+                    onNavigateToTasksList()
+                },
+
                 onLogout = {
                     showMenu = false
                     onLogout()

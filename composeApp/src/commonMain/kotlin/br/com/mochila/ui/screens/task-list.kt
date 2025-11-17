@@ -20,32 +20,34 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import br.com.mochila.data.*
+import br.com.mochila.data.Tarefa
+import br.com.mochila.data.TarefaRepository
 import mochila_app.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.painterResource
 
 @Composable
-fun HomeScreen(
+fun TaskListScreen(
     userId: Int,
-    onNavigateToHome: () -> Unit,
+    onNavigateBack: () -> Unit,
     onOpenMenu: () -> Unit,
     onNavigateToAdd: () -> Unit,
-    onNavigateToSubject: (Int) -> Unit,
-    onNavigateToTasksList: () -> Unit,
-    onLogout: () -> Unit
+    onNavigateToTaskDetail: (Int) -> Unit,
+    onNavigateToHome: () -> Unit,
 ) {
     val RoxoEscuro = Color(0xFF5336CB)
     val RoxoClaro = Color(0xFF7F55CE)
 
-    val materias by remember(userId) { mutableStateOf(MateriaRepository.listarMaterias(userId)) }
-    val tarefas by remember(userId) { mutableStateOf(TarefaRepository.listarTarefas(userId)) }
+    // Carrega tarefas
+    val tarefas by remember(userId) {
+        mutableStateOf(TarefaRepository.listarTarefas(userId))
+    }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
     ) {
-        // Imagem de fundo
+
         Image(
             painter = painterResource(Res.drawable.fundo_quadriculado),
             contentDescription = null,
@@ -58,7 +60,7 @@ fun HomeScreen(
                 .fillMaxSize()
                 .padding(top = 16.dp)
         ) {
-            // Cabeçalho
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -66,7 +68,13 @@ fun HomeScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Matérias", color = RoxoEscuro, fontSize = 28.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    "Tarefas",
+                    color = RoxoEscuro,
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold
+                )
+
                 Box(
                     modifier = Modifier
                         .size(60.dp)
@@ -77,38 +85,44 @@ fun HomeScreen(
                     Image(
                         painter = painterResource(Res.drawable.user),
                         contentDescription = "Usuário",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.clip(CircleShape)
+                        modifier = Modifier.clip(CircleShape),
+                        contentScale = ContentScale.Crop
                     )
                 }
             }
 
-            if (materias.isEmpty()) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        "Nenhuma matéria cadastrada",
-                        color = Color.Gray,
-                        fontSize = 16.sp
-                    )
+            // ---- LISTA ----
+            if (tarefas.isEmpty()) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("Nenhuma tarefa cadastrada.", color = Color.Gray, fontSize = 16.sp)
                 }
             } else {
                 LazyColumn(
                     modifier = Modifier
-                        .fillMaxSize()
+                        .fillMaxWidth()
                         .padding(horizontal = 16.dp)
                 ) {
-                    items(materias) { materia ->
-                        MateriaItem(materia) { materiaId ->
-                            onNavigateToSubject(materiaId)
+                    items(tarefas) { tarefa ->
+                        TarefaItem(tarefa) { tarefaId ->
+                            onNavigateToTaskDetail(tarefaId)   // ✅ AGORA FUNCIONA
                         }
-
-                        // 👇 Espaço entre cada matéria (igual tarefas)
-                        Spacer(modifier = Modifier.height(12.dp))
                     }
                 }
+            }
+        }
+
+        // Voltar
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(start = 20.dp, bottom = 20.dp)
+        ) {
+            IconButton(onClick = onNavigateBack) {
+                Image(
+                    painter = painterResource(Res.drawable.esquerda),
+                    contentDescription = "Voltar",
+                    modifier = Modifier.size(32.dp)
+                )
             }
         }
 
@@ -130,7 +144,7 @@ fun HomeScreen(
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = onOpenMenu) { // ✅ Usa a função correta
+                IconButton(onClick = onOpenMenu) {
                     Image(
                         painter = painterResource(Res.drawable.menu),
                         contentDescription = "Menu lateral",
@@ -147,7 +161,7 @@ fun HomeScreen(
                 IconButton(onClick = onNavigateToHome) {
                     Image(
                         painter = painterResource(Res.drawable.home),
-                        contentDescription = "Início",
+                        contentDescription = "Home",
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -157,20 +171,38 @@ fun HomeScreen(
 }
 
 @Composable
-fun MateriaItem(materia: Materia, onClick: (Int) -> Unit) {
+fun TarefaItem(
+    tarefa: Tarefa,
+    onClick: (Int) -> Unit
+) {
+    val RoxoEscuro = Color(0xFF5336CB)
     val VerdeClaro = Color(0xFFE6F5B0)
 
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(VerdeClaro, shape = RoundedCornerShape(12.dp))
-            .border(1.dp, Color.Gray, RoundedCornerShape(12.dp))
-            .padding(20.dp)
-            .clickable { onClick(materia.id_disciplina) },
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+            .clickable { onClick(tarefa.id_tarefa) }   // ✔ CAMPO CERTO
+            .background(VerdeClaro, RoundedCornerShape(16.dp))
+            .border(1.dp, Color.Gray, RoundedCornerShape(16.dp))
+            .padding(16.dp)
+            .padding(vertical = 8.dp)
     ) {
-        Text(materia.nome, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-        Text(">", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = Color.Gray)
+        Text(
+            text = tarefa.titulo,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            color = RoxoEscuro
+        )
+
+        tarefa.descricao?.let {
+            Spacer(Modifier.height(6.dp))
+            Text(
+                text = it,
+                fontSize = 14.sp,
+                color = Color.DarkGray
+            )
+        }
     }
+
+    Spacer(modifier = Modifier.height(12.dp))
 }
