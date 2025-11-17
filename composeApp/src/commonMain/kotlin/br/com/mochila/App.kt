@@ -87,6 +87,7 @@ fun App() {
                         onNavigateToTaskRegister = { navigateTo("task_register") },
                         onBack = { goBack() },
                         onNavigateToTasksList = { navigateTo("tasks_list") },
+                        onNavigateToAccountSettings = { navigateTo("account_settings") },
                         onLogout = { logout() }
                     )
 
@@ -126,6 +127,7 @@ fun App() {
                                         onNavigateToHome = { navigateTo("home") },
                                         onBack = { goBack() },
                                         onNavigateToTasksList = { navigateTo("tasks_list") },
+                                        onNavigateToAccountSettings = { navigateTo("account_settings") },
                                         onLogout = { logout() }
                                     )
                                 } ?: run {
@@ -210,6 +212,7 @@ fun App() {
                                     onNavigateToHome = { navigateTo("home") },
                                     onBack = { goBack() },
                                     onNavigateToTasksList = { navigateTo("tasks_list") },
+                                    onNavigateToAccountSettings = { navigateTo("account_settings") },
                                     onLogout = { logout() }
                                 )
                             } ?: goBack()
@@ -231,6 +234,16 @@ fun App() {
                             } ?: goBack()
                         } ?: logout()
                     }
+
+                    "account_settings" -> {
+                        currentUserId?.let { userId ->
+                            AccountSettingsScreen(
+                                userId = userId,
+                                onBack = { goBack() },
+                                onLogout = { logout() }
+                            )
+                        } ?: logout()
+                    }
                 }
 
                 if (isMenuVisible) {
@@ -243,6 +256,10 @@ fun App() {
                         onNavigateToTasksList = {
                             closeMenu()
                             navigateTo("tasks_list")
+                        },
+                        onNavigateToAccountSettings = {
+                            closeMenu()
+                            navigateTo("account_settings")
                         },
                         onLogout = { logout() }
                     )
