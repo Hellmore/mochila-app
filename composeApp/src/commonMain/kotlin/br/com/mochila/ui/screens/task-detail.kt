@@ -28,6 +28,7 @@ fun TaskDetailScreen(
     onNavigateToEdit: (Tarefa) -> Unit,
     onNavigateToHome: () -> Unit,
     onNavigateToTasksList: () -> Unit,
+    onNavigateToAccountSettings: () -> Unit,
     onBack: () -> Unit,
     onLogout: () -> Unit
 ) {
@@ -193,7 +194,10 @@ fun TaskDetailScreen(
                         showMenu = false
                         onNavigateToTasksList()
                     },
-
+                    onNavigateToAccountSettings = {
+                        showMenu = false
+                        onNavigateToAccountSettings()
+                    },
                     onLogout = {
                         showMenu = false
                         onLogout()

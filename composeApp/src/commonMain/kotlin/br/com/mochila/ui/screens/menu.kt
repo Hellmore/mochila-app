@@ -26,6 +26,7 @@ fun MenuScreen(
     onCloseMenu: () -> Unit,
     onNavigateToHome: () -> Unit,
     onNavigateToTasksList: () -> Unit,
+    onNavigateToAccountSettings: () -> Unit,
     onLogout: () -> Unit
 ) {
     val RoxoClaro = Color(0xFF7F55CE)
@@ -91,7 +92,10 @@ fun MenuScreen(
                         Spacer(modifier = Modifier.height(24.dp))
 
                         // 🔹 Itens do menu
-                        MenuItem("Configurações da conta", Res.drawable.config) { /* TODO */ }
+                        MenuItem("Configurações da conta", Res.drawable.config) {
+                            onCloseMenu()
+                            onNavigateToAccountSettings()
+                        }
                         MenuItem("Plano de faltas") { /* TODO */ }
                         MenuItem("Matérias") {
                             onCloseMenu()

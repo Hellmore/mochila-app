@@ -29,6 +29,7 @@ fun SubjectDetailScreen(
     onNavigateToItemRegister: () -> Unit,
     onNavigateToHome: () -> Unit,
     onNavigateToTasksList: () -> Unit,
+    onNavigateToAccountSettings: () -> Unit,
     onBack: () -> Unit,
     onLogout: () -> Unit
 ) {
@@ -247,6 +248,10 @@ fun SubjectDetailScreen(
                     onNavigateToTasksList = {
                         showMenu = false
                         onNavigateToTasksList()
+                    },
+                    onNavigateToAccountSettings = {
+                        showMenu = false
+                        onNavigateToAccountSettings()
                     },
 
                     onLogout = {
