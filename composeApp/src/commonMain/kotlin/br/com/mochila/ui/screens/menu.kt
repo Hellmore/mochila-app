@@ -25,7 +25,8 @@ import mochila_app.composeapp.generated.resources.*
 fun MenuScreen(
     onCloseMenu: () -> Unit,
     onNavigateToHome: () -> Unit,
-    onLogout: () -> Unit // ✅ novo parâmetro para sair do sistema
+    onNavigateToTasksList: () -> Unit,
+    onLogout: () -> Unit
 ) {
     val RoxoClaro = Color(0xFF7F55CE)
     val RoxoEscuro = Color(0xFF5336CB)
@@ -97,7 +98,10 @@ fun MenuScreen(
                             onNavigateToHome()
                         }
                         MenuItem("Eventos") { /* TODO */ }
-                        MenuItem("Lista de Tarefas") { /* TODO */ }
+                        MenuItem("Lista de Tarefas") {
+                            onCloseMenu()
+                            onNavigateToTasksList()
+                        }
                         MenuItem("Assine o PLUS!", Res.drawable.plus) { /* TODO */ }
                     }
 
