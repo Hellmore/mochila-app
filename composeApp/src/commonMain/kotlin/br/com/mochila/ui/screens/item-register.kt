@@ -26,6 +26,7 @@ fun ItemRegisterScreen(
     onNavigateToSubjectRegister: () -> Unit,
     onNavigateToTaskRegister: () -> Unit,
     onNavigateToTasksList: () -> Unit,
+    onNavigateToAccountSettings: () -> Unit,
     onBack: () -> Unit,
     onLogout: () -> Unit
 ) {
@@ -209,6 +210,11 @@ fun ItemRegisterScreen(
                 onNavigateToTasksList = {
                     showMenu = false
                     onNavigateToTasksList()
+                },
+
+                onNavigateToAccountSettings = {
+                    showMenu = false
+                    onNavigateToAccountSettings()
                 },
 
                 onLogout = {
