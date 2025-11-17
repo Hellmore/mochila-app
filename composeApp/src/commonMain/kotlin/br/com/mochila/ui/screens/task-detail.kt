@@ -17,16 +17,15 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import br.com.mochila.data.Tarefa
+import br.com.mochila.data.TarefaRepository
 import mochila_app.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.painterResource
-import br.com.mochila.data.Materia
 
 @Composable
-fun SubjectDetailScreen(
-    materia: Materia,
-    onNavigateToEdit: (Materia) -> Unit,
-    onNavigateToAbsenceControl: (Materia) -> Unit,
-    onNavigateToItemRegister: () -> Unit,
+fun TaskDetailScreen(
+    taskId: Int,
+    onNavigateToEdit: (Tarefa) -> Unit,
     onNavigateToHome: () -> Unit,
     onNavigateToTasksList: () -> Unit,
     onBack: () -> Unit,
@@ -37,6 +36,13 @@ fun SubjectDetailScreen(
     val VerdeLima = Color(0xFFC5E300)
 
     var showMenu by remember { mutableStateOf(false) }
+
+    val tarefa = remember(taskId) { TarefaRepository.buscarPorId(taskId) }
+
+    if (tarefa == null) {
+        Text("Erro: tarefa não encontrada.")
+        return
+    }
 
     Box(
         modifier = Modifier
@@ -78,7 +84,6 @@ fun SubjectDetailScreen(
                 .padding(horizontal = 24.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-
             // Cabeçalho
             Row(
                 modifier = Modifier
@@ -109,7 +114,7 @@ fun SubjectDetailScreen(
 
             // Título
             Text(
-                "Matéria",
+                "Tarefa",
                 color = RoxoEscuro,
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
@@ -118,15 +123,13 @@ fun SubjectDetailScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Campos da tarefa
             val campos = mapOf(
-//                "ID da Disciplina" to materia.id_disciplina.toString(),
-                "Nome" to materia.nome,
-                "Professor" to materia.professor,
-                "Frequência Mínima (%)" to materia.frequencia_minima.toString(),
-                "Data de Início" to materia.data_inicio,
-                "Data de Término" to materia.data_fim,
-                "Horas/Aula" to materia.hora_aula.toString(),
-                "Semestre" to materia.semestre
+                "Título" to tarefa.titulo,
+                "Descrição" to (tarefa.descricao ?: "Sem descrição"),
+                "Status" to tarefa.status,
+                "Blockers" to (tarefa.blockers ?: "Nenhum"),
+                "Data limite" to (tarefa.data_limite ?: "Não definida")
             )
 
             campos.forEach { (label, value) ->
@@ -164,7 +167,7 @@ fun SubjectDetailScreen(
 
             // Botão Editar
             Button(
-                onClick = { onNavigateToEdit(materia) },
+                onClick = { onNavigateToEdit(tarefa) },
                 colors = ButtonDefaults.buttonColors(containerColor = RoxoClaro),
                 shape = RoundedCornerShape(8.dp),
                 modifier = Modifier
@@ -175,65 +178,7 @@ fun SubjectDetailScreen(
                 Text("Editar", color = Color.White, fontWeight = FontWeight.Bold)
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // Botão Controle de Faltas
-            Button(
-                onClick = { onNavigateToAbsenceControl(materia) },
-                colors = ButtonDefaults.buttonColors(containerColor = VerdeLima),
-                shape = RoundedCornerShape(8.dp),
-                modifier = Modifier
-                    .widthIn(max = 600.dp)
-                    .fillMaxWidth(0.9f)
-                    .height(45.dp)
-            ) {
-                Text("Controle de Faltas", color = Color.Black, fontWeight = FontWeight.Bold)
-            }
-
             Spacer(modifier = Modifier.height(120.dp))
-
-            // Menu inferior
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 20.dp),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Row(
-                    modifier = Modifier
-                        .background(
-                            color = RoxoEscuro.copy(alpha = 0.95f),
-                            shape = RoundedCornerShape(8.dp)
-                        )
-                        .padding(horizontal = 20.dp),
-                    horizontalArrangement = Arrangement.spacedBy(5.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    IconButton(onClick = { showMenu = true }) {
-                        Image(
-                            painter = painterResource(Res.drawable.menu),
-                            contentDescription = "Menu lateral",
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
-
-                    IconButton(onClick = onNavigateToItemRegister) {
-                        Image(
-                            painter = painterResource(Res.drawable.add),
-                            contentDescription = "Registrar item",
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
-
-                    IconButton(onClick = onNavigateToHome) {
-                        Image(
-                            painter = painterResource(Res.drawable.home),
-                            contentDescription = "Home",
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
-                }
-            }
 
             if (showMenu) {
                 MenuScreen(
@@ -255,7 +200,6 @@ fun SubjectDetailScreen(
                     }
                 )
             }
-
         }
     }
 }

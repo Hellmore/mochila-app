@@ -65,16 +65,34 @@ object DatabaseHelper {
      * @param sql comando SQL (ex: "SELECT * FROM disciplina WHERE id_usuario = ?")
      * @param params lista de parâmetros (opcional)
      */
-    fun executeQuery(sql: String, params: List<Any> = emptyList()): ResultSet? {
-        val conn = connect() ?: return null
-        return try {
+    fun executeQuery(sql: String, params: List<Any> = emptyList()): List<Map<String, Any?>> {
+        val conn = connect() ?: return emptyList()
+        val results = mutableListOf<Map<String, Any?>>()
+
+        try {
             val stmt = conn.prepareStatement(sql)
             params.forEachIndexed { index, param -> stmt.setObject(index + 1, param) }
-            stmt.executeQuery()
+            val rs = stmt.executeQuery()
+
+            val columnCount = rs.metaData.columnCount
+
+            while (rs.next()) {
+                val row = mutableMapOf<String, Any?>()
+                for (i in 1..columnCount) {
+                    row[rs.metaData.getColumnName(i)] = rs.getObject(i)
+                }
+                results.add(row)
+            }
+
+            rs.close()
+            stmt.close()
         } catch (e: Exception) {
             e.printStackTrace()
-            null
+        } finally {
+            conn.close()
         }
+
+        return results
     }
 
     /**
