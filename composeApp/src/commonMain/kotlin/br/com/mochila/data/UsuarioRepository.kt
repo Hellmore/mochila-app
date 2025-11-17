@@ -3,26 +3,24 @@ package br.com.mochila.data
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 
+// Data class para transportar dados do usuário
+data class Usuario(val id: Int, val nome: String, val email: String)
+
 object UsuarioRepository {
 
     /**
      * Cadastra um novo usuário no banco.
-     * Retorna true se inserção for bem-sucedida, false caso contrário.
      */
     fun insertUsuario(nome: String, email: String, senha: String): Boolean {
         val conn = DatabaseHelper.connect() ?: return false
         return try {
-            val sql = """
-                INSERT INTO usuario (nome, email, senha) 
-                VALUES (?, ?, ?)
-            """
+            val sql = "INSERT INTO usuario (nome, email, senha) VALUES (?, ?, ?)"
             val stmt: PreparedStatement = conn.prepareStatement(sql)
             stmt.setString(1, nome)
             stmt.setString(2, email)
             stmt.setString(3, senha)
             stmt.executeUpdate()
             stmt.close()
-            println("✅ Usuário cadastrado: $email")
             true
         } catch (e: Exception) {
             println("⚠️ Erro ao inserir usuário: ${e.message}")
@@ -50,15 +48,8 @@ object UsuarioRepository {
                     userId = rs.getInt("id_usuario")
                 }
             }
-
             rs.close()
             stmt.close()
-
-            if (userId != null) {
-                println("✅ Login autorizado para: $email (ID: $userId)")
-            } else {
-                println("❌ Credenciais inválidas para: $email")
-            }
             userId
         } catch (e: Exception) {
             println("⚠️ Erro ao validar login: ${e.message}")
@@ -67,45 +58,66 @@ object UsuarioRepository {
             DatabaseHelper.close()
         }
     }
-
+    
     /**
-     * Busca o ID de um usuário pelo e-mail.
+     * ✅ Busca um usuário completo pelo seu ID.
      */
-    fun getUsuarioIdPorEmail(email: String): Int? {
+    fun getUsuarioById(userId: Int): Usuario? {
         val conn = DatabaseHelper.connect() ?: return null
         return try {
-            val sql = "SELECT id_usuario FROM usuario WHERE email = ?"
+            val sql = "SELECT id_usuario, nome, email FROM usuario WHERE id_usuario = ?"
             val stmt = conn.prepareStatement(sql)
-            stmt.setString(1, email)
+            stmt.setInt(1, userId)
             val rs = stmt.executeQuery()
-            val userId = if (rs.next()) rs.getInt("id_usuario") else null
+
+            val usuario = if (rs.next()) {
+                Usuario(
+                    id = rs.getInt("id_usuario"),
+                    nome = rs.getString("nome"),
+                    email = rs.getString("email")
+                )
+            } else null
+
             rs.close()
             stmt.close()
-            userId
+            usuario
         } catch (e: Exception) {
-            println("⚠️ Erro ao buscar ID do usuário: ${e.message}")
+            println("⚠️ Erro ao buscar usuário por ID: ${e.message}")
             null
         } finally {
             DatabaseHelper.close()
         }
     }
-
+    
     /**
-     * Busca um usuário pelo e-mail.
+     * ✅ Atualiza os dados de um usuário.
+     * Se a nova senha for nula ou vazia, ela não é alterada.
      */
-    fun buscarUsuarioPorEmail(email: String): Boolean {
+    fun updateUsuario(userId: Int, nome: String, email: String, novaSenha: String?): Boolean {
         val conn = DatabaseHelper.connect() ?: return false
         return try {
-            val sql = "SELECT 1 FROM usuario WHERE email = ?"
+            // Constrói o SQL dinamicamente para atualizar a senha apenas se fornecida
+            val sql = if (novaSenha.isNullOrBlank()) {
+                "UPDATE usuario SET nome = ?, email = ?, atualizado_em = CURRENT_TIMESTAMP WHERE id_usuario = ?"
+            } else {
+                "UPDATE usuario SET nome = ?, email = ?, senha = ?, atualizado_em = CURRENT_TIMESTAMP WHERE id_usuario = ?"
+            }
+            
             val stmt = conn.prepareStatement(sql)
-            stmt.setString(1, email)
-            val rs = stmt.executeQuery()
-            val existe = rs.next()
-            rs.close()
+            stmt.setString(1, nome)
+            stmt.setString(2, email)
+            if (novaSenha.isNullOrBlank()) {
+                stmt.setInt(3, userId)
+            } else {
+                stmt.setString(3, novaSenha)
+                stmt.setInt(4, userId)
+            }
+            
+            val rows = stmt.executeUpdate()
             stmt.close()
-            existe
+            rows > 0
         } catch (e: Exception) {
-            println("⚠️ Erro ao buscar usuário: ${e.message}")
+            println("⚠️ Erro ao atualizar usuário: ${e.message}")
             false
         } finally {
             DatabaseHelper.close()
