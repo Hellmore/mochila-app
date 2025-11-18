@@ -32,6 +32,7 @@ fun HomeScreen(
     onNavigateToAdd: () -> Unit,
     onNavigateToSubject: (Int) -> Unit,
     onNavigateToTasksList: () -> Unit,
+    onNavigateToAccountSettings: () -> Unit,
     onLogout: () -> Unit
 ) {
     val RoxoEscuro = Color(0xFF5336CB)
@@ -69,7 +70,8 @@ fun HomeScreen(
                     modifier = Modifier
                         .size(60.dp)
                         .clip(CircleShape)
-                        .background(RoxoClaro),
+                        .background(RoxoClaro)
+                        .clickable { onNavigateToAccountSettings() },
                     contentAlignment = Alignment.Center
                 ) {
                     Image(
