@@ -101,15 +101,6 @@ fun AccountSettingsScreen(
                         .background(RoxoClaro)
                         .border(2.dp, VerdeLima, CircleShape)
                 )
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(RoxoEscuro)
-                        .border(2.dp, Color.White, CircleShape)
-                        .align(Alignment.BottomEnd)
-                        .clickable { /* TODO: lógica de upload de foto */ }
-                )
             }
 
             Spacer(modifier = Modifier.height(32.dp))
