@@ -69,6 +69,7 @@ fun App() {
                                 onNavigateToHome = { /* já estamos na home */ },
                                 onOpenMenu = { openMenu() },
                                 onNavigateToAdd = { navigateTo("item_register") },
+                                onNavigateToAccountSettings = { navigateTo("account_settings") },
                                 onNavigateToSubject = { materiaId ->
                                     selectedMateriaId = materiaId
                                     navigateTo("subject_detail")

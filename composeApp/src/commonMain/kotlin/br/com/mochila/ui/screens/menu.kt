@@ -84,7 +84,11 @@ fun MenuScreen(
                             modifier = Modifier
                                 .size(80.dp)
                                 .clip(CircleShape)
-                                .background(RoxoEscuro),
+                                .background(RoxoEscuro)
+                                .clickable {
+                                    onCloseMenu()
+                                    onNavigateToAccountSettings()
+                                },
                             contentAlignment = Alignment.Center
                         ) {
                             Image(
