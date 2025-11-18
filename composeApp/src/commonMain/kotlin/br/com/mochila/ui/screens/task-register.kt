@@ -169,9 +169,8 @@ fun TaskRegisterScreen(
             val campos = listOf(
                 Pair("Título", titulo) to { it: String -> titulo = it },
                 Pair("Descrição", descricao) to { it: String -> descricao = it },
-                Pair("Status (Pendente, Em andamento, Concluída)", status) to { it: String -> status = it },
                 Pair("Blockers", blockers) to { it: String -> blockers = it },
-                Pair("Data limite (AAAA-MM-DD)", dataLimite) to { it: String -> dataLimite = it }
+                Pair("Data limite", dataLimite) to { it: String -> dataLimite = it }
             )
 
             campos.forEach { (campo, setValue) ->
@@ -195,7 +194,72 @@ fun TaskRegisterScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+// 🔽 Dropdown de Status (padronizado)
+            var expandedStatus by remember { mutableStateOf(false) }
+            val statusOptions = listOf("Pendente", "Em andamento", "Cancelada", "Concluida")
+
+            Box(
+                modifier = Modifier
+                    .widthIn(max = 600.dp)
+                    .fillMaxWidth(0.9f)
+                    .padding(vertical = 6.dp)
+            ) {
+                OutlinedTextField(
+                    value = status,
+                    onValueChange = {},
+                    readOnly = true,
+                    placeholder = {
+                        Text(
+                            "Status",
+                            color = Color.Gray.copy(alpha = 0.6f),
+                            fontSize = 14.sp
+                        )
+                    },
+                    trailingIcon = {
+                        IconButton(onClick = { expandedStatus = true }) {
+                            Icon(
+                                painterResource(Res.drawable.drop),
+                                contentDescription = "Selecionar status",
+                                tint = RoxoClaro
+                            )
+                        }
+                    },
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = Color.White,
+                        unfocusedContainerColor = Color.White,
+                        focusedBorderColor = RoxoClaro,
+                        unfocusedBorderColor = RoxoClaro,
+                        focusedTextColor = Color.Black.copy(alpha = 0.85f),
+                        unfocusedTextColor = Color.Black.copy(alpha = 0.85f)
+                    ),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                )
+
+                DropdownMenu(
+                    expanded = expandedStatus,
+                    onDismissRequest = { expandedStatus = false }
+                ) {
+                    statusOptions.forEach { option ->
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    option,
+                                    fontSize = 14.sp,
+                                    color = if (status == option) RoxoEscuro else Color.Black.copy(alpha = 0.85f),
+                                    fontWeight = if (status == option) FontWeight.Bold else FontWeight.Normal
+                                )
+                            },
+                            onClick = {
+                                status = option
+                                expandedStatus = false
+                            }
+                        )
+                    }
+                }
+            }
 
             message?.let {
                 Text(

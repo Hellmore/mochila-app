@@ -17,13 +17,13 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import br.com.mochila.data.Tarefa
-import br.com.mochila.data.TarefaRepository
+import br.com.mochila.data.*
 import mochila_app.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.painterResource
 
 @Composable
 fun TaskDetailScreen(
+    userId: Int,
     taskId: Int,
     onNavigateToEdit: (Tarefa) -> Unit,
     onNavigateToHome: () -> Unit,
@@ -37,8 +37,8 @@ fun TaskDetailScreen(
     val VerdeLima = Color(0xFFC5E300)
 
     var showMenu by remember { mutableStateOf(false) }
-
     val tarefa = remember(taskId) { TarefaRepository.buscarPorId(taskId) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     if (tarefa == null) {
         Text("Erro: tarefa não encontrada.")
@@ -179,17 +179,74 @@ fun TaskDetailScreen(
                 Text("Editar", color = Color.White, fontWeight = FontWeight.Bold)
             }
 
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Button(
+                onClick = { showDeleteDialog = true },
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD9534F)),
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier
+                    .widthIn(max = 600.dp)
+                    .fillMaxWidth(0.9f)
+                    .height(45.dp)
+            ) {
+                Text("Excluir Tarefa", color = Color.White, fontWeight = FontWeight.Bold)
+            }
+
+            if (showDeleteDialog) {
+                AlertDialog(
+                    onDismissRequest = { showDeleteDialog = false },
+                    title = {
+                        Text(
+                            "Confirmar Exclusão",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 18.sp
+                        )
+                    },
+                    text = {
+                        Text("Tem certeza que deseja excluir a tarefa \"${tarefa.titulo}\"?")
+                    },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                val apagou = TarefaRepository.deletarTarefa(
+                                    idUsuario = userId,
+                                    idTarefa = tarefa.id_tarefa
+                                )
+
+                                showDeleteDialog = false
+
+                                if (apagou) {
+                                    println("Tarefa deletada com sucesso!")
+                                    onNavigateToTasksList()
+                                } else {
+                                    println("Erro ao deletar tarefa.")
+                                }
+                            }
+                        ) {
+                            Text("Excluir", color = Color(0xFFD9534F), fontWeight = FontWeight.Bold)
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showDeleteDialog = false }) {
+                            Text("Cancelar")
+                        }
+                    },
+                    shape = RoundedCornerShape(12.dp),
+                    containerColor = Color.White
+                )
+            }
+
             Spacer(modifier = Modifier.height(120.dp))
 
             if (showMenu) {
                 MenuScreen(
+                    userId = userId,
                     onCloseMenu = { showMenu = false },
-
                     onNavigateToHome = {
                         showMenu = false
                         onNavigateToHome()
                     },
-
                     onNavigateToTasksList = {
                         showMenu = false
                         onNavigateToTasksList()

@@ -19,10 +19,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import mochila_app.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.painterResource
-import br.com.mochila.data.Materia
+import br.com.mochila.data.*
 
 @Composable
 fun SubjectDetailScreen(
+    userId: Int,
     materia: Materia,
     onNavigateToEdit: (Materia) -> Unit,
     onNavigateToAbsenceControl: (Materia) -> Unit,
@@ -38,6 +39,7 @@ fun SubjectDetailScreen(
     val VerdeLima = Color(0xFFC5E300)
 
     var showMenu by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
@@ -178,17 +180,74 @@ fun SubjectDetailScreen(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Botão Controle de Faltas
+//            // Botão Controle de Faltas
+//            Button(
+//                onClick = { onNavigateToAbsenceControl(materia) },
+//                colors = ButtonDefaults.buttonColors(containerColor = VerdeLima),
+//                shape = RoundedCornerShape(8.dp),
+//                modifier = Modifier
+//                    .widthIn(max = 600.dp)
+//                    .fillMaxWidth(0.9f)
+//                    .height(45.dp)
+//            ) {
+//                Text("Controle de Faltas", color = Color.Black, fontWeight = FontWeight.Bold)
+//            }
+
+
             Button(
-                onClick = { onNavigateToAbsenceControl(materia) },
-                colors = ButtonDefaults.buttonColors(containerColor = VerdeLima),
+                onClick = { showDeleteDialog = true },
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD9534F)),
                 shape = RoundedCornerShape(8.dp),
                 modifier = Modifier
                     .widthIn(max = 600.dp)
                     .fillMaxWidth(0.9f)
                     .height(45.dp)
             ) {
-                Text("Controle de Faltas", color = Color.Black, fontWeight = FontWeight.Bold)
+                Text("Excluir Matéria", color = Color.White, fontWeight = FontWeight.Bold)
+            }
+
+            if (showDeleteDialog) {
+                AlertDialog(
+                    onDismissRequest = { showDeleteDialog = false },
+                    title = {
+                        Text(
+                            "Confirmar Exclusão",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 18.sp
+                        )
+                    },
+                    text = {
+                        Text("Tem certeza que deseja excluir a matéria \"${materia.nome}\"?")
+                    },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                val apagou = MateriaRepository.deletarMateria(
+                                    idUsuario = userId,
+                                    idDisciplina = materia.id_disciplina
+                                )
+
+                                showDeleteDialog = false
+
+                                if (apagou) {
+                                    println("Disciplina deletada com sucesso!")
+                                    onNavigateToHome()
+                                } else {
+                                    println("Erro ao deletar disciplina.")
+                                }
+                            }
+                        ) {
+                            Text("Excluir", color = Color(0xFFD9534F), fontWeight = FontWeight.Bold)
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showDeleteDialog = false }) {
+                            Text("Cancelar")
+                        }
+                    },
+                    shape = RoundedCornerShape(12.dp),
+                    containerColor = Color.White
+                )
             }
 
             Spacer(modifier = Modifier.height(120.dp))
@@ -238,6 +297,8 @@ fun SubjectDetailScreen(
 
             if (showMenu) {
                 MenuScreen(
+                    userId = userId,
+
                     onCloseMenu = { showMenu = false },
 
                     onNavigateToHome = {

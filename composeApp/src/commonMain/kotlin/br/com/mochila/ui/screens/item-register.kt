@@ -19,9 +19,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import mochila_app.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.painterResource
+import br.com.mochila.data.*
 
 @Composable
 fun ItemRegisterScreen(
+    userId: Int,
     onNavigateToHome: () -> Unit,
     onNavigateToSubjectRegister: () -> Unit,
     onNavigateToTaskRegister: () -> Unit,
@@ -35,6 +37,12 @@ fun ItemRegisterScreen(
     val VerdeLima = Color(0xFFC5E300)
 
     var showMenu by remember { mutableStateOf(false) }
+    var nomeUsuario by remember { mutableStateOf("Carregando...") }
+
+    LaunchedEffect(userId) {
+        val usuario = UsuarioRepository.getUsuarioById(userId)
+        usuario?.let { nomeUsuario = it.nome }
+    }
 
     Box(
         modifier = Modifier
@@ -112,7 +120,7 @@ fun ItemRegisterScreen(
                 }
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
-                    "Nome usuário",
+                    nomeUsuario,
                     color = Color.Gray,
                     fontSize = 22.sp
                 )
@@ -134,9 +142,9 @@ fun ItemRegisterScreen(
             // 🔹 Botões principais
             val botoes = listOf(
                 "Nova Matéria" to onNavigateToSubjectRegister,
-                "Novo Evento" to { /* TODO */ },
+                // "Novo Evento" to { /* TODO */ },
                 "Nova Tarefa" to onNavigateToTaskRegister,
-                "Nova Falta" to { /* TODO */ }
+                // "Nova Falta" to { /* TODO */ }
             )
 
             Column(
@@ -200,6 +208,8 @@ fun ItemRegisterScreen(
 
         if (showMenu) {
             MenuScreen(
+                userId = userId,
+
                 onCloseMenu = { showMenu = false },
 
                 onNavigateToHome = {

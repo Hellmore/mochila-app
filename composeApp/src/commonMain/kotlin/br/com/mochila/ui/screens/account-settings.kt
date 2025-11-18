@@ -40,8 +40,8 @@ fun AccountSettingsScreen(
     var senha by remember { mutableStateOf("") }
     var confirmarSenha by remember { mutableStateOf("") }
     var message by remember { mutableStateOf<String?>(null) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
-    // Carregar dados do usuário
     LaunchedEffect(userId) {
         val usuario: Usuario? = UsuarioRepository.getUsuarioById(userId)
         usuario?.let {
@@ -155,12 +155,17 @@ fun AccountSettingsScreen(
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(24.dp, Alignment.CenterHorizontally),
+                modifier = Modifier
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Button(
                     onClick = { salvarAlteracoes() },
                     colors = ButtonDefaults.buttonColors(containerColor = VerdeLima),
                     shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.width(180.dp).height(45.dp) // largura menor, mas não minúscula
+                    modifier = Modifier.width(180.dp).height(45.dp)
                 ) {
                     Text("Salvar", color = Color.Black, fontWeight = FontWeight.Bold)
                 }
@@ -173,17 +178,66 @@ fun AccountSettingsScreen(
                 ) {
                     Text("Cancelar", color = Color.White, fontWeight = FontWeight.Bold)
                 }
+
+                Button(
+                    onClick = onLogout,
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD9534F)),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.width(180.dp).height(45.dp)
+                ) {
+                    Text("Sair da Conta", color = Color.White, fontWeight = FontWeight.Bold)
+                }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
-                onClick = onLogout,
+                onClick = { showDeleteDialog = true },
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
                 shape = RoundedCornerShape(8.dp),
                 modifier = Modifier.width(180.dp).height(45.dp)
             ) {
-                Text("Sair da Conta", color = Color.White, fontWeight = FontWeight.Bold)
+                Text("Excluir Conta", color = Color.White, fontWeight = FontWeight.Bold)
+            }
+
+            if (showDeleteDialog) {
+                AlertDialog(
+                    onDismissRequest = { showDeleteDialog = false },
+                    title = {
+                        Text(
+                            "Excluir Conta",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 18.sp
+                        )
+                    },
+                    text = {
+                        Text("Tem certeza que deseja excluir sua conta? Essa ação não pode ser desfeita.")
+                    },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                val deletado = UsuarioRepository.deleteUsuario(userId)
+                                showDeleteDialog = false
+
+                                if (deletado) {
+                                    println("Conta excluída com sucesso.")
+                                    onLogout() // volta pra tela de login
+                                } else {
+                                    println("Erro ao excluir conta.")
+                                }
+                            }
+                        ) {
+                            Text("Excluir", color = Color(0xFFD9534F), fontWeight = FontWeight.Bold)
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showDeleteDialog = false }) {
+                            Text("Cancelar")
+                        }
+                    },
+                    shape = RoundedCornerShape(12.dp),
+                    containerColor = Color.White
+                )
             }
         }
     }
