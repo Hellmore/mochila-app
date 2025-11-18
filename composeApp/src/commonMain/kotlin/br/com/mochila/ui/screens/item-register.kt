@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.sp
 import mochila_app.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.painterResource
 import br.com.mochila.data.*
+import androidx.compose.foundation.clickable
 
 @Composable
 fun ItemRegisterScreen(
@@ -106,7 +107,8 @@ fun ItemRegisterScreen(
                     modifier = Modifier
                         .size(150.dp)
                         .clip(CircleShape)
-                        .background(RoxoEscuro),
+                        .background(RoxoEscuro)
+                        .clickable { onNavigateToAccountSettings() },
                     contentAlignment = Alignment.Center
                 ) {
                     Image(
