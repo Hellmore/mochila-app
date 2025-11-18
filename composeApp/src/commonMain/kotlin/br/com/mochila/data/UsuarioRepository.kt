@@ -123,4 +123,22 @@ object UsuarioRepository {
             DatabaseHelper.close()
         }
     }
+
+    fun deleteUsuario(userId: Int): Boolean {
+        val conn = DatabaseHelper.connect() ?: return false
+        return try {
+            val sql = "DELETE FROM usuario WHERE id_usuario = ?"
+            val stmt = conn.prepareStatement(sql)
+            stmt.setInt(1, userId)
+
+            val rows = stmt.executeUpdate()
+            stmt.close()
+            rows > 0
+        } catch (e: Exception) {
+            println("⚠️ Erro ao deletar usuário: ${e.message}")
+            false
+        } finally {
+            DatabaseHelper.close()
+        }
+    }
 }

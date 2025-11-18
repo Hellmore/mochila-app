@@ -10,6 +10,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -17,12 +22,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import br.com.mochila.data.*
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import mochila_app.composeapp.generated.resources.*
 
 @Composable
 fun MenuScreen(
+    userId: Int,
     onCloseMenu: () -> Unit,
     onNavigateToHome: () -> Unit,
     onNavigateToTasksList: () -> Unit,
@@ -31,6 +38,13 @@ fun MenuScreen(
 ) {
     val RoxoClaro = Color(0xFF7F55CE)
     val RoxoEscuro = Color(0xFF5336CB)
+
+    var nomeUsuario by remember { mutableStateOf("Carregando...") }
+
+    LaunchedEffect(userId) {
+        val usuario = UsuarioRepository.getUsuarioById(userId)
+        usuario?.let { nomeUsuario = it.nome }
+    }
 
     // 🔹 Camada de fundo semitransparente — fecha o menu ao clicar fora
     Box(
@@ -66,7 +80,6 @@ fun MenuScreen(
                     verticalArrangement = Arrangement.SpaceBetween
                 ) {
                     Column(horizontalAlignment = Alignment.Start) {
-                        // 🔹 Foto e nome do usuário
                         Box(
                             modifier = Modifier
                                 .size(80.dp)
@@ -84,7 +97,7 @@ fun MenuScreen(
 
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            "Nome usuário",
+                            nomeUsuario,
                             color = Color.White.copy(alpha = 0.9f),
                             fontSize = 26.sp
                         )
@@ -96,17 +109,17 @@ fun MenuScreen(
                             onCloseMenu()
                             onNavigateToAccountSettings()
                         }
-                        MenuItem("Plano de faltas") { /* TODO */ }
+                        // MenuItem("Plano de faltas") { /* TODO */ }
                         MenuItem("Matérias") {
                             onCloseMenu()
                             onNavigateToHome()
                         }
-                        MenuItem("Eventos") { /* TODO */ }
+                        // MenuItem("Eventos") { /* TODO */ }
                         MenuItem("Lista de Tarefas") {
                             onCloseMenu()
                             onNavigateToTasksList()
                         }
-                        MenuItem("Assine o PLUS!", Res.drawable.plus) { /* TODO */ }
+                        // MenuItem("Assine o PLUS!", Res.drawable.plus) { /* TODO */ }
                     }
 
                     // 🔹 Rodapé do menu
