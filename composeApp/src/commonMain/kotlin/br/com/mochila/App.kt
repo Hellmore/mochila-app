@@ -81,15 +81,20 @@ fun App() {
                         } ?: logout()
                     }
 
-                    "item_register" -> ItemRegisterScreen(
-                        onNavigateToHome = { navigateTo("home") },
-                        onNavigateToSubjectRegister = { navigateTo("subject_register") },
-                        onNavigateToTaskRegister = { navigateTo("task_register") },
-                        onBack = { goBack() },
-                        onNavigateToTasksList = { navigateTo("tasks_list") },
-                        onNavigateToAccountSettings = { navigateTo("account_settings") },
-                        onLogout = { logout() }
-                    )
+                    "item_register" -> {
+                        currentUserId?.let { userId ->
+                            ItemRegisterScreen(
+                                userId = userId,
+                                onNavigateToHome = { navigateTo("home") },
+                                onNavigateToSubjectRegister = { navigateTo("subject_register") },
+                                onNavigateToTaskRegister = { navigateTo("task_register") },
+                                onBack = { goBack() },
+                                onNavigateToTasksList = { navigateTo("tasks_list") },
+                                onNavigateToAccountSettings = { navigateTo("account_settings") },
+                                onLogout = { logout() }
+                            )
+                        } ?: logout()
+                    }
 
                     "subject_register" -> {
                         currentUserId?.let { userId ->
@@ -112,15 +117,11 @@ fun App() {
                                 materia?.let { m ->
                                     SubjectDetailScreen(
                                         materia = m,
-                                        // callbacks que recebem Materia
                                         onNavigateToEdit = { materia ->
-                                            // salva o id e abre a tela de edição
                                             selectedMateriaId = materia.id_disciplina
                                             navigateTo("subject_edit")
                                         },
                                         onNavigateToAbsenceControl = { materia ->
-                                            // se tiver tela de controle de faltas, aqui você pode salvar id e navegar
-                                            // por enquanto apenas volta pra home
                                             navigateTo("home")
                                         },
                                         onNavigateToItemRegister = { navigateTo("item_register") },
@@ -128,6 +129,7 @@ fun App() {
                                         onBack = { goBack() },
                                         onNavigateToTasksList = { navigateTo("tasks_list") },
                                         onNavigateToAccountSettings = { navigateTo("account_settings") },
+                                        userId = userId,
                                         onLogout = { logout() }
                                     )
                                 } ?: run {
@@ -201,9 +203,10 @@ fun App() {
                     }
 
                     "task_detail" -> {
-                        currentUserId?.let {
+                        currentUserId?.let { userId ->
                             selectedTaskId?.let { taskId ->
                                 TaskDetailScreen(
+                                    userId = userId,
                                     taskId = taskId,
                                     onNavigateToEdit = { tarefa ->
                                         selectedTaskId = tarefa.id_tarefa
@@ -247,22 +250,25 @@ fun App() {
                 }
 
                 if (isMenuVisible) {
-                    MenuScreen(
-                        onCloseMenu = { closeMenu() },
-                        onNavigateToHome = {
-                            closeMenu()
-                            navigateTo("home")
-                        },
-                        onNavigateToTasksList = {
-                            closeMenu()
-                            navigateTo("tasks_list")
-                        },
-                        onNavigateToAccountSettings = {
-                            closeMenu()
-                            navigateTo("account_settings")
-                        },
-                        onLogout = { logout() }
-                    )
+                    currentUserId?.let { userId ->
+                        MenuScreen(
+                            userId = userId,
+                            onCloseMenu = { closeMenu() },
+                            onNavigateToHome = {
+                                closeMenu()
+                                navigateTo("home")
+                            },
+                            onNavigateToTasksList = {
+                                closeMenu()
+                                navigateTo("tasks_list")
+                            },
+                            onNavigateToAccountSettings = {
+                                closeMenu()
+                                navigateTo("account_settings")
+                            },
+                            onLogout = { logout() }
+                        )
+                    }
                 }
             }
         }

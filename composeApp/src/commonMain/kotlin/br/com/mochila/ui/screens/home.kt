@@ -45,7 +45,6 @@ fun HomeScreen(
             .fillMaxSize()
             .background(Color.White)
     ) {
-        // Imagem de fundo
         Image(
             painter = painterResource(Res.drawable.fundo_quadriculado),
             contentDescription = null,
@@ -58,7 +57,6 @@ fun HomeScreen(
                 .fillMaxSize()
                 .padding(top = 16.dp)
         ) {
-            // Cabeçalho
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -104,8 +102,6 @@ fun HomeScreen(
                         MateriaItem(materia) { materiaId ->
                             onNavigateToSubject(materiaId)
                         }
-
-                        // 👇 Espaço entre cada matéria (igual tarefas)
                         Spacer(modifier = Modifier.height(12.dp))
                     }
                 }
@@ -130,7 +126,7 @@ fun HomeScreen(
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = onOpenMenu) { // ✅ Usa a função correta
+                IconButton(onClick = onOpenMenu) {
                     Image(
                         painter = painterResource(Res.drawable.menu),
                         contentDescription = "Menu lateral",

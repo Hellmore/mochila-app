@@ -243,7 +243,7 @@ fun SubjectRegisterScreen(
                     .height(45.dp)
             ) {
                 Text(
-                    if (isEditing) "Salvar alterações" else "Salvar",
+                    if (isEditing) "Salvar alterações" else "Cadastrar Matéria",
                     color = Color.Black,
                     fontWeight = FontWeight.Bold,
                     fontSize = 15.sp
