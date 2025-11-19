@@ -25,6 +25,7 @@ fun TaskRegisterScreen(
     onBack: () -> Unit,
     onLogout: () -> Unit,
     onOpenMenu: () -> Unit,
+    onNavigateToTasksList: () -> Unit,
     isEditing: Boolean = false,
     taskId: Int? = null
 ) {
@@ -74,7 +75,7 @@ fun TaskRegisterScreen(
         if (operacaoBemSucedida) {
             message = if (isEditing) "Tarefa atualizada com sucesso!" else "Tarefa cadastrada com sucesso!"
             success = true
-            onNavigateToHome()
+            onNavigateToTasksList()
         } else {
             message = "Erro ao salvar tarefa."
             success = false
@@ -88,7 +89,7 @@ fun TaskRegisterScreen(
         if (operacaoBemSucedida) {
             message = "Tarefa excluída com sucesso!"
             success = true
-            onNavigateToHome()
+            onNavigateToTasksList()
         } else {
             message = "Erro ao excluir tarefa."
             success = false
@@ -170,7 +171,6 @@ fun TaskRegisterScreen(
                 Pair("Título", titulo) to { it: String -> titulo = it },
                 Pair("Descrição", descricao) to { it: String -> descricao = it },
                 Pair("Blockers", blockers) to { it: String -> blockers = it },
-                Pair("Data limite", dataLimite) to { it: String -> dataLimite = it }
             )
 
             campos.forEach { (campo, setValue) ->
@@ -194,7 +194,38 @@ fun TaskRegisterScreen(
                 )
             }
 
-// 🔽 Dropdown de Status (padronizado)
+            var prevLength by remember { mutableStateOf(0) }
+
+            OutlinedTextField(
+                value = dataLimite,
+                onValueChange = { input ->
+                    val digits = input.filter { it.isDigit() }.take(8)
+
+                    val formatted = buildString {
+                        for (i in digits.indices) {
+                            append(digits[i])
+                            if (i == 1 || i == 3) append('/')
+                        }
+                    }
+
+                    dataLimite = formatted
+                    prevLength = digits.length
+                },
+                placeholder = { Text("Data Limite (DD/MM/AAAA)", color = Color.Gray, fontSize = 14.sp) },
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = Color.White,
+                    unfocusedContainerColor = Color.White,
+                    focusedBorderColor = RoxoClaro,
+                    unfocusedBorderColor = RoxoClaro
+                ),
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier
+                    .widthIn(max = 600.dp)
+                    .fillMaxWidth(0.9f)
+                    .padding(vertical = 6.dp)
+            )
+
             var expandedStatus by remember { mutableStateOf(false) }
             val statusOptions = listOf("Pendente", "Em andamento", "Cancelada", "Concluida")
 

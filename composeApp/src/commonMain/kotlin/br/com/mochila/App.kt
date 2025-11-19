@@ -147,7 +147,6 @@ fun App() {
                                 val materia: Materia? = MateriaRepository.buscarPorId(materiaId)
 
                                 materia?.let { m ->
-                                    // converter Materia -> Subject (data class do subject-register.kt)
                                     val subjectData = Subject(
                                         id = m.id_disciplina,
                                         nome = m.nome,
@@ -182,6 +181,7 @@ fun App() {
                                 onNavigateToHome = { navigateTo("home") },
                                 onBack = { goBack() },
                                 onLogout = { logout() },
+                                onNavigateToTasksList = { navigateTo("tasks_list") },
                                 onOpenMenu = { openMenu() },
                             )
                         } ?: logout()
@@ -233,6 +233,7 @@ fun App() {
                                     onNavigateToHome = { navigateTo("home") },
                                     onBack = { goBack() },
                                     onLogout = { logout() },
+                                    onNavigateToTasksList = { navigateTo("tasks_list") },
                                     onOpenMenu = { openMenu() }
                                 )
                             } ?: goBack()
