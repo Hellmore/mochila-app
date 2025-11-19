@@ -9,8 +9,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,8 +37,39 @@ fun HomeScreen(
     val RoxoEscuro = Color(0xFF5336CB)
     val RoxoClaro = Color(0xFF7F55CE)
 
-    val materias by remember(userId) { mutableStateOf(MateriaRepository.listarMaterias(userId)) }
-    val tarefas by remember(userId) { mutableStateOf(TarefaRepository.listarTarefas(userId)) }
+    // Lista completa vinda do repositório
+    val materias = remember(userId) { MateriaRepository.listarMaterias(userId) }
+    val tarefas = remember(userId) { TarefaRepository.listarTarefas(userId) }
+
+    // 🔹 Estados de filtro
+    var selectedSemester by remember { mutableStateOf("Todos") }
+    var searchText by remember { mutableStateOf("") }
+    var semesterMenuExpanded by remember { mutableStateOf(false) }
+    var isSearchExpanded by remember { mutableStateOf(false) }
+
+    // 🔹 Lista de semestres existentes (sem vazios / nulos)
+    val semesters = remember(materias) {
+        materias
+            .mapNotNull { materia ->
+                materia.semestre?.takeIf { it.isNotBlank() }
+            }
+            .distinct()
+            .sorted()
+    }
+
+    // 🔹 Aplica filtros (semestre + nome)
+    val filteredMaterias = remember(materias, selectedSemester, searchText) {
+        materias.filter { materia ->
+            val matchesSemester =
+                selectedSemester == "Todos" ||
+                        (materia.semestre ?: "").equals(selectedSemester, ignoreCase = false)
+
+            val matchesName =
+                materia.nome.contains(searchText, ignoreCase = true)
+
+            matchesSemester && matchesName
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -58,6 +88,7 @@ fun HomeScreen(
                 .fillMaxSize()
                 .padding(top = 16.dp)
         ) {
+            // 🔹 Cabeçalho
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -65,7 +96,12 @@ fun HomeScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Matérias", color = RoxoEscuro, fontSize = 28.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    "Matérias",
+                    color = RoxoEscuro,
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold
+                )
                 Box(
                     modifier = Modifier
                         .size(60.dp)
@@ -83,13 +119,112 @@ fun HomeScreen(
                 }
             }
 
-            if (materias.isEmpty()) {
+            // 🔹 Linha de filtros com aparência de "pill"
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Botão "Filtro" (abre/capola o campo de busca)
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(50.dp))
+                            .background(RoxoClaro)
+                            .clickable { isSearchExpanded = !isSearchExpanded }
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "Filtro",
+                                color = Color.White,
+                                fontSize = 14.sp
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Image(
+                                painter = painterResource(Res.drawable.drop), // troque pelo nome do seu ícone
+                                contentDescription = "Abrir filtro",
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    }
+
+                    // Botão "Semestre" (abre dropdown)
+                    Box {
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(50.dp))
+                                .background(RoxoClaro)
+                                .clickable { semesterMenuExpanded = true }
+                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = if (selectedSemester == "Todos") "Semestre" else selectedSemester,
+                                    color = Color.White,
+                                    fontSize = 14.sp
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Image(
+                                    painter = painterResource(Res.drawable.drop), // troque pelo nome do seu ícone
+                                    contentDescription = "Selecionar semestre",
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        }
+
+                        DropdownMenu(
+                            expanded = semesterMenuExpanded,
+                            onDismissRequest = { semesterMenuExpanded = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Todos") },
+                                onClick = {
+                                    selectedSemester = "Todos"
+                                    semesterMenuExpanded = false
+                                }
+                            )
+                            semesters.forEach { semestre ->
+                                DropdownMenuItem(
+                                    text = { Text(semestre) },
+                                    onClick = {
+                                        selectedSemester = semestre
+                                        semesterMenuExpanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Campo de busca que só aparece quando o botão "Filtro" é clicado
+                if (isSearchExpanded) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = searchText,
+                        onValueChange = { searchText = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text("Buscar matéria pelo nome") },
+                        singleLine = true
+                    )
+                }
+            }
+
+            // 🔹 Lista filtrada
+            if (filteredMaterias.isEmpty()) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        "Nenhuma matéria cadastrada",
+                        if (materias.isEmpty())
+                            "Nenhuma matéria cadastrada"
+                        else
+                            "Nenhuma matéria encontrada com esses filtros",
                         color = Color.Gray,
                         fontSize = 16.sp
                     )
@@ -100,7 +235,7 @@ fun HomeScreen(
                         .fillMaxSize()
                         .padding(horizontal = 16.dp)
                 ) {
-                    items(materias) { materia ->
+                    items(filteredMaterias) { materia ->
                         MateriaItem(materia) { materiaId ->
                             onNavigateToSubject(materiaId)
                         }
@@ -110,7 +245,7 @@ fun HomeScreen(
             }
         }
 
-        // Menu inferior
+        // 🔹 Menu inferior
         Row(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
