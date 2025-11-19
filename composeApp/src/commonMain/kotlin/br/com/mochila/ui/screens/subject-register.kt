@@ -193,8 +193,6 @@ fun SubjectRegisterScreen(
                 Pair("Nome da Matéria", nomeMateria) to { it: String -> nomeMateria = it },
                 Pair("Professor", professor) to { it: String -> professor = it },
                 Pair("Frequência mínima (%)", frequenciaMin) to { it: String -> frequenciaMin = it },
-                Pair("Data de Início", dataInicio) to { it: String -> dataInicio = it },
-                Pair("Data de Fim", dataFim) to { it: String -> dataFim = it },
                 Pair("Horas por Aula", horasPorAula) to { it: String -> horasPorAula = it },
                 Pair("Semestre", semestre) to { it: String -> semestre = it },
             )
@@ -219,6 +217,66 @@ fun SubjectRegisterScreen(
                         .padding(vertical = 6.dp)
                 )
             }
+
+            var prevLengthInicio by remember { mutableStateOf(0) }
+
+            OutlinedTextField(
+                value = dataInicio,
+                onValueChange = { input ->
+                    val digits = input.filter { it.isDigit() }.take(8)
+                    val formatted = buildString {
+                        for (i in digits.indices) {
+                            append(digits[i])
+                            if (i == 1 || i == 3) append('/')
+                        }
+                    }
+                    dataInicio = formatted
+                    prevLengthInicio = digits.length
+                },
+                placeholder = { Text("Data de Início (DD/MM/AAAA)", color = Color.Gray, fontSize = 14.sp) },
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = Color.White,
+                    unfocusedContainerColor = Color.White,
+                    focusedBorderColor = RoxoClaro,
+                    unfocusedBorderColor = RoxoClaro
+                ),
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier
+                    .widthIn(max = 600.dp)
+                    .fillMaxWidth(0.9f)
+                    .padding(vertical = 6.dp)
+            )
+
+            var prevLengthFim by remember { mutableStateOf(0) }
+
+            OutlinedTextField(
+                value = dataFim,
+                onValueChange = { input ->
+                    val digits = input.filter { it.isDigit() }.take(8)
+                    val formatted = buildString {
+                        for (i in digits.indices) {
+                            append(digits[i])
+                            if (i == 1 || i == 3) append('/')
+                        }
+                    }
+                    dataFim = formatted
+                    prevLengthFim = digits.length
+                },
+                placeholder = { Text("Data de Fim (DD/MM/AAAA)", color = Color.Gray, fontSize = 14.sp) },
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = Color.White,
+                    unfocusedContainerColor = Color.White,
+                    focusedBorderColor = RoxoClaro,
+                    unfocusedBorderColor = RoxoClaro
+                ),
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier
+                    .widthIn(max = 600.dp)
+                    .fillMaxWidth(0.9f)
+                    .padding(vertical = 6.dp)
+            )
 
             Spacer(modifier = Modifier.height(12.dp))
 
