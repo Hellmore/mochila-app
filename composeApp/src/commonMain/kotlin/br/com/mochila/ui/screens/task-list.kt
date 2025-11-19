@@ -104,7 +104,7 @@ fun TaskListScreen(
                 ) {
                     items(tarefas) { tarefa ->
                         TarefaItem(tarefa) { tarefaId ->
-                            onNavigateToTaskDetail(tarefaId)   // ✅ AGORA FUNCIONA
+                            onNavigateToTaskDetail(tarefaId)
                         }
                     }
                 }
