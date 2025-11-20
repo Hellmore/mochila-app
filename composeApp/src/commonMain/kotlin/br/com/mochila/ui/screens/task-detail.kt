@@ -36,6 +36,44 @@ fun TaskDetailScreen(
     val RoxoClaro = Color(0xFF7F55CE)
     val VerdeLima = Color(0xFFC5E300)
 
+    @Composable
+    fun CampoRoxoExibicao(
+        valor: String,
+        label: String
+    ) {
+        val RoxoClaro = Color(0xFF7F55CE)
+
+        OutlinedTextField(
+            value = valor,
+            onValueChange = {},
+            readOnly = true,
+            label = {
+                Text(
+                    text = label,
+                    color = RoxoClaro,
+                    fontSize = 14.sp
+                )
+            },
+            singleLine = false,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color.White,
+                focusedBorderColor = RoxoClaro,
+                unfocusedBorderColor = RoxoClaro,
+                focusedLabelColor = RoxoClaro,
+                unfocusedLabelColor = RoxoClaro,
+                focusedTextColor = Color.Black.copy(alpha = 0.85f),
+                unfocusedTextColor = Color.Black.copy(alpha = 0.85f),
+                cursorColor = Color.Transparent
+            ),
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier
+                .widthIn(max = 600.dp)
+                .fillMaxWidth(0.9f)
+                .padding(vertical = 6.dp)
+        )
+    }
+
     var showMenu by remember { mutableStateOf(false) }
     val tarefa = remember(taskId) { TarefaRepository.buscarPorId(taskId) }
     var showDeleteDialog by remember { mutableStateOf(false) }
@@ -50,7 +88,7 @@ fun TaskDetailScreen(
             .fillMaxSize()
             .background(Color.White)
     ) {
-        // Fundo decorativo
+
         Image(
             painter = painterResource(Res.drawable.fundo_quadriculado),
             contentDescription = null,
@@ -59,21 +97,22 @@ fun TaskDetailScreen(
         )
 
         Image(
-            painter = painterResource(Res.drawable.pin),
-            contentDescription = null,
+            painter = painterResource(Res.drawable.star),
+            contentDescription = "Decoração estrela",
             modifier = Modifier
-                .align(Alignment.TopEnd)
-                .fillMaxHeight(0.95f),
-            contentScale = ContentScale.FillHeight
+                .align(Alignment.TopCenter)
+                .offset(x = 600.dp, y = (-150).dp)
+                .size(600.dp),
+            contentScale = ContentScale.Fit
         )
 
         Image(
-            painter = painterResource(Res.drawable.mochila),
-            contentDescription = null,
+            painter = painterResource(Res.drawable.chevron),
+            contentDescription = "Decoração chevron",
             modifier = Modifier
-                .align(Alignment.BottomStart)
-                .fillMaxWidth(0.65f)
-                .aspectRatio(1f),
+                .align(Alignment.CenterStart)
+                .offset(x = (-100).dp, y = 260.dp)
+                .size(600.dp),
             contentScale = ContentScale.Fit
         )
 
@@ -113,56 +152,20 @@ fun TaskDetailScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Título
             Text(
-                "Tarefa",
+                text = "Tarefa",
                 color = RoxoEscuro,
                 fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.align(Alignment.CenterHorizontally)
+                fontWeight = FontWeight.Bold
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Campos da tarefa
-            val campos = mapOf(
-                "Título" to tarefa.titulo,
-                "Descrição" to (tarefa.descricao ?: "Sem descrição"),
-                "Status" to tarefa.status,
-                "Blockers" to (tarefa.blockers ?: "Nenhum"),
-                "Data limite" to (tarefa.data_limite ?: "Não definida")
-            )
-
-            campos.forEach { (label, value) ->
-                Column(
-                    modifier = Modifier
-                        .widthIn(max = 600.dp)
-                        .padding(vertical = 4.dp)
-                ) {
-                    Text(
-                        text = "$label:",
-                        color = RoxoEscuro,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    OutlinedTextField(
-                        value = value,
-                        onValueChange = {},
-                        readOnly = true,
-                        singleLine = true,
-                        shape = RoundedCornerShape(8.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = RoxoClaro,
-                            unfocusedBorderColor = RoxoClaro,
-                            focusedContainerColor = Color.White,
-                            unfocusedContainerColor = Color.White
-                        ),
-                        modifier = Modifier
-                            .widthIn(max = 600.dp)
-                            .fillMaxWidth(0.9f)
-                    )
-                }
-            }
+            CampoRoxoExibicao(valor = tarefa.titulo, label = "Título")
+            CampoRoxoExibicao(valor = tarefa.descricao ?: "Sem descrição", label = "Descrição")
+            CampoRoxoExibicao(valor = tarefa.status, label = "Status")
+            CampoRoxoExibicao(valor = tarefa.blockers ?: "Nenhum", label = "Blockers")
+            CampoRoxoExibicao(valor = tarefa.data_limite ?: "Não definida", label = "Data limite")
 
             Spacer(modifier = Modifier.height(20.dp))
 

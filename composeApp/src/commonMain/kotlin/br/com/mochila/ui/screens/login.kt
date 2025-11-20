@@ -33,22 +33,34 @@ fun LoginScreen(
     var password by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
-    // 🔸 Usa o repositório para validar o login
     fun login() {
         if (email.isBlank() || password.isBlank()) {
             errorMessage = "E-mail e senha não podem estar em branco."
             return
         }
 
+        val emailExiste = UsuarioRepository.emailExiste(email)
         val userId = UsuarioRepository.validarLogin(email, password)
 
-        if (userId != null) {
-            println("✅ Login bem-sucedido para $email (ID: $userId)")
-            errorMessage = null
-            onLoginSuccess(userId) // Retorna o ID para o App.kt
-        } else {
-            errorMessage = "Usuário ou senha inválidos."
+        // 🔹 E-mail e senha incorretos
+        if (!emailExiste && userId == null) {
+            errorMessage = "E-mail e senha incorretos."
+            return
         }
+
+        // 🔹 E-mail não existe
+        if (!emailExiste) {
+            errorMessage = "E-mail incorreto."
+            return
+        }
+
+        // 🔹 E-mail existe, mas senha está errada
+        if (emailExiste && userId == null) {
+            errorMessage = "Senha incorreta."
+            return
+        }
+
+        onLoginSuccess(userId!!)
     }
 
     Box(
@@ -56,7 +68,6 @@ fun LoginScreen(
             .fillMaxSize()
             .background(Color.White)
     ) {
-        // 🔹 Fundo
         Image(
             painter = painterResource(Res.drawable.fundo_quadriculado),
             contentDescription = null,
@@ -103,46 +114,67 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Campo de e-mail
             OutlinedTextField(
                 value = email,
-                onValueChange = { email = it },
-                placeholder = { Text("Insira o seu e-mail") },
+                onValueChange = { input ->
+                    if (input.length <= 30) {
+                        email = input
+                    }
+                },
+                label = { Text("Insira o seu e-mail") },
                 singleLine = true,
                 textStyle = LocalTextStyle.current.copy(fontSize = 14.sp),
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
                     unfocusedContainerColor = Color.White,
-                    focusedContainerColor = Color.White
+                    focusedContainerColor = Color.White,
+                    focusedLabelColor = Color.White,
                 )
             )
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Campo de senha
             OutlinedTextField(
                 value = password,
-                onValueChange = { password = it },
-                placeholder = { Text("Insira a sua senha") },
+                onValueChange = { input ->
+                    if (input.length <= 25) {
+                        password = input
+                    }
+                },
+                label = { Text("Insira a sua senha") },
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
                 textStyle = LocalTextStyle.current.copy(fontSize = 14.sp),
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
                     unfocusedContainerColor = Color.White,
-                    focusedContainerColor = Color.White
+                    focusedContainerColor = Color.White,
+                    focusedLabelColor = Color.White,
                 )
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-            // Mensagem de erro
-            errorMessage?.let {
-                Text(it, color = Color.Red, fontSize = 13.sp)
-                Spacer(modifier = Modifier.height(8.dp))
+            errorMessage?.let { msg ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            color = Color(0xFFFFCDD2), // Vermelho claro (erro)
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                        .padding(16.dp)
+                ) {
+                    Text(
+                        text = msg,
+                        color = Color(0xFFB71C1C), // Vermelho escuro (erro)
+                        fontSize = 15.sp
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
             }
 
-            // ✅ Ordem ajustada: Login primeiro
             Button(
                 onClick = { login() },
                 colors = ButtonDefaults.buttonColors(containerColor = VerdeLima),
@@ -165,14 +197,14 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Button(
-                onClick = onNavigateToRecovery,
-                colors = ButtonDefaults.buttonColors(containerColor = RoxoEscuro),
-                shape = RoundedCornerShape(8.dp),
-                modifier = Modifier.fillMaxWidth().height(42.dp)
-            ) {
-                Text("Esqueci a senha", color = Color.White, fontSize = 14.sp)
-            }
+//            Button(
+//                onClick = onNavigateToRecovery,
+//                colors = ButtonDefaults.buttonColors(containerColor = RoxoEscuro),
+//                shape = RoundedCornerShape(8.dp),
+//                modifier = Modifier.fillMaxWidth().height(42.dp)
+//            ) {
+//                Text("Esqueci a senha", color = Color.White, fontSize = 14.sp)
+//            }
         }
     }
 }

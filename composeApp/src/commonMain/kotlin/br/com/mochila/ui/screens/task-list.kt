@@ -33,6 +33,7 @@ fun TaskListScreen(
     onOpenMenu: () -> Unit,
     onNavigateToAdd: () -> Unit,
     onNavigateToTaskDetail: (Int) -> Unit,
+    onNavigateToAccountSettings: () -> Unit,
     onNavigateToHome: () -> Unit,
 ) {
     val RoxoEscuro = Color(0xFF5336CB)
@@ -73,6 +74,24 @@ fun TaskListScreen(
             contentScale = ContentScale.Crop
         )
 
+        Image(
+            painter = painterResource(Res.drawable.pin),
+            contentDescription = "Pin decorativo",
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .fillMaxHeight(0.95f),
+            contentScale = ContentScale.FillHeight
+        )
+        Image(
+            painter = painterResource(Res.drawable.mochila),
+            contentDescription = "Mochila decorativa",
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .fillMaxWidth(0.65f)
+                .aspectRatio(1f),
+            contentScale = ContentScale.Fit
+        )
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -98,7 +117,8 @@ fun TaskListScreen(
                     modifier = Modifier
                         .size(60.dp)
                         .clip(CircleShape)
-                        .background(RoxoClaro),
+                        .background(RoxoClaro)
+                        .clickable { onNavigateToAccountSettings() },
                     contentAlignment = Alignment.Center
                 ) {
                     Image(
@@ -222,7 +242,6 @@ fun TaskListScreen(
             }
         }
 
-        // Menu inferior
         Row(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -234,31 +253,37 @@ fun TaskListScreen(
                 modifier = Modifier
                     .background(
                         color = RoxoEscuro.copy(alpha = 0.95f),
-                        shape = RoundedCornerShape(20.dp)
+                        shape = RoundedCornerShape(8.dp)
                     )
                     .padding(horizontal = 20.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                horizontalArrangement = Arrangement.spacedBy(5.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+
+                // Menu lateral
                 IconButton(onClick = onOpenMenu) {
                     Image(
                         painter = painterResource(Res.drawable.menu),
                         contentDescription = "Menu lateral",
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(16.dp)
                     )
                 }
+
+                // Adicionar
                 IconButton(onClick = onNavigateToAdd) {
                     Image(
                         painter = painterResource(Res.drawable.add),
                         contentDescription = "Adicionar",
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(16.dp)
                     )
                 }
+
+                // Home
                 IconButton(onClick = onNavigateToHome) {
                     Image(
                         painter = painterResource(Res.drawable.home),
-                        contentDescription = "Home",
-                        modifier = Modifier.size(24.dp)
+                        contentDescription = "Início",
+                        modifier = Modifier.size(16.dp)
                     )
                 }
             }

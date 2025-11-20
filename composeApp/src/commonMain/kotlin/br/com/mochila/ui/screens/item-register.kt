@@ -50,15 +50,13 @@ fun ItemRegisterScreen(
             .fillMaxSize()
             .background(Color.White)
     ) {
-        // 🟣 Fundo notebook
         Image(
-            painter = painterResource(Res.drawable.notebook),
-            contentDescription = "Fundo caderno",
+            painter = painterResource(Res.drawable.fundo_quadriculado),
+            contentDescription = null,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
         )
 
-        // 🌟 Estrela verde decorativa
         Image(
             painter = painterResource(Res.drawable.star),
             contentDescription = "Decoração estrela",
@@ -69,7 +67,6 @@ fun ItemRegisterScreen(
             contentScale = ContentScale.Fit
         )
 
-        // ⬅️ Chevron decorativo
         Image(
             painter = painterResource(Res.drawable.chevron),
             contentDescription = "Decoração chevron",
