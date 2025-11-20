@@ -198,6 +198,7 @@ fun App() {
                                 onNavigateBack = { goBack() },
                                 onOpenMenu = { openMenu() },
                                 onNavigateToAdd = { navigateTo("item_register") },
+                                onNavigateToAccountSettings = { navigateTo("account_settings") },
                                 onNavigateToHome = { navigateTo("home") }
                             )
                         } ?: logout()

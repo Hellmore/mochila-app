@@ -33,6 +33,169 @@ fun TaskRegisterScreen(
     val RoxoClaro = Color(0xFF7F55CE)
     val VerdeLima = Color(0xFFC5E300)
 
+    @Composable
+    fun CampoRoxo(
+        valor: String,
+        label: String,
+        onChange: (String) -> Unit,
+    ) {
+        val RoxoClaro = Color(0xFF7F55CE)
+
+        OutlinedTextField(
+            value = valor,
+            onValueChange = onChange,
+            label = {
+                Text(
+                    text = label,
+                    color = RoxoClaro,
+                    fontSize = 14.sp
+                )
+            },
+            singleLine = true,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color.White,
+                focusedBorderColor = RoxoClaro,
+                unfocusedBorderColor = RoxoClaro,
+                focusedLabelColor = RoxoClaro,
+                cursorColor = RoxoClaro
+            ),
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier
+                .widthIn(max = 600.dp)
+                .fillMaxWidth(0.9f)
+                .padding(vertical = 6.dp)
+        )
+    }
+
+    @Composable
+    fun CampoRoxoData(
+        valor: String,
+        label: String,
+        onChange: (String) -> Unit
+    ) {
+        CampoRoxo(
+            valor = valor,
+            label = label,
+            onChange = { entrada ->
+
+                // Permite apagar sempre
+                if (entrada.length < valor.length) {
+                    onChange(entrada)
+                    return@CampoRoxo
+                }
+
+                // Apenas números
+                val digits = entrada.filter { it.isDigit() }.take(8)
+
+                // Mascara DD/MM/AAAA
+                val formatted = buildString {
+                    for (i in digits.indices) {
+                        append(digits[i])
+                        if (i == 1 || i == 3) append('/')
+                    }
+                }
+
+                onChange(formatted)
+            }
+        )
+    }
+
+    @Composable
+    fun CampoRoxoStatus(
+        valor: String,
+        label: String = "Status",
+        opcoes: List<String>,
+        onChange: (String) -> Unit
+    ) {
+        var expanded by remember { mutableStateOf(false) }
+        val RoxoClaro = Color(0xFF7F55CE)
+
+        Box(
+            modifier = Modifier
+                .widthIn(max = 600.dp)
+                .fillMaxWidth(0.9f)
+                .padding(vertical = 6.dp)
+        ) {
+            OutlinedTextField(
+                value = valor,
+                onValueChange = {},
+                readOnly = true,
+                label = {
+                    Text(
+                        text = label,
+                        color = RoxoClaro,
+                        fontSize = 14.sp
+                    )
+                },
+                trailingIcon = {
+                    IconButton(onClick = { expanded = true }) {
+                        Icon(
+                            painterResource(Res.drawable.drop),
+                            contentDescription = "Selecionar status",
+                            tint = RoxoClaro
+                        )
+                    }
+                },
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = Color.White,
+                    unfocusedContainerColor = Color.White,
+                    focusedBorderColor = RoxoClaro,
+                    unfocusedBorderColor = RoxoClaro,
+                    focusedLabelColor = RoxoClaro,
+                    cursorColor = RoxoClaro,
+                    focusedTextColor = Color.Black.copy(alpha = 0.85f),
+                    unfocusedTextColor = Color.Black.copy(alpha = 0.85f)
+                ),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                opcoes.forEach { option ->
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                option,
+                                fontSize = 14.sp,
+                                color = if (valor == option) RoxoClaro else Color.Black.copy(alpha = 0.85f),
+                                fontWeight = if (valor == option) FontWeight.Bold else FontWeight.Normal
+                            )
+                        },
+                        onClick = {
+                            onChange(option)
+                            expanded = false
+                        }
+                    )
+                }
+            }
+        }
+    }
+
+    fun dataValida(data: String): Boolean {
+        if (!Regex("""\d{2}/\d{2}/\d{4}""").matches(data)) return false
+
+        val partes = data.split("/")
+        val dia = partes[0].toIntOrNull() ?: return false
+        val mes = partes[1].toIntOrNull() ?: return false
+        val ano = partes[2].toIntOrNull() ?: return false
+
+        if (mes !in 1..12) return false
+
+        val diasNoMes = when (mes) {
+            1,3,5,7,8,10,12 -> 31
+            4,6,9,11 -> 30
+            2 -> if ((ano % 4 == 0 && ano % 100 != 0) || ano % 400 == 0) 29 else 28
+            else -> return false
+        }
+
+        return dia in 1..diasNoMes
+    }
+
     val existingTask = remember(taskId) { taskId?.let { TarefaRepository.buscarPorId(it) } }
 
     var titulo by remember { mutableStateOf(existingTask?.titulo ?: "") }
@@ -45,13 +208,20 @@ fun TaskRegisterScreen(
     var success by remember { mutableStateOf(false) }
 
     fun salvarTarefa() {
+
         if (titulo.isBlank() || descricao.isBlank()) {
             message = "Título e descrição são obrigatórios."
             success = false
             return
         }
 
-        val operacaoBemSucedida = if (isEditing && taskId != null) {
+        if (dataLimite.isNotBlank() && !dataValida(dataLimite)) {
+            message = "Data limite inválida."
+            success = false
+            return
+        }
+
+        val sucesso = if (isEditing && taskId != null) {
             TarefaRepository.atualizarTarefa(
                 idTarefa = taskId,
                 idUsuario = userId,
@@ -72,7 +242,7 @@ fun TaskRegisterScreen(
             )
         }
 
-        if (operacaoBemSucedida) {
+        if (sucesso) {
             message = if (isEditing) "Tarefa atualizada com sucesso!" else "Tarefa cadastrada com sucesso!"
             success = true
             onNavigateToTasksList()
@@ -109,20 +279,22 @@ fun TaskRegisterScreen(
             contentScale = ContentScale.Crop
         )
         Image(
-            painter = painterResource(Res.drawable.pin),
-            contentDescription = "Pin decorativo",
+            painter = painterResource(Res.drawable.star),
+            contentDescription = "Decoração estrela",
             modifier = Modifier
-                .align(Alignment.TopEnd)
-                .fillMaxHeight(0.95f),
-            contentScale = ContentScale.FillHeight
+                .align(Alignment.TopCenter)
+                .offset(x = 600.dp, y = (-150).dp)
+                .size(600.dp),
+            contentScale = ContentScale.Fit
         )
+
         Image(
-            painter = painterResource(Res.drawable.mochila),
-            contentDescription = "Mochila decorativa",
+            painter = painterResource(Res.drawable.chevron),
+            contentDescription = "Decoração chevron",
             modifier = Modifier
-                .align(Alignment.BottomStart)
-                .fillMaxWidth(0.65f)
-                .aspectRatio(1f),
+                .align(Alignment.CenterStart)
+                .offset(x = (-100).dp, y = 260.dp)
+                .size(600.dp),
             contentScale = ContentScale.Fit
         )
 
@@ -159,7 +331,7 @@ fun TaskRegisterScreen(
             }
 
             Text(
-                if (isEditing) "Editar Tarefa" else "Nova Tarefa",
+                text = if (isEditing) "Editar Tarefa" else "Nova Tarefa",
                 color = RoxoEscuro,
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold
@@ -167,146 +339,68 @@ fun TaskRegisterScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            val campos = listOf(
-                Pair("Título", titulo) to { it: String -> titulo = it },
-                Pair("Descrição", descricao) to { it: String -> descricao = it },
-                Pair("Blockers", blockers) to { it: String -> blockers = it },
+            CampoRoxo(
+                valor = titulo,
+                label = "Título",
+                onChange = { if (it.length <= 30) titulo = it }
             )
 
-            campos.forEach { (campo, setValue) ->
-                val (placeholder, valor) = campo
-                OutlinedTextField(
-                    value = valor,
-                    onValueChange = setValue,
-                    placeholder = { Text(placeholder, color = Color.Gray, fontSize = 14.sp) },
-                    singleLine = true,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = Color.White,
-                        unfocusedContainerColor = Color.White,
-                        focusedBorderColor = RoxoClaro,
-                        unfocusedBorderColor = RoxoClaro
-                    ),
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier
-                        .widthIn(max = 600.dp)
-                        .fillMaxWidth(0.9f)
-                        .padding(vertical = 6.dp)
-                )
-            }
-
-            var prevLength by remember { mutableStateOf(0) }
-
-            OutlinedTextField(
-                value = dataLimite,
-                onValueChange = { input ->
-                    val digits = input.filter { it.isDigit() }.take(8)
-
-                    val formatted = buildString {
-                        for (i in digits.indices) {
-                            append(digits[i])
-                            if (i == 1 || i == 3) append('/')
-                        }
-                    }
-
-                    dataLimite = formatted
-                    prevLength = digits.length
-                },
-                placeholder = { Text("Data Limite (DD/MM/AAAA)", color = Color.Gray, fontSize = 14.sp) },
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White,
-                    focusedBorderColor = RoxoClaro,
-                    unfocusedBorderColor = RoxoClaro
-                ),
-                shape = RoundedCornerShape(8.dp),
-                modifier = Modifier
-                    .widthIn(max = 600.dp)
-                    .fillMaxWidth(0.9f)
-                    .padding(vertical = 6.dp)
+            CampoRoxo(
+                valor = descricao,
+                label = "Descrição",
+                onChange = { if (it.length <= 50) descricao = it }
             )
 
-            var expandedStatus by remember { mutableStateOf(false) }
-            val statusOptions = listOf("Pendente", "Em andamento", "Cancelada", "Concluida")
+            CampoRoxo(
+                valor = blockers,
+                label = "Blockers",
+                onChange = { if (it.length <= 20) blockers = it }
+            )
 
-            Box(
-                modifier = Modifier
-                    .widthIn(max = 600.dp)
-                    .fillMaxWidth(0.9f)
-                    .padding(vertical = 6.dp)
-            ) {
-                OutlinedTextField(
-                    value = status,
-                    onValueChange = {},
-                    readOnly = true,
-                    placeholder = {
-                        Text(
-                            "Status",
-                            color = Color.Gray.copy(alpha = 0.6f),
-                            fontSize = 14.sp
-                        )
-                    },
-                    trailingIcon = {
-                        IconButton(onClick = { expandedStatus = true }) {
-                            Icon(
-                                painterResource(Res.drawable.drop),
-                                contentDescription = "Selecionar status",
-                                tint = RoxoClaro
-                            )
-                        }
-                    },
-                    singleLine = true,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = Color.White,
-                        unfocusedContainerColor = Color.White,
-                        focusedBorderColor = RoxoClaro,
-                        unfocusedBorderColor = RoxoClaro,
-                        focusedTextColor = Color.Black.copy(alpha = 0.85f),
-                        unfocusedTextColor = Color.Black.copy(alpha = 0.85f)
-                    ),
-                    shape = RoundedCornerShape(8.dp),
+            CampoRoxoData(
+                valor = dataLimite,
+                label = "Data limite (DD/MM/AAAA)",
+                onChange = { dataLimite = it }
+            )
+
+            CampoRoxoStatus(
+                valor = status,
+                label = "Status",
+                opcoes = listOf("Pendente", "Em andamento", "Cancelada", "Concluida"),
+                onChange = { status = it }
+            )
+
+            message?.let { msg ->
+                Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                )
-
-                DropdownMenu(
-                    expanded = expandedStatus,
-                    onDismissRequest = { expandedStatus = false }
+                        .fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    statusOptions.forEach { option ->
-                        DropdownMenuItem(
-                            text = {
-                                Text(
-                                    option,
-                                    fontSize = 14.sp,
-                                    color = if (status == option) RoxoEscuro else Color.Black.copy(alpha = 0.85f),
-                                    fontWeight = if (status == option) FontWeight.Bold else FontWeight.Normal
-                                )
-                            },
-                            onClick = {
-                                status = option
-                                expandedStatus = false
-                            }
+                    Box(
+                        modifier = Modifier
+                            .widthIn(max = 600.dp)
+                            .fillMaxWidth(0.9f)
+                            .background(
+                                color = if (success) Color(0xFFB9F6CA) else Color(0xFFFFCDD2),
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            .padding(16.dp)
+                    ) {
+                        Text(
+                            text = msg,
+                            color = if (success) Color(0xFF1B5E20) else Color(0xFFB71C1C),
+                            fontSize = 15.sp
                         )
                     }
+
+                    Spacer(modifier = Modifier.height(12.dp))
                 }
             }
 
-            message?.let {
-                Text(
-                    it,
-                    color = if (success) Color(0xFF00C853) else Color.Red,
-                    fontSize = 13.sp
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-
-            // 💾 Botão salvar
             Button(
                 onClick = { salvarTarefa() },
                 colors = ButtonDefaults.buttonColors(containerColor = VerdeLima),
                 shape = RoundedCornerShape(8.dp),
-                border = BorderStroke(1.dp, Color.Black),
                 modifier = Modifier
                     .widthIn(max = 600.dp)
                     .fillMaxWidth(0.9f)

@@ -27,7 +27,6 @@ data class Subject(
     val horasAula: String,
     val semestre: String
 )
-
 @Composable
 fun SubjectRegisterScreen(
     userId: Int,
@@ -42,7 +41,137 @@ fun SubjectRegisterScreen(
     val RoxoClaro = Color(0xFF7F55CE)
     val VerdeLima = Color(0xFFC5E300)
 
-    // 🧾 Campos de entrada
+    @Composable
+    fun CampoRoxo(
+        valor: String,
+        label: String,
+        onChange: (String) -> Unit,
+    ) {
+        val RoxoClaro = Color(0xFF7F55CE)
+
+        OutlinedTextField(
+            value = valor,
+            onValueChange = onChange,
+            label = {
+                Text(
+                    text = label,
+                    color = RoxoClaro,
+                    fontSize = 14.sp
+                )
+            },
+            singleLine = true,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color.White,
+                focusedBorderColor = RoxoClaro,
+                unfocusedBorderColor = RoxoClaro,
+                focusedLabelColor = RoxoClaro,
+                cursorColor = RoxoClaro
+            ),
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier
+                .widthIn(max = 600.dp)
+                .fillMaxWidth(0.9f)
+                .padding(vertical = 6.dp)
+        )
+    }
+
+    @Composable
+    fun CampoRoxoData(
+        valor: String,
+        label: String,
+        onChange: (String) -> Unit
+    ) {
+        CampoRoxo(
+            valor = valor,
+            label = label,
+            onChange = { entrada ->
+
+                // Permite apagar sempre
+                if (entrada.length < valor.length) {
+                    onChange(entrada)
+                    return@CampoRoxo
+                }
+
+                // Apenas números
+                val digits = entrada.filter { it.isDigit() }.take(8)
+
+                // Mascara DD/MM/AAAA
+                val formatted = buildString {
+                    for (i in digits.indices) {
+                        append(digits[i])
+                        if (i == 1 || i == 3) append('/')
+                    }
+                }
+
+                onChange(formatted)
+            }
+        )
+    }
+
+    @Composable
+    fun CampoRoxoHorasAula(
+        valor: String,
+        label: String,
+        onChange: (String) -> Unit
+    ) {
+        CampoRoxo(
+            valor = valor,
+            label = label,
+            onChange = { entrada ->
+
+                // Permitir apagar de forma natural
+                if (entrada.length < valor.length) {
+                    onChange(entrada.replace("h", ""))
+                    return@CampoRoxo
+                }
+
+                // Remover h para trabalhar somente com a parte numérica
+                val clean = entrada.replace("h", "")
+
+                // Manter somente números e 1 dois-pontos
+                val filtered = buildString {
+                    var colonAdded = false
+                    clean.forEach {
+                        if (it.isDigit()) append(it)
+                        else if (it == ':' && !colonAdded) {
+                            append(':')
+                            colonAdded = true
+                        }
+                    }
+                }
+
+                // Limite máximo: "999:99"
+                if (filtered.length > 4) return@CampoRoxo
+
+                // Adicionar "h" automaticamente ao final SE tiver pelo menos um número
+                onChange(
+                    if (filtered.isNotEmpty()) filtered + "h" else filtered
+                )
+            }
+        )
+    }
+
+    fun dataValida(data: String): Boolean {
+        if (!Regex("""\d{2}/\d{2}/\d{4}""").matches(data)) return false
+
+        val partes = data.split("/")
+        val dia = partes[0].toIntOrNull() ?: return false
+        val mes = partes[1].toIntOrNull() ?: return false
+        val ano = partes[2].toIntOrNull() ?: return false
+
+        if (mes !in 1..12) return false
+
+        val diasNoMes = when (mes) {
+            1,3,5,7,8,10,12 -> 31
+            4,6,9,11 -> 30
+            2 -> if ((ano % 4 == 0 && ano % 100 != 0) || ano % 400 == 0) 29 else 28
+            else -> return false
+        }
+
+        return dia in 1..diasNoMes
+    }
+
     var nomeMateria by remember { mutableStateOf(subjectData?.nome ?: "") }
     var professor by remember { mutableStateOf(subjectData?.professor ?: "") }
     var frequenciaMin by remember { mutableStateOf(subjectData?.frequencia ?: "") }
@@ -54,17 +183,47 @@ fun SubjectRegisterScreen(
     var message by remember { mutableStateOf<String?>(null) }
     var success by remember { mutableStateOf(false) }
 
-    // 🔸 Salvar nova matéria ou atualizar existente
     fun salvarMateria() {
-        val frequenciaMinInt = frequenciaMin.filter { it.isDigit() }.toIntOrNull()
-        val horasPorAulaInt = horasPorAula.filter { it.isDigit() }.toIntOrNull()
 
-        if (nomeMateria.isBlank() || professor.isBlank() || frequenciaMinInt == null || horasPorAulaInt == null) {
-            message = "Preencha todos os campos obrigatórios corretamente."
+        // ➤ 1. Verificar campos vazios
+        if (
+            nomeMateria.isBlank() ||
+            professor.isBlank() ||
+            frequenciaMin.isBlank() ||
+            dataInicio.isBlank() ||
+            dataFim.isBlank() ||
+            horasPorAula.isBlank() ||
+            semestre.isBlank()
+        ) {
+            message = "Nenhum campo pode estar vazio."
             success = false
             return
         }
 
+        // ➤ 2. Validar datas
+        if (!dataValida(dataInicio)) {
+            message = "Data de início inválida."
+            success = false
+            return
+        }
+
+        if (!dataValida(dataFim)) {
+            message = "Data de término inválida."
+            success = false
+            return
+        }
+
+        // ➤ 3. Converter números
+        val frequenciaMinInt = frequenciaMin.filter { it.isDigit() }.toIntOrNull()
+        val horasPorAulaInt = horasPorAula.filter { it.isDigit() }.toIntOrNull()
+
+        if (frequenciaMinInt == null || horasPorAulaInt == null) {
+            message = "Verifique os campos numéricos."
+            success = false
+            return
+        }
+
+        // ➤ 4. Salvar (se todas validações passaram)
         val operacaoBemSucedida = if (isEditing) {
             MateriaRepository.atualizarMateria(
                 idUsuario = userId,
@@ -129,21 +288,24 @@ fun SubjectRegisterScreen(
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
         )
+
         Image(
-            painter = painterResource(Res.drawable.pin),
-            contentDescription = "Pin decorativo",
+            painter = painterResource(Res.drawable.star),
+            contentDescription = "Decoração estrela",
             modifier = Modifier
-                .align(Alignment.TopEnd)
-                .fillMaxHeight(0.95f),
-            contentScale = ContentScale.FillHeight
+                .align(Alignment.TopCenter)
+                .offset(x = 600.dp, y = (-150).dp)
+                .size(600.dp),
+            contentScale = ContentScale.Fit
         )
+
         Image(
-            painter = painterResource(Res.drawable.mochila),
-            contentDescription = "Mochila decorativa",
+            painter = painterResource(Res.drawable.chevron),
+            contentDescription = "Decoração chevron",
             modifier = Modifier
-                .align(Alignment.BottomStart)
-                .fillMaxWidth(0.65f)
-                .aspectRatio(1f),
+                .align(Alignment.CenterStart)
+                .offset(x = (-100).dp, y = 260.dp)
+                .size(600.dp),
             contentScale = ContentScale.Fit
         )
 
@@ -181,7 +343,7 @@ fun SubjectRegisterScreen(
             }
 
             Text(
-                if (isEditing) "Editar Matéria" else "Nova Matéria",
+                text = if (isEditing) "Editar Matéria" else "Nova Matéria",
                 color = RoxoEscuro,
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold
@@ -189,112 +351,111 @@ fun SubjectRegisterScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            val campos = listOf(
-                Pair("Nome da Matéria", nomeMateria) to { it: String -> nomeMateria = it },
-                Pair("Professor", professor) to { it: String -> professor = it },
-                Pair("Frequência mínima (%)", frequenciaMin) to { it: String -> frequenciaMin = it },
-                Pair("Horas por Aula", horasPorAula) to { it: String -> horasPorAula = it },
-                Pair("Semestre", semestre) to { it: String -> semestre = it },
+            CampoRoxo(
+                valor = nomeMateria,
+                label = "Nome da Matéria",
+                onChange = {
+                    if (it.length <= 30) nomeMateria = it
+                }
             )
 
-            campos.forEach { (campo, setValue) ->
-                val (placeholder, valor) = campo
-                OutlinedTextField(
-                    value = valor,
-                    onValueChange = setValue,
-                    placeholder = { Text(placeholder, color = Color.Gray, fontSize = 14.sp) },
-                    singleLine = true,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = Color.White,
-                        unfocusedContainerColor = Color.White,
-                        focusedBorderColor = RoxoClaro,
-                        unfocusedBorderColor = RoxoClaro
-                    ),
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier
-                        .widthIn(max = 600.dp)
-                        .fillMaxWidth(0.9f)
-                        .padding(vertical = 6.dp)
-                )
-            }
-
-            var prevLengthInicio by remember { mutableStateOf(0) }
-
-            OutlinedTextField(
-                value = dataInicio,
-                onValueChange = { input ->
-                    val digits = input.filter { it.isDigit() }.take(8)
-                    val formatted = buildString {
-                        for (i in digits.indices) {
-                            append(digits[i])
-                            if (i == 1 || i == 3) append('/')
-                        }
-                    }
-                    dataInicio = formatted
-                    prevLengthInicio = digits.length
-                },
-                placeholder = { Text("Data de Início (DD/MM/AAAA)", color = Color.Gray, fontSize = 14.sp) },
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White,
-                    focusedBorderColor = RoxoClaro,
-                    unfocusedBorderColor = RoxoClaro
-                ),
-                shape = RoundedCornerShape(8.dp),
-                modifier = Modifier
-                    .widthIn(max = 600.dp)
-                    .fillMaxWidth(0.9f)
-                    .padding(vertical = 6.dp)
+            CampoRoxo(
+                valor = professor,
+                label = "Professor",
+                onChange = {
+                    if (it.length <= 30) professor = it
+                }
             )
 
-            var prevLengthFim by remember { mutableStateOf(0) }
+            CampoRoxo(
+                valor = frequenciaMin,
+                label = "Frequência mínima",
+                onChange = { entrada ->
 
-            OutlinedTextField(
-                value = dataFim,
-                onValueChange = { input ->
-                    val digits = input.filter { it.isDigit() }.take(8)
-                    val formatted = buildString {
-                        for (i in digits.indices) {
-                            append(digits[i])
-                            if (i == 1 || i == 3) append('/')
-                        }
+                    // Permitir apagar
+                    if (entrada.length < frequenciaMin.length) {
+                        frequenciaMin = entrada.filter { it.isDigit() }
+                        return@CampoRoxo
                     }
-                    dataFim = formatted
-                    prevLengthFim = digits.length
-                },
-                placeholder = { Text("Data de Fim (DD/MM/AAAA)", color = Color.Gray, fontSize = 14.sp) },
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White,
-                    focusedBorderColor = RoxoClaro,
-                    unfocusedBorderColor = RoxoClaro
-                ),
-                shape = RoundedCornerShape(8.dp),
-                modifier = Modifier
-                    .widthIn(max = 600.dp)
-                    .fillMaxWidth(0.9f)
-                    .padding(vertical = 6.dp)
+
+                    val digits = entrada.filter { it.isDigit() }.take(2)
+
+                    frequenciaMin = if (digits.length == 2) {
+                        "$digits%"
+                    } else digits
+                }
+            )
+
+            CampoRoxoHorasAula(
+                valor = horasPorAula,
+                label = "Horas por aula",
+                onChange = { horasPorAula = it }
+            )
+
+            CampoRoxo(
+                valor = semestre,
+                label = "Semestre",
+                onChange = { entrada ->
+
+                    // Permitir apagar
+                    if (entrada.length < semestre.length) {
+                        semestre = entrada.filter { it.isDigit() }
+                        return@CampoRoxo
+                    }
+
+                    val digits = entrada.filter { it.isDigit() }.take(2)
+
+                    semestre = if (digits.isNotEmpty()) {
+                        digits + "°"
+                    } else digits
+                }
+            )
+
+            CampoRoxoData(
+                valor = dataInicio,
+                label = "Data de Início (DD/MM/AAAA)",
+                onChange = { dataInicio = it }
+            )
+
+            CampoRoxoData(
+                valor = dataFim,
+                label = "Data de Fim (DD/MM/AAAA)",
+                onChange = { dataFim = it }
             )
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            message?.let {
-                Text(
-                    it,
-                    color = if (success) Color(0xFF00C853) else Color.Red,
-                    fontSize = 13.sp
-                )
-                Spacer(modifier = Modifier.height(8.dp))
+            message?.let { msg ->
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .widthIn(max = 600.dp)
+                            .fillMaxWidth(0.9f)
+                            .background(
+                                color = if (success) Color(0xFFB9F6CA) else Color(0xFFFFCDD2),
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            .padding(16.dp)
+                    ) {
+                        Text(
+                            text = msg,
+                            color = if (success) Color(0xFF1B5E20) else Color(0xFFB71C1C),
+                            fontSize = 15.sp
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
             }
 
-            // 💾 Botão salvar
             Button(
                 onClick = { salvarMateria() },
                 colors = ButtonDefaults.buttonColors(containerColor = VerdeLima),
                 shape = RoundedCornerShape(8.dp),
-                border = BorderStroke(1.dp, Color.Black),
                 modifier = Modifier
                     .widthIn(max = 600.dp)
                     .fillMaxWidth(0.9f)

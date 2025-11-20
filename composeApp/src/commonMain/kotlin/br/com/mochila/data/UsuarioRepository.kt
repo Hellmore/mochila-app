@@ -3,15 +3,46 @@ package br.com.mochila.data
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 
-// Data class para transportar dados do usuário
-data class Usuario(val id: Int, val nome: String, val email: String)
+data class Usuario(
+    val id: Int,
+    val nome: String,
+    val email: String,
+    val senha: String
+)
+
 
 object UsuarioRepository {
 
-    /**
-     * Cadastra um novo usuário no banco.
-     */
+    private fun validarEmail(email: String): Boolean {
+        return email.contains("@") && email.length <= 30
+    }
+
+    private fun validarNome(nome: String): Boolean {
+        return nome.length in 3..30
+    }
+
+    private fun validarSenha(senha: String): Boolean {
+        val regex = Regex("""^(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,25}$""")
+        return regex.matches(senha)
+    }
+
     fun insertUsuario(nome: String, email: String, senha: String): Boolean {
+
+        if (!validarEmail(email)) {
+            println("Email inválido: $email")
+            return false
+        }
+
+        if (!validarNome(nome)) {
+            println("Nome inválido: $nome")
+            return false
+        }
+
+        if (!validarSenha(senha)) {
+            println("Senha inválida. Deve ter 8 a 25 caracteres, incluir letra maiúscula, número e caractere especial.")
+            return false
+        }
+
         val conn = DatabaseHelper.connect() ?: return false
         return try {
             val sql = "INSERT INTO usuario (nome, email, senha) VALUES (?, ?, ?)"
@@ -30,9 +61,6 @@ object UsuarioRepository {
         }
     }
 
-    /**
-     * Valida login do usuário e retorna o ID em caso de sucesso.
-     */
     fun validarLogin(email: String, senha: String): Int? {
         val conn = DatabaseHelper.connect() ?: return null
         return try {
@@ -58,14 +86,11 @@ object UsuarioRepository {
             DatabaseHelper.close()
         }
     }
-    
-    /**
-     * ✅ Busca um usuário completo pelo seu ID.
-     */
+
     fun getUsuarioById(userId: Int): Usuario? {
         val conn = DatabaseHelper.connect() ?: return null
         return try {
-            val sql = "SELECT id_usuario, nome, email FROM usuario WHERE id_usuario = ?"
+            val sql = "SELECT id_usuario, nome, email, senha FROM usuario WHERE id_usuario = ?"
             val stmt = conn.prepareStatement(sql)
             stmt.setInt(1, userId)
             val rs = stmt.executeQuery()
@@ -74,7 +99,8 @@ object UsuarioRepository {
                 Usuario(
                     id = rs.getInt("id_usuario"),
                     nome = rs.getString("nome"),
-                    email = rs.getString("email")
+                    email = rs.getString("email"),
+                    senha = rs.getString("senha")
                 )
             } else null
 
@@ -88,11 +114,7 @@ object UsuarioRepository {
             DatabaseHelper.close()
         }
     }
-    
-    /**
-     * ✅ Atualiza os dados de um usuário.
-     * Se a nova senha for nula ou vazia, ela não é alterada.
-     */
+
     fun updateUsuario(userId: Int, nome: String, email: String, novaSenha: String?): Boolean {
         val conn = DatabaseHelper.connect() ?: return false
         return try {
@@ -141,4 +163,26 @@ object UsuarioRepository {
             DatabaseHelper.close()
         }
     }
+
+    fun emailExiste(email: String): Boolean {
+        val conn = DatabaseHelper.connect() ?: return false
+        return try {
+            val sql = "SELECT id_usuario FROM usuario WHERE email = ?"
+            val stmt = conn.prepareStatement(sql)
+            stmt.setString(1, email)
+            val rs = stmt.executeQuery()
+
+            val existe = rs.next()
+
+            rs.close()
+            stmt.close()
+            existe
+        } catch (e: Exception) {
+            println("⚠️ Erro ao verificar email: ${e.message}")
+            false
+        } finally {
+            DatabaseHelper.close()
+        }
+    }
+
 }
