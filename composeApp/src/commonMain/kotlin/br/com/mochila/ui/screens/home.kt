@@ -83,6 +83,24 @@ fun HomeScreen(
             contentScale = ContentScale.Crop
         )
 
+        Image(
+            painter = painterResource(Res.drawable.pin),
+            contentDescription = "Pin decorativo",
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .fillMaxHeight(0.95f),
+            contentScale = ContentScale.FillHeight
+        )
+        Image(
+            painter = painterResource(Res.drawable.mochila),
+            contentDescription = "Mochila decorativa",
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .fillMaxWidth(0.65f)
+                .aspectRatio(1f),
+            contentScale = ContentScale.Fit
+        )
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -245,7 +263,6 @@ fun HomeScreen(
             }
         }
 
-        // 🔹 Menu inferior
         Row(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -257,31 +274,37 @@ fun HomeScreen(
                 modifier = Modifier
                     .background(
                         color = RoxoEscuro.copy(alpha = 0.95f),
-                        shape = RoundedCornerShape(20.dp)
+                        shape = RoundedCornerShape(8.dp)
                     )
                     .padding(horizontal = 20.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                horizontalArrangement = Arrangement.spacedBy(5.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+
+                // Menu lateral
                 IconButton(onClick = onOpenMenu) {
                     Image(
                         painter = painterResource(Res.drawable.menu),
                         contentDescription = "Menu lateral",
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(16.dp)
                     )
                 }
+
+                // Adicionar
                 IconButton(onClick = onNavigateToAdd) {
                     Image(
                         painter = painterResource(Res.drawable.add),
                         contentDescription = "Adicionar",
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(16.dp)
                     )
                 }
+
+                // Home
                 IconButton(onClick = onNavigateToHome) {
                     Image(
                         painter = painterResource(Res.drawable.home),
                         contentDescription = "Início",
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(16.dp)
                     )
                 }
             }

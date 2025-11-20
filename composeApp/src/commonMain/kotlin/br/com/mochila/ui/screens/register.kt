@@ -35,8 +35,53 @@ fun RegisterScreen(onBackToLogin: () -> Unit) {
 
     val scope = rememberCoroutineScope()
 
+    fun validarEmail(email: String): Boolean {
+        return email.contains("@") && email.length <= 30
+    }
+
+    fun validarNome(nome: String): Boolean {
+        return nome.length in 3..30
+    }
+
+    fun validarSenha(senha: String): Boolean {
+        val regex = Regex(
+            pattern = """^(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,25}$"""
+        )
+        return regex.matches(senha)
+    }
+
     fun register() {
+
+        val emailValido = validarEmail(email)
+        val nomeValido = validarNome(username)
+        val senhaValida = validarSenha(password)
+
+        if (!emailValido && !nomeValido && !senhaValida) {
+            message = "Todos os campos estão incorretos. Verifique e tente novamente."
+            success = false
+            return
+        }
+
+        if (!emailValido) {
+            message = "E-mail inválido. Deve conter '@' e ter no máximo 30 caracteres."
+            success = false
+            return
+        }
+
+        if (!nomeValido) {
+            message = "O nome de usuário deve ter entre 3 e 30 caracteres."
+            success = false
+            return
+        }
+
+        if (!senhaValida) {
+            message = "Senha inválida. Deve ter 8 a 25 caracteres, incluir letra maiúscula, número e caractere especial."
+            success = false
+            return
+        }
+
         val conn = DatabaseHelper.connect()
+
         if (conn != null) {
             try {
                 val stmt: PreparedStatement = conn.prepareStatement(
@@ -129,8 +174,10 @@ fun RegisterScreen(onBackToLogin: () -> Unit) {
             // 🔸 Campo de e-mail
             OutlinedTextField(
                 value = email,
-                onValueChange = { email = it },
-                placeholder = { Text("Insira o seu e-mail") },
+                onValueChange = { input ->
+                    if (input.length <= 30) email = input
+                },
+                label = { Text("Insira o seu e-mail") },
                 singleLine = true,
                 textStyle = LocalTextStyle.current.copy(fontSize = 14.sp),
                 modifier = Modifier
@@ -139,7 +186,8 @@ fun RegisterScreen(onBackToLogin: () -> Unit) {
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedContainerColor = Color.White,
                     unfocusedContainerColor = Color.White,
-                    disabledContainerColor = Color.White
+                    disabledContainerColor = Color.White,
+                    focusedLabelColor = Color.White,
                 ),
                 shape = RoundedCornerShape(8.dp)
             )
@@ -149,8 +197,10 @@ fun RegisterScreen(onBackToLogin: () -> Unit) {
             // 🔸 Campo de usuário
             OutlinedTextField(
                 value = username,
-                onValueChange = { username = it },
-                placeholder = { Text("Insira o seu usuário") },
+                onValueChange = { input ->
+                    if (input.length <= 30) username = input
+                },
+                label = { Text("Insira o seu usuário") },
                 singleLine = true,
                 textStyle = LocalTextStyle.current.copy(fontSize = 14.sp),
                 modifier = Modifier
@@ -159,7 +209,8 @@ fun RegisterScreen(onBackToLogin: () -> Unit) {
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedContainerColor = Color.White,
                     unfocusedContainerColor = Color.White,
-                    disabledContainerColor = Color.White
+                    disabledContainerColor = Color.White,
+                    focusedLabelColor = Color.White,
                 ),
                 shape = RoundedCornerShape(8.dp)
             )
@@ -169,8 +220,10 @@ fun RegisterScreen(onBackToLogin: () -> Unit) {
             // 🔸 Campo de senha (oculta)
             OutlinedTextField(
                 value = password,
-                onValueChange = { password = it },
-                placeholder = { Text("Crie uma senha") },
+                onValueChange = { input ->
+                    if (input.length <= 25) password = input
+                },
+                label = { Text("Crie uma senha") },
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
                 textStyle = LocalTextStyle.current.copy(fontSize = 14.sp),
@@ -180,29 +233,38 @@ fun RegisterScreen(onBackToLogin: () -> Unit) {
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedContainerColor = Color.White,
                     unfocusedContainerColor = Color.White,
-                    disabledContainerColor = Color.White
+                    disabledContainerColor = Color.White,
+                    focusedLabelColor = Color.White,
                 ),
                 shape = RoundedCornerShape(8.dp)
             )
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // 🔹 Mensagem de feedback
-            message?.let {
-                Text(
-                    it,
-                    color = if (success) Color(0xFF00C853) else Color.Red,
-                    fontSize = 13.sp
-                )
-                Spacer(modifier = Modifier.height(8.dp))
+            message?.let { msg ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(0.9f)
+                        .background(
+                            color = if (success) Color(0xFFB9F6CA) else Color(0xFFFFCDD2),
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                        .padding(16.dp)
+                ) {
+                    Text(
+                        text = msg,
+                        color = if (success) Color(0xFF1B5E20) else Color(0xFFB71C1C),
+                        fontSize = 15.sp
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
             }
 
-            // 🔸 Botão Registrar
             Button(
                 onClick = { register() },
                 colors = ButtonDefaults.buttonColors(containerColor = RoxoEscuro),
                 shape = RoundedCornerShape(8.dp),
-                border = BorderStroke(1.dp, Color.Black),
                 modifier = Modifier
                     .widthIn(max = 600.dp)
                     .fillMaxWidth(0.9f)
