@@ -38,6 +38,44 @@ fun SubjectDetailScreen(
     val RoxoClaro = Color(0xFF7F55CE)
     val VerdeLima = Color(0xFFC5E300)
 
+    @Composable
+    fun CampoRoxoExibicao(
+        valor: String,
+        label: String
+    ) {
+        val RoxoClaro = Color(0xFF7F55CE)
+
+        OutlinedTextField(
+            value = valor,
+            onValueChange = {},
+            readOnly = true,
+            label = {
+                Text(
+                    text = label,
+                    color = RoxoClaro,
+                    fontSize = 14.sp
+                )
+            },
+            singleLine = false,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color.White,
+                focusedBorderColor = RoxoClaro,
+                unfocusedBorderColor = RoxoClaro,
+                focusedLabelColor = RoxoClaro,
+                unfocusedLabelColor = RoxoClaro,
+                focusedTextColor = Color.Black.copy(alpha = 0.85f),
+                unfocusedTextColor = Color.Black.copy(alpha = 0.85f),
+                cursorColor = Color.Transparent
+            ),
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier
+                .widthIn(max = 600.dp)
+                .fillMaxWidth(0.9f)
+                .padding(vertical = 6.dp)
+        )
+    }
+
     var showMenu by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
 
@@ -55,21 +93,22 @@ fun SubjectDetailScreen(
         )
 
         Image(
-            painter = painterResource(Res.drawable.pin),
-            contentDescription = null,
+            painter = painterResource(Res.drawable.star),
+            contentDescription = "Decoração estrela",
             modifier = Modifier
-                .align(Alignment.TopEnd)
-                .fillMaxHeight(0.95f),
-            contentScale = ContentScale.FillHeight
+                .align(Alignment.TopCenter)
+                .offset(x = 600.dp, y = (-150).dp)
+                .size(600.dp),
+            contentScale = ContentScale.Fit
         )
 
         Image(
-            painter = painterResource(Res.drawable.mochila),
-            contentDescription = null,
+            painter = painterResource(Res.drawable.chevron),
+            contentDescription = "Decoração chevron",
             modifier = Modifier
-                .align(Alignment.BottomStart)
-                .fillMaxWidth(0.65f)
-                .aspectRatio(1f),
+                .align(Alignment.CenterStart)
+                .offset(x = (-100).dp, y = 260.dp)
+                .size(600.dp),
             contentScale = ContentScale.Fit
         )
 
@@ -110,58 +149,22 @@ fun SubjectDetailScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Título
             Text(
-                "Matéria",
+                text = "Matéria",
                 color = RoxoEscuro,
                 fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.align(Alignment.CenterHorizontally)
+                fontWeight = FontWeight.Bold
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            val campos = mapOf(
-//                "ID da Disciplina" to materia.id_disciplina.toString(),
-                "Nome" to materia.nome,
-                "Professor" to materia.professor,
-                "Frequência Mínima (%)" to materia.frequencia_minima.toString(),
-                "Data de Início" to materia.data_inicio,
-                "Data de Término" to materia.data_fim,
-                "Horas/Aula" to materia.hora_aula.toString(),
-                "Semestre" to materia.semestre
-            )
-
-            campos.forEach { (label, value) ->
-                Column(
-                    modifier = Modifier
-                        .widthIn(max = 600.dp)
-                        .padding(vertical = 4.dp)
-                ) {
-                    Text(
-                        text = "$label:",
-                        color = RoxoEscuro,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    OutlinedTextField(
-                        value = value,
-                        onValueChange = {},
-                        readOnly = true,
-                        singleLine = true,
-                        shape = RoundedCornerShape(8.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = RoxoClaro,
-                            unfocusedBorderColor = RoxoClaro,
-                            focusedContainerColor = Color.White,
-                            unfocusedContainerColor = Color.White
-                        ),
-                        modifier = Modifier
-                            .widthIn(max = 600.dp)
-                            .fillMaxWidth(0.9f)
-                    )
-                }
-            }
+            CampoRoxoExibicao(valor = materia.nome, label = "Nome")
+            CampoRoxoExibicao(valor = materia.professor, label = "Professor")
+            CampoRoxoExibicao(valor = materia.frequencia_minima.toString(), label = "Frequência Mínima (%)")
+            CampoRoxoExibicao(valor = materia.data_inicio, label = "Data de Início")
+            CampoRoxoExibicao(valor = materia.data_fim, label = "Data de Término")
+            CampoRoxoExibicao(valor = materia.hora_aula.toString(), label = "Horas/Aula")
+            CampoRoxoExibicao(valor = materia.semestre, label = "Semestre")
 
             Spacer(modifier = Modifier.height(20.dp))
 
