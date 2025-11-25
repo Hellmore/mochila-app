@@ -27,7 +27,7 @@ import org.jetbrains.compose.resources.painterResource
 
 @Composable
 fun ProfileScreen(
-    userId: Int, // ✅ PARÂMETRO ADICIONADO
+    userId: Int,
     onBack: () -> Unit
 ) {
     val RoxoEscuro = Color(0xFF5336CB)
@@ -90,7 +90,7 @@ fun ProfileScreen(
 
             Box(contentAlignment = Alignment.Center) {
                 Image(
-                    painter = painterResource(Res.drawable.user), // Placeholder
+                    painter = painterResource(Res.drawable.user),
                     contentDescription = "Foto do Perfil",
                     modifier = Modifier.size(140.dp).clip(CircleShape).background(RoxoClaro).border(2.dp, VerdeLima, CircleShape)
                 )

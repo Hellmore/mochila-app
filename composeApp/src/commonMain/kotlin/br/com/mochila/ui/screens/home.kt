@@ -37,17 +37,16 @@ fun HomeScreen(
     val RoxoEscuro = Color(0xFF5336CB)
     val RoxoClaro = Color(0xFF7F55CE)
 
-    // Lista completa vinda do repositório
     val materias = remember(userId) { MateriaRepository.listarMaterias(userId) }
     val tarefas = remember(userId) { TarefaRepository.listarTarefas(userId) }
 
-    // 🔹 Estados de filtro
+    // Estados de filtro
     var selectedSemester by remember { mutableStateOf("Todos") }
     var searchText by remember { mutableStateOf("") }
     var semesterMenuExpanded by remember { mutableStateOf(false) }
     var isSearchExpanded by remember { mutableStateOf(false) }
 
-    // 🔹 Lista de semestres existentes (sem vazios / nulos)
+    // Lista de semestres existentes
     val semesters = remember(materias) {
         materias
             .mapNotNull { materia ->
@@ -57,7 +56,7 @@ fun HomeScreen(
             .sorted()
     }
 
-    // 🔹 Aplica filtros (semestre + nome)
+    // Aplica Filtros
     val filteredMaterias = remember(materias, selectedSemester, searchText) {
         materias.filter { materia ->
             val matchesSemester =
@@ -106,7 +105,7 @@ fun HomeScreen(
                 .fillMaxSize()
                 .padding(top = 16.dp)
         ) {
-            // 🔹 Cabeçalho
+            // Cabeçalho
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -137,7 +136,7 @@ fun HomeScreen(
                 }
             }
 
-            // 🔹 Linha de filtros com aparência de "pill"
+            // Botóes de Filtro
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -148,7 +147,7 @@ fun HomeScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Botão "Filtro" (abre/capola o campo de busca)
+                    // Botão "Pesquisa"
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(50.dp))
@@ -158,20 +157,20 @@ fun HomeScreen(
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                text = "Filtro",
+                                text = "Pesquisa",
                                 color = Color.White,
                                 fontSize = 14.sp
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Image(
-                                painter = painterResource(Res.drawable.drop), // troque pelo nome do seu ícone
+                                painter = painterResource(Res.drawable.drop),
                                 contentDescription = "Abrir filtro",
                                 modifier = Modifier.size(16.dp)
                             )
                         }
                     }
 
-                    // Botão "Semestre" (abre dropdown)
+                    // Botão "Semestre"
                     Box {
                         Box(
                             modifier = Modifier
@@ -219,7 +218,7 @@ fun HomeScreen(
                     }
                 }
 
-                // Campo de busca que só aparece quando o botão "Filtro" é clicado
+                // Campo Colapsavel
                 if (isSearchExpanded) {
                     Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
@@ -232,7 +231,7 @@ fun HomeScreen(
                 }
             }
 
-            // 🔹 Lista filtrada
+            // Lista filtrada
             if (filteredMaterias.isEmpty()) {
                 Box(
                     modifier = Modifier.fillMaxSize(),

@@ -32,7 +32,7 @@ fun RecoveryScreen(onBackToLogin: () -> Unit) {
             .fillMaxSize()
             .background(Color.White)
     ) {
-        // 🔹 Fundo quadriculado
+        // Fundo quadriculado
         Image(
             painter = painterResource(Res.drawable.fundo_quadriculado),
             contentDescription = null,
@@ -40,7 +40,7 @@ fun RecoveryScreen(onBackToLogin: () -> Unit) {
             contentScale = ContentScale.Crop
         )
 
-        // 🔹 Fundo com curvas coloridas
+        // Fundo curvas
         Image(
             painter = painterResource(Res.drawable.fundo_curvas),
             contentDescription = null,
@@ -48,7 +48,7 @@ fun RecoveryScreen(onBackToLogin: () -> Unit) {
             contentScale = ContentScale.Crop
         )
 
-        // 🔹 Conteúdo principal
+        // Conteúdo principal
         Column(
             modifier = Modifier
                 .align(Alignment.Center)
@@ -57,7 +57,7 @@ fun RecoveryScreen(onBackToLogin: () -> Unit) {
                 .fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // 🔙 Botão Voltar (histórico real)
+            // Botão Voltar
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -67,7 +67,7 @@ fun RecoveryScreen(onBackToLogin: () -> Unit) {
                 BackButton(onBack = onBackToLogin)
             }
 
-            // 🔹 Logo circular
+            // Logo circular
             Box(
                 modifier = Modifier
                     .size(180.dp)
@@ -84,7 +84,7 @@ fun RecoveryScreen(onBackToLogin: () -> Unit) {
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // 🔹 Campo de e-mail
+            // Campo de e-mail
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
@@ -101,7 +101,7 @@ fun RecoveryScreen(onBackToLogin: () -> Unit) {
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // 🔹 Campo de confirmação de e-mail
+            // Campo de confirmação de e-mail
             OutlinedTextField(
                 value = confirmEmail,
                 onValueChange = { confirmEmail = it },
@@ -118,7 +118,7 @@ fun RecoveryScreen(onBackToLogin: () -> Unit) {
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // 🔹 Botão Enviar e-mail de recuperação
+            // Botão Enviar e-mail de recuperação
             Button(
                 onClick = { /* TODO: Enviar e-mail */ },
                 colors = ButtonDefaults.buttonColors(containerColor = RoxoEscuro),
@@ -133,7 +133,7 @@ fun RecoveryScreen(onBackToLogin: () -> Unit) {
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // 🔹 Botão Voltar ao Login (texto simples)
+            // Botão Voltar ao Login (texto simples)
             TextButton(onClick = onBackToLogin) {
                 Text("Voltar ao Login", color = Color.White, fontSize = 14.sp)
             }

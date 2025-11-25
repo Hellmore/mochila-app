@@ -23,7 +23,7 @@ import org.jetbrains.compose.resources.painterResource
 fun LoginScreen(
     onNavigateToRegister: () -> Unit,
     onNavigateToRecovery: () -> Unit,
-    onLoginSuccess: (userId: Int) -> Unit // ✅ Retorna o ID do usuário
+    onLoginSuccess: (userId: Int) -> Unit
 ) {
     val RoxoEscuro = Color(0xFF5336CB)
     val VerdeLima = Color(0xFFC5E300)
@@ -42,19 +42,17 @@ fun LoginScreen(
         val emailExiste = UsuarioRepository.emailExiste(email)
         val userId = UsuarioRepository.validarLogin(email, password)
 
-        // 🔹 E-mail e senha incorretos
+        // Mensagens de erro
         if (!emailExiste && userId == null) {
             errorMessage = "E-mail e senha incorretos."
             return
         }
 
-        // 🔹 E-mail não existe
         if (!emailExiste) {
             errorMessage = "E-mail incorreto."
             return
         }
 
-        // 🔹 E-mail existe, mas senha está errada
         if (emailExiste && userId == null) {
             errorMessage = "Senha incorreta."
             return
@@ -82,14 +80,13 @@ fun LoginScreen(
             contentScale = ContentScale.Crop
         )
 
-        // 🔹 Conteúdo principal
+        // Conteúdo principal
         Column(
             modifier = Modifier
                 .align(Alignment.Center)
                 .padding(horizontal = 24.dp)
                 .widthIn(max = 600.dp)
                 .fillMaxWidth()
-                // ✅ Aciona o login ao pressionar Enter
                 .onKeyEvent {
                     if (it.type == KeyEventType.KeyDown && it.key == Key.Enter) {
                         login()

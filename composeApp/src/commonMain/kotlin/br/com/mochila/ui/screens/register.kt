@@ -97,9 +97,9 @@ fun RegisterScreen(onBackToLogin: () -> Unit) {
                 success = true
                 println("✅ Usuário cadastrado: $email")
 
-                // ⏳ Espera 1,5s e redireciona automaticamente para Login
+                //  Redireciona automaticamente para Login
                 scope.launch {
-                    delay(1500)
+                    delay(3000)
                     onBackToLogin()
                 }
             } catch (e: Exception) {
@@ -120,7 +120,7 @@ fun RegisterScreen(onBackToLogin: () -> Unit) {
             .fillMaxSize()
             .background(Color.White)
     ) {
-        // 🔹 Fundo quadriculado
+        // Fundo quadriculado
         Image(
             painter = painterResource(Res.drawable.fundo_quadriculado),
             contentDescription = null,
@@ -128,7 +128,7 @@ fun RegisterScreen(onBackToLogin: () -> Unit) {
             contentScale = ContentScale.Crop
         )
 
-        // 🔹 Fundo com curvas coloridas
+        // 🔹 Fundo curvas
         Image(
             painter = painterResource(Res.drawable.fundo_curvas),
             contentDescription = null,
@@ -136,7 +136,7 @@ fun RegisterScreen(onBackToLogin: () -> Unit) {
             contentScale = ContentScale.Crop
         )
 
-        // 🔹 Conteúdo principal
+        // Conteúdo principal
         Column(
             modifier = Modifier
                 .align(Alignment.Center)
@@ -145,7 +145,7 @@ fun RegisterScreen(onBackToLogin: () -> Unit) {
                 .fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // 🔙 Botão Voltar
+            // Botão Voltar
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -155,7 +155,7 @@ fun RegisterScreen(onBackToLogin: () -> Unit) {
                 BackButton(onBack = onBackToLogin)
             }
 
-            // 🔸 Logo circular
+            // Logo circular
             Box(
                 modifier = Modifier
                     .size(180.dp)
@@ -171,7 +171,7 @@ fun RegisterScreen(onBackToLogin: () -> Unit) {
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // 🔸 Campo de e-mail
+            // Campo de e-mail
             OutlinedTextField(
                 value = email,
                 onValueChange = { input ->
@@ -194,7 +194,7 @@ fun RegisterScreen(onBackToLogin: () -> Unit) {
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // 🔸 Campo de usuário
+            // Campo de usuário
             OutlinedTextField(
                 value = username,
                 onValueChange = { input ->
@@ -217,7 +217,7 @@ fun RegisterScreen(onBackToLogin: () -> Unit) {
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // 🔸 Campo de senha (oculta)
+            // Campo de senha
             OutlinedTextField(
                 value = password,
                 onValueChange = { input ->
@@ -275,7 +275,7 @@ fun RegisterScreen(onBackToLogin: () -> Unit) {
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // 🔸 Botão Voltar ao Login (texto simples)
+            // Botão Voltar ao Login
             TextButton(onClick = onBackToLogin) {
                 Text("Já tem conta? Faça o Login", color = Color.White, fontSize = 14.sp)
             }

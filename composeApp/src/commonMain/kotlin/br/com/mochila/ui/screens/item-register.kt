@@ -77,7 +77,7 @@ fun ItemRegisterScreen(
             contentScale = ContentScale.Fit
         )
 
-        // 📚 Conteúdo principal
+        // Conteúdo principal
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -85,7 +85,7 @@ fun ItemRegisterScreen(
                 .padding(horizontal = 24.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // 🔙 Botão Voltar
+            // Botão Voltar
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -95,7 +95,7 @@ fun ItemRegisterScreen(
                 BackButton(onBack = onBack)
             }
 
-            // 👤 Cabeçalho centralizado: imagem + nome
+            // Cabeçalho
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.fillMaxWidth()
@@ -127,7 +127,6 @@ fun ItemRegisterScreen(
 
             Spacer(modifier = Modifier.height(40.dp))
 
-            // 🔹 Título “Registros”
             Text(
                 text = "Registros",
                 color = RoxoEscuro,
@@ -138,7 +137,7 @@ fun ItemRegisterScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // 🔹 Botões principais
+            // Botões principais
             val botoes = listOf(
                 "Nova Matéria" to onNavigateToSubjectRegister,
                 // "Novo Evento" to { /* TODO */ },
@@ -169,7 +168,7 @@ fun ItemRegisterScreen(
             Spacer(modifier = Modifier.height(100.dp))
         }
 
-        // 🔹 Menu inferior fixo
+        // Menu inferior
         Row(
             modifier = Modifier
                 .align(Alignment.BottomCenter)

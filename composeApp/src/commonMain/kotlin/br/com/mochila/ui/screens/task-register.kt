@@ -271,7 +271,7 @@ fun TaskRegisterScreen(
             .fillMaxSize()
             .background(Color.White)
     ) {
-        // 🔹 Fundo decorativo
+        // Fundo quadriculado
         Image(
             painter = painterResource(Res.drawable.fundo_quadriculado),
             contentDescription = "Fundo quadriculado",
@@ -414,7 +414,7 @@ fun TaskRegisterScreen(
                 )
             }
 
-            // 🗑️ Botão excluir (somente edição)
+            // Botão excluir
             if (isEditing) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Button(
@@ -433,7 +433,7 @@ fun TaskRegisterScreen(
             Spacer(modifier = Modifier.height(100.dp))
         }
 
-        // 🔹 Menu inferior fixo
+        // Menu inferior fixo
         Row(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
