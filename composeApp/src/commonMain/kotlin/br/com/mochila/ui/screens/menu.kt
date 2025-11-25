@@ -46,14 +46,14 @@ fun MenuScreen(
         usuario?.let { nomeUsuario = it.nome }
     }
 
-    // 🔹 Camada de fundo semitransparente — fecha o menu ao clicar fora
+    // Camada de fundo semitransparente
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black.copy(alpha = 0.3f))
             .clickable(onClick = onCloseMenu)
     ) {
-        // 🔹 Painel lateral animado
+        // Painel lateral animado
         AnimatedVisibility(
             visible = true,
             enter = slideInHorizontally(
@@ -108,7 +108,7 @@ fun MenuScreen(
 
                         Spacer(modifier = Modifier.height(24.dp))
 
-                        // 🔹 Itens do menu
+                        // Itens do menu
                         MenuItem("Configurações da conta", Res.drawable.config) {
                             onCloseMenu()
                             onNavigateToAccountSettings()
@@ -126,12 +126,12 @@ fun MenuScreen(
                         // MenuItem("Assine o PLUS!", Res.drawable.plus) { /* TODO */ }
                     }
 
-                    // 🔹 Rodapé do menu
+                    // Rodapé do menu
                     Column(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalAlignment = Alignment.Start
                     ) {
-                        // ✅ Botão de logout
+                        // Botão de logout
                         MenuItem("Sair da conta") {
                             onCloseMenu()
                             onLogout() // volta para tela de login
@@ -139,7 +139,7 @@ fun MenuScreen(
 
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        // 🔹 Botão para fechar o menu
+                        // Botão para fechar o menu
                         IconButton(
                             onClick = onCloseMenu,
                             modifier = Modifier.align(Alignment.Start)

@@ -112,7 +112,6 @@ fun App() {
                     "subject_detail" -> {
                         currentUserId?.let { userId ->
                             selectedMateriaId?.let { materiaId ->
-                                // usa o método existente no seu repositório para buscar por id
                                 val materia: Materia? = MateriaRepository.buscarPorId(materiaId)
 
                                 materia?.let { m ->

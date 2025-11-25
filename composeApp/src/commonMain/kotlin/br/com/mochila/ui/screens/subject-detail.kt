@@ -84,7 +84,7 @@ fun SubjectDetailScreen(
             .fillMaxSize()
             .background(Color.White)
     ) {
-        // Fundo decorativo
+        // Fundo quadriculado
         Image(
             painter = painterResource(Res.drawable.fundo_quadriculado),
             contentDescription = null,

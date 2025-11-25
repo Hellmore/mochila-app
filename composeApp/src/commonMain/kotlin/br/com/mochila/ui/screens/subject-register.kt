@@ -87,7 +87,6 @@ fun SubjectRegisterScreen(
             label = label,
             onChange = { entrada ->
 
-                // Permite apagar sempre
                 if (entrada.length < valor.length) {
                     onChange(entrada)
                     return@CampoRoxo
@@ -120,16 +119,13 @@ fun SubjectRegisterScreen(
             label = label,
             onChange = { entrada ->
 
-                // Permitir apagar de forma natural
                 if (entrada.length < valor.length) {
                     onChange(entrada.replace("h", ""))
                     return@CampoRoxo
                 }
 
-                // Remover h para trabalhar somente com a parte numérica
                 val clean = entrada.replace("h", "")
 
-                // Manter somente números e 1 dois-pontos
                 val filtered = buildString {
                     var colonAdded = false
                     clean.forEach {
@@ -144,7 +140,6 @@ fun SubjectRegisterScreen(
                 // Limite máximo: "999:99"
                 if (filtered.length > 4) return@CampoRoxo
 
-                // Adicionar "h" automaticamente ao final SE tiver pelo menos um número
                 onChange(
                     if (filtered.isNotEmpty()) filtered + "h" else filtered
                 )
@@ -185,7 +180,7 @@ fun SubjectRegisterScreen(
 
     fun salvarMateria() {
 
-        // ➤ 1. Verificar campos vazios
+        // Verificar campos vazios
         if (
             nomeMateria.isBlank() ||
             professor.isBlank() ||
@@ -200,7 +195,7 @@ fun SubjectRegisterScreen(
             return
         }
 
-        // ➤ 2. Validar datas
+        // Validar datas
         if (!dataValida(dataInicio)) {
             message = "Data de início inválida."
             success = false
@@ -213,7 +208,7 @@ fun SubjectRegisterScreen(
             return
         }
 
-        // ➤ 3. Converter números
+        // Converter números
         val frequenciaMinInt = frequenciaMin.filter { it.isDigit() }.toIntOrNull()
         val horasPorAulaInt = horasPorAula.filter { it.isDigit() }.toIntOrNull()
 
@@ -223,7 +218,7 @@ fun SubjectRegisterScreen(
             return
         }
 
-        // ➤ 4. Salvar (se todas validações passaram)
+        // Salvar (se todas validações passaram)
         val operacaoBemSucedida = if (isEditing) {
             MateriaRepository.atualizarMateria(
                 idUsuario = userId,
@@ -259,7 +254,7 @@ fun SubjectRegisterScreen(
         }
     }
 
-    // 🔸 Excluir disciplina existente
+    // Excluir disciplina existente
     fun excluirMateria() {
         if (!isEditing || subjectData == null) return
 
@@ -275,7 +270,7 @@ fun SubjectRegisterScreen(
         }
     }
 
-    // 🎨 Layout
+    // Layout
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -469,7 +464,7 @@ fun SubjectRegisterScreen(
                 )
             }
 
-            // 🗑️ Botão excluir (somente edição)
+            // Botão excluir
             if (isEditing) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Button(
@@ -488,7 +483,7 @@ fun SubjectRegisterScreen(
             Spacer(modifier = Modifier.height(100.dp))
         }
 
-        // 🔹 Menu inferior fixo
+        // Menu inferior fixo
         Row(
             modifier = Modifier
                 .align(Alignment.BottomCenter)

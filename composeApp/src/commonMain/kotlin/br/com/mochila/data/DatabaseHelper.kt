@@ -6,7 +6,7 @@ object DatabaseHelper {
 
     private const val DB_NAME = "mochila.db"
 
-    // 🔹 Conecta ao banco e inicializa se necessário
+    // Conecta ao banco e inicializa se necessário
     fun connect(): Connection? {
         return try {
             val conn = DriverManager.getConnection("jdbc:sqlite:$DB_NAME")
@@ -18,7 +18,7 @@ object DatabaseHelper {
         }
     }
 
-    // 🔹 Cria as tabelas se o banco estiver vazio
+    // Cria as tabelas se o banco estiver vazio
     private fun initializeDatabase(conn: Connection) {
         try {
             val meta = conn.metaData
@@ -56,7 +56,7 @@ object DatabaseHelper {
     }
 
     // ============================================================
-    // 🔹 Funções auxiliares para uso direto nas telas
+    // Funções auxiliares
     // ============================================================
 
     /**
@@ -118,7 +118,7 @@ object DatabaseHelper {
         }
     }
 
-    // 🔹 Fecha a conexão (SQLite fecha automaticamente ao sair de escopo)
+    // Fecha a conexão (SQLite fecha automaticamente ao sair de escopo)
     fun close() {
         // Nenhuma ação necessária para SQLite
     }
