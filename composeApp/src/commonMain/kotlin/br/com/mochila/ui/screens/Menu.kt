@@ -9,12 +9,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -22,10 +17,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import br.com.mochila.data.*
+import br.com.mochila.presenter.MenuPresenter
+import br.com.mochila.presenter.MenuView
+import mochila_app.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
-import mochila_app.composeapp.generated.resources.*
 
 @Composable
 fun MenuScreen(
@@ -39,21 +35,24 @@ fun MenuScreen(
     val RoxoClaro = Color(0xFF7F55CE)
     val RoxoEscuro = Color(0xFF5336CB)
 
-    var nomeUsuario by remember { mutableStateOf("Carregando...") }
+    var userName by remember { mutableStateOf("Carregando...") }
 
-    LaunchedEffect(userId) {
-        val usuario = UsuarioRepository.getUsuarioById(userId)
-        usuario?.let { nomeUsuario = it.nome }
+    val presenter = remember {
+        object : MenuView {
+            override fun showUserName(name: String) { userName = name }
+        }.let { view -> MenuPresenter(view) }
     }
 
-    // Camada de fundo semitransparente
+    LaunchedEffect(userId) {
+        presenter.loadUserName(userId)
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black.copy(alpha = 0.3f))
             .clickable(onClick = onCloseMenu)
     ) {
-        // Painel lateral animado
         AnimatedVisibility(
             visible = true,
             enter = slideInHorizontally(
@@ -70,7 +69,7 @@ fun MenuScreen(
                     .fillMaxHeight()
                     .fillMaxWidth(0.20f)
                     .background(RoxoClaro)
-                    .clickable(enabled = false) { } // impede fechar ao clicar dentro
+                    .clickable(enabled = false) {}
             ) {
                 Column(
                     modifier = Modifier
@@ -100,46 +99,34 @@ fun MenuScreen(
                         }
 
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            nomeUsuario,
-                            color = Color.White.copy(alpha = 0.9f),
-                            fontSize = 26.sp
-                        )
-
+                        Text(userName, color = Color.White.copy(alpha = 0.9f), fontSize = 26.sp)
                         Spacer(modifier = Modifier.height(24.dp))
 
-                        // Itens do menu
                         MenuItem("Configurações da conta", Res.drawable.config) {
                             onCloseMenu()
                             onNavigateToAccountSettings()
                         }
-                        // MenuItem("Plano de faltas") { /* TODO */ }
                         MenuItem("Matérias") {
                             onCloseMenu()
                             onNavigateToHome()
                         }
-                        // MenuItem("Eventos") { /* TODO */ }
                         MenuItem("Lista de Tarefas") {
                             onCloseMenu()
                             onNavigateToTasksList()
                         }
-                        // MenuItem("Assine o PLUS!", Res.drawable.plus) { /* TODO */ }
                     }
 
-                    // Rodapé do menu
                     Column(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalAlignment = Alignment.Start
                     ) {
-                        // Botão de logout
                         MenuItem("Sair da conta") {
                             onCloseMenu()
-                            onLogout() // volta para tela de login
+                            onLogout()
                         }
 
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        // Botão para fechar o menu
                         IconButton(
                             onClick = onCloseMenu,
                             modifier = Modifier.align(Alignment.Start)
@@ -171,11 +158,7 @@ private fun MenuItem(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Start
     ) {
-        Text(
-            text = text,
-            color = Color.White,
-            fontSize = 15.sp
-        )
+        Text(text = text, color = Color.White, fontSize = 15.sp)
 
         if (iconRes != null) {
             Spacer(modifier = Modifier.width(8.dp))

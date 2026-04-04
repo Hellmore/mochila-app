@@ -14,7 +14,10 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import br.com.mochila.data.TarefaRepository
+import br.com.mochila.model.Task
+import br.com.mochila.presenter.TaskRegisterPresenter
+import br.com.mochila.presenter.TaskRegisterView
+import br.com.mochila.ui.screens.components.BackButton
 import mochila_app.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.painterResource
 
@@ -33,24 +36,48 @@ fun TaskRegisterScreen(
     val RoxoClaro = Color(0xFF7F55CE)
     val VerdeLima = Color(0xFFC5E300)
 
-    @Composable
-    fun CampoRoxo(
-        valor: String,
-        label: String,
-        onChange: (String) -> Unit,
-    ) {
-        val RoxoClaro = Color(0xFF7F55CE)
+    var title by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
+    var status by remember { mutableStateOf("Pendente") }
+    var blockers by remember { mutableStateOf("") }
+    var dueDate by remember { mutableStateOf("") }
 
+    var message by remember { mutableStateOf<String?>(null) }
+    var success by remember { mutableStateOf(false) }
+
+    val presenter = remember {
+        object : TaskRegisterView {
+            override fun showTask(task: Task) {
+                title = task.title
+                description = task.description
+                status = task.status
+                blockers = task.blockers ?: ""
+                dueDate = task.dueDate ?: ""
+            }
+            override fun showValidationError(msg: String) { message = msg; success = false }
+            override fun showSaveSuccess(isEditing: Boolean) {
+                message = if (isEditing) "Tarefa atualizada com sucesso!" else "Tarefa cadastrada com sucesso!"
+                success = true
+            }
+            override fun showSaveError() { message = "Erro ao salvar tarefa."; success = false }
+            override fun showDeleteSuccess() { message = "Tarefa excluída com sucesso!"; success = true }
+            override fun showDeleteError() { message = "Erro ao excluir tarefa."; success = false }
+            override fun navigateToTasksList() { onNavigateToTasksList() }
+        }.let { view -> TaskRegisterPresenter(view) }
+    }
+
+    LaunchedEffect(taskId) {
+        if (isEditing && taskId != null) {
+            presenter.loadTask(taskId)
+        }
+    }
+
+    @Composable
+    fun FieldRoxo(valor: String, label: String, onChange: (String) -> Unit) {
         OutlinedTextField(
             value = valor,
             onValueChange = onChange,
-            label = {
-                Text(
-                    text = label,
-                    color = RoxoClaro,
-                    fontSize = 14.sp
-                )
-            },
+            label = { Text(text = label, color = RoxoClaro, fontSize = 14.sp) },
             singleLine = true,
             colors = OutlinedTextFieldDefaults.colors(
                 focusedContainerColor = Color.White,
@@ -69,48 +96,23 @@ fun TaskRegisterScreen(
     }
 
     @Composable
-    fun CampoRoxoData(
-        valor: String,
-        label: String,
-        onChange: (String) -> Unit
-    ) {
-        CampoRoxo(
-            valor = valor,
-            label = label,
-            onChange = { entrada ->
-
-                // Permite apagar sempre
-                if (entrada.length < valor.length) {
-                    onChange(entrada)
-                    return@CampoRoxo
+    fun FieldDate(valor: String, label: String, onChange: (String) -> Unit) {
+        FieldRoxo(valor = valor, label = label, onChange = { input ->
+            if (input.length < valor.length) { onChange(input); return@FieldRoxo }
+            val digits = input.filter { it.isDigit() }.take(8)
+            val formatted = buildString {
+                for (i in digits.indices) {
+                    append(digits[i])
+                    if (i == 1 || i == 3) append('/')
                 }
-
-                // Apenas números
-                val digits = entrada.filter { it.isDigit() }.take(8)
-
-                // Mascara DD/MM/AAAA
-                val formatted = buildString {
-                    for (i in digits.indices) {
-                        append(digits[i])
-                        if (i == 1 || i == 3) append('/')
-                    }
-                }
-
-                onChange(formatted)
             }
-        )
+            onChange(formatted)
+        })
     }
 
     @Composable
-    fun CampoRoxoStatus(
-        valor: String,
-        label: String = "Status",
-        opcoes: List<String>,
-        onChange: (String) -> Unit
-    ) {
+    fun FieldStatus(valor: String, opcoes: List<String>, onChange: (String) -> Unit) {
         var expanded by remember { mutableStateOf(false) }
-        val RoxoClaro = Color(0xFF7F55CE)
-
         Box(
             modifier = Modifier
                 .widthIn(max = 600.dp)
@@ -121,13 +123,7 @@ fun TaskRegisterScreen(
                 value = valor,
                 onValueChange = {},
                 readOnly = true,
-                label = {
-                    Text(
-                        text = label,
-                        color = RoxoClaro,
-                        fontSize = 14.sp
-                    )
-                },
+                label = { Text(text = "Status", color = RoxoClaro, fontSize = 14.sp) },
                 trailingIcon = {
                     IconButton(onClick = { expanded = true }) {
                         Icon(
@@ -151,11 +147,7 @@ fun TaskRegisterScreen(
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.fillMaxWidth()
             )
-
-            DropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false }
-            ) {
+            DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                 opcoes.forEach { option ->
                     DropdownMenuItem(
                         text = {
@@ -166,112 +158,28 @@ fun TaskRegisterScreen(
                                 fontWeight = if (valor == option) FontWeight.Bold else FontWeight.Normal
                             )
                         },
-                        onClick = {
-                            onChange(option)
-                            expanded = false
-                        }
+                        onClick = { onChange(option); expanded = false }
                     )
                 }
             }
         }
     }
 
-    fun dataValida(data: String): Boolean {
-        if (!Regex("""\d{2}/\d{2}/\d{4}""").matches(data)) return false
-
-        val partes = data.split("/")
-        val dia = partes[0].toIntOrNull() ?: return false
-        val mes = partes[1].toIntOrNull() ?: return false
-        val ano = partes[2].toIntOrNull() ?: return false
-
-        if (mes !in 1..12) return false
-
-        val diasNoMes = when (mes) {
-            1,3,5,7,8,10,12 -> 31
-            4,6,9,11 -> 30
-            2 -> if ((ano % 4 == 0 && ano % 100 != 0) || ano % 400 == 0) 29 else 28
-            else -> return false
-        }
-
-        return dia in 1..diasNoMes
-    }
-
-    val existingTask = remember(taskId) { taskId?.let { TarefaRepository.buscarPorId(it) } }
-
-    var titulo by remember { mutableStateOf(existingTask?.titulo ?: "") }
-    var descricao by remember { mutableStateOf(existingTask?.descricao ?: "") }
-    var status by remember { mutableStateOf(existingTask?.status ?: "Pendente") }
-    var blockers by remember { mutableStateOf(existingTask?.blockers ?: "") }
-    var dataLimite by remember { mutableStateOf(existingTask?.data_limite ?: "") }
-
-    var message by remember { mutableStateOf<String?>(null) }
-    var success by remember { mutableStateOf(false) }
-
-    fun salvarTarefa() {
-
-        if (titulo.isBlank() || descricao.isBlank()) {
-            message = "Título e descrição são obrigatórios."
-            success = false
-            return
-        }
-
-        if (dataLimite.isNotBlank() && !dataValida(dataLimite)) {
-            message = "Data limite inválida."
-            success = false
-            return
-        }
-
-        val sucesso = if (isEditing && taskId != null) {
-            TarefaRepository.atualizarTarefa(
-                idTarefa = taskId,
-                idUsuario = userId,
-                titulo = titulo,
-                descricao = descricao,
-                status = status,
-                blockers = blockers,
-                dataLimite = dataLimite
-            )
-        } else {
-            TarefaRepository.insertTarefa(
-                idUsuario = userId,
-                titulo = titulo,
-                descricao = descricao,
-                status = status,
-                blockers = blockers,
-                dataLimite = dataLimite
-            )
-        }
-
-        if (sucesso) {
-            message = if (isEditing) "Tarefa atualizada com sucesso!" else "Tarefa cadastrada com sucesso!"
-            success = true
-            onNavigateToTasksList()
-        } else {
-            message = "Erro ao salvar tarefa."
-            success = false
-        }
-    }
-
-    fun excluirTarefa() {
-        if (!isEditing || taskId == null) return
-
-        val operacaoBemSucedida = TarefaRepository.deletarTarefa(taskId, userId)
-        if (operacaoBemSucedida) {
-            message = "Tarefa excluída com sucesso!"
-            success = true
-            onNavigateToTasksList()
-        } else {
-            message = "Erro ao excluir tarefa."
-            success = false
-        }
-    }
+    fun buildTask() = Task(
+        id = taskId ?: 0,
+        userId = userId,
+        title = title,
+        description = description,
+        status = status,
+        blockers = blockers.ifBlank { null },
+        dueDate = dueDate.ifBlank { null }
+    )
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
     ) {
-        // Fundo quadriculado
         Image(
             painter = painterResource(Res.drawable.fundo_quadriculado),
             contentDescription = "Fundo quadriculado",
@@ -287,7 +195,6 @@ fun TaskRegisterScreen(
                 .size(600.dp),
             contentScale = ContentScale.Fit
         )
-
         Image(
             painter = painterResource(Res.drawable.chevron),
             contentDescription = "Decoração chevron",
@@ -339,41 +246,22 @@ fun TaskRegisterScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            CampoRoxo(
-                valor = titulo,
-                label = "Título",
-                onChange = { if (it.length <= 30) titulo = it }
-            )
-
-            CampoRoxo(
-                valor = descricao,
-                label = "Descrição",
-                onChange = { if (it.length <= 50) descricao = it }
-            )
-
-            CampoRoxo(
-                valor = blockers,
-                label = "Blockers",
-                onChange = { if (it.length <= 20) blockers = it }
-            )
-
-            CampoRoxoData(
-                valor = dataLimite,
-                label = "Data limite (DD/MM/AAAA)",
-                onChange = { dataLimite = it }
-            )
-
-            CampoRoxoStatus(
+            FieldRoxo(valor = title, label = "Título") { if (it.length <= 30) title = it }
+            FieldRoxo(valor = description, label = "Descrição") { if (it.length <= 50) description = it }
+            FieldRoxo(valor = blockers, label = "Blockers") { if (it.length <= 20) blockers = it }
+            FieldDate(valor = dueDate, label = "Data limite (DD/MM/AAAA)") { dueDate = it }
+            FieldStatus(
                 valor = status,
-                label = "Status",
                 opcoes = listOf("Pendente", "Em andamento", "Cancelada", "Concluida"),
                 onChange = { status = it }
             )
 
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Feedback
             message?.let { msg ->
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Box(
@@ -392,13 +280,13 @@ fun TaskRegisterScreen(
                             fontSize = 15.sp
                         )
                     }
-
                     Spacer(modifier = Modifier.height(12.dp))
                 }
             }
 
+            // Botão Salvar
             Button(
-                onClick = { salvarTarefa() },
+                onClick = { presenter.saveTask(userId, buildTask(), isEditing) },
                 colors = ButtonDefaults.buttonColors(containerColor = VerdeLima),
                 shape = RoundedCornerShape(8.dp),
                 modifier = Modifier
@@ -414,11 +302,11 @@ fun TaskRegisterScreen(
                 )
             }
 
-            // Botão excluir
-            if (isEditing) {
+            // Botão Excluir (apenas em edição)
+            if (isEditing && taskId != null) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Button(
-                    onClick = { excluirTarefa() },
+                    onClick = { presenter.deleteTask(userId, taskId) },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F)),
                     shape = RoundedCornerShape(8.dp),
                     modifier = Modifier

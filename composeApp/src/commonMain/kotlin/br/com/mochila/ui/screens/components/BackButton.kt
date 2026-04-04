@@ -1,4 +1,4 @@
-package br.com.mochila.ui.screens
+package br.com.mochila.ui.screens.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.size
