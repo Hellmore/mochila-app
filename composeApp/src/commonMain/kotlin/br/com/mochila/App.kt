@@ -6,15 +6,16 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import br.com.mochila.ui.screens.*
 import br.com.mochila.data.*
+import br.com.mochila.model.*
+import br.com.mochila.ui.screens.*
 
 @Composable
 fun App() {
     var currentUserId by remember { mutableStateOf<Int?>(null) }
     var screenStack by remember { mutableStateOf(listOf("login")) }
     var isMenuVisible by remember { mutableStateOf(false) }
-    var selectedMateriaId by remember { mutableStateOf<Int?>(null) }
+    var selectedSubjectId by remember { mutableStateOf<Int?>(null) }
     var selectedTaskId by remember { mutableStateOf<Int?>(null) }
 
     val currentScreen = screenStack.last()
@@ -38,7 +39,7 @@ fun App() {
         currentUserId = null
         isMenuVisible = false
         screenStack = listOf("login")
-        selectedMateriaId = null
+        selectedSubjectId = null
         selectedTaskId = null
     }
 
@@ -70,13 +71,11 @@ fun App() {
                                 onOpenMenu = { openMenu() },
                                 onNavigateToAdd = { navigateTo("item_register") },
                                 onNavigateToAccountSettings = { navigateTo("account_settings") },
-                                onNavigateToSubject = { materiaId ->
-                                    selectedMateriaId = materiaId
+                                onNavigateToSubject = { subjectId ->
+                                    selectedSubjectId = subjectId
                                     navigateTo("subject_detail")
                                 },
-                                onNavigateToTasksList = {
-                                    navigateTo("tasks_list")
-                                },
+                                onNavigateToTasksList = { navigateTo("tasks_list") },
                                 onLogout = { logout() }
                             )
                         } ?: logout()
@@ -111,52 +110,30 @@ fun App() {
 
                     "subject_detail" -> {
                         currentUserId?.let { userId ->
-                            selectedMateriaId?.let { materiaId ->
-                                val materia: Materia? = MateriaRepository.buscarPorId(materiaId)
-
-                                materia?.let { m ->
-                                    SubjectDetailScreen(
-                                        materia = m,
-                                        onNavigateToEdit = { materia ->
-                                            selectedMateriaId = materia.id_disciplina
-                                            navigateTo("subject_edit")
-                                        },
-                                        onNavigateToAbsenceControl = { materia ->
-                                            navigateTo("home")
-                                        },
-                                        onNavigateToItemRegister = { navigateTo("item_register") },
-                                        onNavigateToHome = { navigateTo("home") },
-                                        onBack = { goBack() },
-                                        onNavigateToTasksList = { navigateTo("tasks_list") },
-                                        onNavigateToAccountSettings = { navigateTo("account_settings") },
-                                        userId = userId,
-                                        onLogout = { logout() }
-                                    )
-                                } ?: run {
-                                    // se não encontrou a matéria, volta para home
-                                    goBack()
-                                }
+                            selectedSubjectId?.let { subjectId ->
+                                SubjectDetailScreen(
+                                    userId = userId,
+                                    subjectId = subjectId,
+                                    onNavigateToEdit = { subject ->
+                                        selectedSubjectId = subject.id
+                                        navigateTo("subject_edit")
+                                    },
+                                    onNavigateToItemRegister = { navigateTo("item_register") },
+                                    onNavigateToHome = { navigateTo("home") },
+                                    onBack = { goBack() },
+                                    onNavigateToTasksList = { navigateTo("tasks_list") },
+                                    onNavigateToAccountSettings = { navigateTo("account_settings") },
+                                    onLogout = { logout() }
+                                )
                             } ?: goBack()
                         } ?: logout()
                     }
 
                     "subject_edit" -> {
                         currentUserId?.let { userId ->
-                            selectedMateriaId?.let { materiaId ->
-                                val materia: Materia? = MateriaRepository.buscarPorId(materiaId)
-
-                                materia?.let { m ->
-                                    val subjectData = Subject(
-                                        id = m.id_disciplina,
-                                        nome = m.nome,
-                                        professor = m.professor,
-                                        frequencia = m.frequencia_minima.toString(),
-                                        dataInicio = m.data_inicio,
-                                        dataFim = m.data_fim,
-                                        horasAula = m.hora_aula.toString(),
-                                        semestre = m.semestre
-                                    )
-
+                            selectedSubjectId?.let { subjectId ->
+                                val subject: Subject? = SubjectRepository.findById(subjectId)
+                                subject?.let { s ->
                                     SubjectRegisterScreen(
                                         userId = userId,
                                         onNavigateToHome = { navigateTo("home") },
@@ -164,11 +141,9 @@ fun App() {
                                         onLogout = { logout() },
                                         onOpenMenu = { openMenu() },
                                         isEditing = true,
-                                        subjectData = subjectData
+                                        subjectData = s
                                     )
-                                } ?: run {
-                                    goBack()
-                                }
+                                } ?: goBack()
                             } ?: goBack()
                         } ?: logout()
                     }
@@ -181,15 +156,15 @@ fun App() {
                                 onBack = { goBack() },
                                 onLogout = { logout() },
                                 onNavigateToTasksList = { navigateTo("tasks_list") },
-                                onOpenMenu = { openMenu() },
+                                onOpenMenu = { openMenu() }
                             )
                         } ?: logout()
                     }
 
                     "tasks_list" -> {
-                        currentUserId?.let {
+                        currentUserId?.let { userId ->
                             TaskListScreen(
-                                userId = it,
+                                userId = userId,
                                 onNavigateToTaskDetail = { id ->
                                     selectedTaskId = id
                                     navigateTo("task_detail")
@@ -209,8 +184,8 @@ fun App() {
                                 TaskDetailScreen(
                                     userId = userId,
                                     taskId = taskId,
-                                    onNavigateToEdit = { tarefa ->
-                                        selectedTaskId = tarefa.id_tarefa
+                                    onNavigateToEdit = { task ->
+                                        selectedTaskId = task.id
                                         navigateTo("task_edit")
                                     },
                                     onNavigateToHome = { navigateTo("home") },
@@ -256,18 +231,9 @@ fun App() {
                         MenuScreen(
                             userId = userId,
                             onCloseMenu = { closeMenu() },
-                            onNavigateToHome = {
-                                closeMenu()
-                                navigateTo("home")
-                            },
-                            onNavigateToTasksList = {
-                                closeMenu()
-                                navigateTo("tasks_list")
-                            },
-                            onNavigateToAccountSettings = {
-                                closeMenu()
-                                navigateTo("account_settings")
-                            },
+                            onNavigateToHome = { closeMenu(); navigateTo("home") },
+                            onNavigateToTasksList = { closeMenu(); navigateTo("tasks_list") },
+                            onNavigateToAccountSettings = { closeMenu(); navigateTo("account_settings") },
                             onLogout = { logout() }
                         )
                     }
