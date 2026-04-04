@@ -19,7 +19,10 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import br.com.mochila.data.*
+import br.com.mochila.data.TaskRepository
+import br.com.mochila.model.Subject
+import br.com.mochila.presenter.HomePresenter
+import br.com.mochila.presenter.HomeView
 import mochila_app.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.painterResource
 
@@ -37,37 +40,30 @@ fun HomeScreen(
     val RoxoEscuro = Color(0xFF5336CB)
     val RoxoClaro = Color(0xFF7F55CE)
 
-    val materias = remember(userId) { MateriaRepository.listarMaterias(userId) }
-    val tarefas = remember(userId) { TarefaRepository.listarTarefas(userId) }
-
-    // Estados de filtro
+    // Estado da View
+    var subjects by remember { mutableStateOf<List<Subject>>(emptyList()) }
     var selectedSemester by remember { mutableStateOf("Todos") }
     var searchText by remember { mutableStateOf("") }
     var semesterMenuExpanded by remember { mutableStateOf(false) }
     var isSearchExpanded by remember { mutableStateOf(false) }
 
-    // Lista de semestres existentes
-    val semesters = remember(materias) {
-        materias
-            .mapNotNull { materia ->
-                materia.semestre?.takeIf { it.isNotBlank() }
-            }
-            .distinct()
-            .sorted()
+    // Presenter
+    val presenter = remember {
+        object : HomeView {
+            override fun showSubjects(list: List<Subject>) { subjects = list }
+            override fun showEmptyState() { subjects = emptyList() }
+            override fun navigateToSubjectDetail(subjectId: Int) { onNavigateToSubject(subjectId) }
+        }.let { view -> HomePresenter(view) }
     }
 
-    // Aplica Filtros
-    val filteredMaterias = remember(materias, selectedSemester, searchText) {
-        materias.filter { materia ->
-            val matchesSemester =
-                selectedSemester == "Todos" ||
-                        (materia.semestre ?: "").equals(selectedSemester, ignoreCase = false)
+    LaunchedEffect(userId) {
+        presenter.loadSubjects(userId)
+    }
 
-            val matchesName =
-                materia.nome.contains(searchText, ignoreCase = true)
+    val semesters = remember(subjects) { presenter.getSemesters(subjects) }
 
-            matchesSemester && matchesName
-        }
+    val filteredSubjects = remember(subjects, selectedSemester, searchText) {
+        presenter.filterSubjects(subjects, selectedSemester, searchText)
     }
 
     Box(
@@ -136,7 +132,7 @@ fun HomeScreen(
                 }
             }
 
-            // Botóes de Filtro
+            // Botões de Filtro
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -147,7 +143,7 @@ fun HomeScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Botão "Pesquisa"
+                    // Botão Pesquisa
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(50.dp))
@@ -156,11 +152,7 @@ fun HomeScreen(
                             .padding(horizontal = 16.dp, vertical = 8.dp)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = "Pesquisa",
-                                color = Color.White,
-                                fontSize = 14.sp
-                            )
+                            Text(text = "Pesquisa", color = Color.White, fontSize = 14.sp)
                             Spacer(modifier = Modifier.width(8.dp))
                             Image(
                                 painter = painterResource(Res.drawable.drop),
@@ -170,7 +162,7 @@ fun HomeScreen(
                         }
                     }
 
-                    // Botão "Semestre"
+                    // Botão Semestre
                     Box {
                         Box(
                             modifier = Modifier
@@ -187,7 +179,7 @@ fun HomeScreen(
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Image(
-                                    painter = painterResource(Res.drawable.drop), // troque pelo nome do seu ícone
+                                    painter = painterResource(Res.drawable.drop),
                                     contentDescription = "Selecionar semestre",
                                     modifier = Modifier.size(16.dp)
                                 )
@@ -205,11 +197,11 @@ fun HomeScreen(
                                     semesterMenuExpanded = false
                                 }
                             )
-                            semesters.forEach { semestre ->
+                            semesters.forEach { semester ->
                                 DropdownMenuItem(
-                                    text = { Text(semestre) },
+                                    text = { Text(semester) },
                                     onClick = {
-                                        selectedSemester = semestre
+                                        selectedSemester = semester
                                         semesterMenuExpanded = false
                                     }
                                 )
@@ -218,7 +210,7 @@ fun HomeScreen(
                     }
                 }
 
-                // Campo Colapsavel
+                // Campo colapsável de busca
                 if (isSearchExpanded) {
                     Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
@@ -232,13 +224,13 @@ fun HomeScreen(
             }
 
             // Lista filtrada
-            if (filteredMaterias.isEmpty()) {
+            if (filteredSubjects.isEmpty()) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        if (materias.isEmpty())
+                        if (subjects.isEmpty())
                             "Nenhuma matéria cadastrada"
                         else
                             "Nenhuma matéria encontrada com esses filtros",
@@ -252,9 +244,9 @@ fun HomeScreen(
                         .fillMaxSize()
                         .padding(horizontal = 16.dp)
                 ) {
-                    items(filteredMaterias) { materia ->
-                        MateriaItem(materia) { materiaId ->
-                            onNavigateToSubject(materiaId)
+                    items(filteredSubjects) { subject ->
+                        SubjectItem(subject) { subjectId ->
+                            presenter.onSubjectClicked(subjectId)
                         }
                         Spacer(modifier = Modifier.height(12.dp))
                     }
@@ -262,6 +254,7 @@ fun HomeScreen(
             }
         }
 
+        // Menu inferior
         Row(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -279,8 +272,6 @@ fun HomeScreen(
                 horizontalArrangement = Arrangement.spacedBy(5.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-
-                // Menu lateral
                 IconButton(onClick = onOpenMenu) {
                     Image(
                         painter = painterResource(Res.drawable.menu),
@@ -288,8 +279,6 @@ fun HomeScreen(
                         modifier = Modifier.size(16.dp)
                     )
                 }
-
-                // Adicionar
                 IconButton(onClick = onNavigateToAdd) {
                     Image(
                         painter = painterResource(Res.drawable.add),
@@ -297,8 +286,6 @@ fun HomeScreen(
                         modifier = Modifier.size(16.dp)
                     )
                 }
-
-                // Home
                 IconButton(onClick = onNavigateToHome) {
                     Image(
                         painter = painterResource(Res.drawable.home),
@@ -312,7 +299,7 @@ fun HomeScreen(
 }
 
 @Composable
-fun MateriaItem(materia: Materia, onClick: (Int) -> Unit) {
+fun SubjectItem(subject: Subject, onClick: (Int) -> Unit) {
     val VerdeClaro = Color(0xFFE6F5B0)
 
     Row(
@@ -321,11 +308,11 @@ fun MateriaItem(materia: Materia, onClick: (Int) -> Unit) {
             .background(VerdeClaro, shape = RoundedCornerShape(12.dp))
             .border(1.dp, Color.Gray, RoundedCornerShape(12.dp))
             .padding(20.dp)
-            .clickable { onClick(materia.id_disciplina) },
+            .clickable { onClick(subject.id) },
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(materia.nome, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+        Text(subject.name, fontWeight = FontWeight.Bold, fontSize = 16.sp)
         Text(">", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = Color.Gray)
     }
 }

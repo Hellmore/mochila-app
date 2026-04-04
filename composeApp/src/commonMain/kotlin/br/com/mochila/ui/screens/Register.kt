@@ -1,6 +1,5 @@
 package br.com.mochila.ui.screens
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -14,12 +13,13 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import br.com.mochila.presenter.RegisterPresenter
+import br.com.mochila.presenter.RegisterView
+import br.com.mochila.ui.screens.components.BackButton
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.jetbrains.compose.resources.painterResource
 import mochila_app.composeapp.generated.resources.*
-import br.com.mochila.data.DatabaseHelper
-import java.sql.PreparedStatement
+import org.jetbrains.compose.resources.painterResource
 
 @Composable
 fun RegisterScreen(onBackToLogin: () -> Unit) {
@@ -35,84 +35,21 @@ fun RegisterScreen(onBackToLogin: () -> Unit) {
 
     val scope = rememberCoroutineScope()
 
-    fun validarEmail(email: String): Boolean {
-        return email.contains("@") && email.length <= 30
-    }
-
-    fun validarNome(nome: String): Boolean {
-        return nome.length in 3..30
-    }
-
-    fun validarSenha(senha: String): Boolean {
-        val regex = Regex(
-            pattern = """^(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,25}$"""
-        )
-        return regex.matches(senha)
-    }
-
-    fun register() {
-
-        val emailValido = validarEmail(email)
-        val nomeValido = validarNome(username)
-        val senhaValida = validarSenha(password)
-
-        if (!emailValido && !nomeValido && !senhaValida) {
-            message = "Todos os campos estão incorretos. Verifique e tente novamente."
-            success = false
-            return
-        }
-
-        if (!emailValido) {
-            message = "E-mail inválido. Deve conter '@' e ter no máximo 30 caracteres."
-            success = false
-            return
-        }
-
-        if (!nomeValido) {
-            message = "O nome de usuário deve ter entre 3 e 30 caracteres."
-            success = false
-            return
-        }
-
-        if (!senhaValida) {
-            message = "Senha inválida. Deve ter 8 a 25 caracteres, incluir letra maiúscula, número e caractere especial."
-            success = false
-            return
-        }
-
-        val conn = DatabaseHelper.connect()
-
-        if (conn != null) {
-            try {
-                val stmt: PreparedStatement = conn.prepareStatement(
-                    "INSERT INTO usuario (nome, email, senha) VALUES (?, ?, ?)"
-                )
-                stmt.setString(1, username)
-                stmt.setString(2, email)
-                stmt.setString(3, password)
-                stmt.executeUpdate()
-                stmt.close()
-
+    val presenter = remember {
+        object : RegisterView {
+            override fun showValidationError(msg: String) { message = msg; success = false }
+            override fun showRegisterSuccess() {
                 message = "Usuário cadastrado com sucesso!"
                 success = true
-                println("✅ Usuário cadastrado: $email")
-
-                //  Redireciona automaticamente para Login
+            }
+            override fun showRegisterError(msg: String) { message = msg; success = false }
+            override fun navigateToLogin() {
                 scope.launch {
                     delay(3000)
                     onBackToLogin()
                 }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                message = "Erro ao cadastrar usuário. Verifique se o e-mail já existe."
-                success = false
-            } finally {
-                DatabaseHelper.close()
             }
-        } else {
-            message = "Erro ao conectar ao banco."
-            success = false
-        }
+        }.let { view -> RegisterPresenter(view) }
     }
 
     Box(
@@ -120,15 +57,12 @@ fun RegisterScreen(onBackToLogin: () -> Unit) {
             .fillMaxSize()
             .background(Color.White)
     ) {
-        // Fundo quadriculado
         Image(
             painter = painterResource(Res.drawable.fundo_quadriculado),
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
         )
-
-        // 🔹 Fundo curvas
         Image(
             painter = painterResource(Res.drawable.fundo_curvas),
             contentDescription = null,
@@ -136,7 +70,6 @@ fun RegisterScreen(onBackToLogin: () -> Unit) {
             contentScale = ContentScale.Crop
         )
 
-        // Conteúdo principal
         Column(
             modifier = Modifier
                 .align(Alignment.Center)
@@ -145,7 +78,6 @@ fun RegisterScreen(onBackToLogin: () -> Unit) {
                 .fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Botão Voltar
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -155,7 +87,7 @@ fun RegisterScreen(onBackToLogin: () -> Unit) {
                 BackButton(onBack = onBackToLogin)
             }
 
-            // Logo circular
+            // Logo
             Box(
                 modifier = Modifier
                     .size(180.dp)
@@ -171,70 +103,52 @@ fun RegisterScreen(onBackToLogin: () -> Unit) {
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Campo de e-mail
             OutlinedTextField(
                 value = email,
-                onValueChange = { input ->
-                    if (input.length <= 30) email = input
-                },
+                onValueChange = { if (it.length <= 30) email = it },
                 label = { Text("Insira o seu e-mail") },
                 singleLine = true,
                 textStyle = LocalTextStyle.current.copy(fontSize = 14.sp),
-                modifier = Modifier
-                    .widthIn(max = 600.dp)
-                    .fillMaxWidth(0.9f),
+                modifier = Modifier.widthIn(max = 600.dp).fillMaxWidth(0.9f),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedContainerColor = Color.White,
                     unfocusedContainerColor = Color.White,
-                    disabledContainerColor = Color.White,
-                    focusedLabelColor = Color.White,
+                    focusedLabelColor = Color.White
                 ),
                 shape = RoundedCornerShape(8.dp)
             )
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Campo de usuário
             OutlinedTextField(
                 value = username,
-                onValueChange = { input ->
-                    if (input.length <= 30) username = input
-                },
+                onValueChange = { if (it.length <= 30) username = it },
                 label = { Text("Insira o seu usuário") },
                 singleLine = true,
                 textStyle = LocalTextStyle.current.copy(fontSize = 14.sp),
-                modifier = Modifier
-                    .widthIn(max = 600.dp)
-                    .fillMaxWidth(0.9f),
+                modifier = Modifier.widthIn(max = 600.dp).fillMaxWidth(0.9f),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedContainerColor = Color.White,
                     unfocusedContainerColor = Color.White,
-                    disabledContainerColor = Color.White,
-                    focusedLabelColor = Color.White,
+                    focusedLabelColor = Color.White
                 ),
                 shape = RoundedCornerShape(8.dp)
             )
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Campo de senha
             OutlinedTextField(
                 value = password,
-                onValueChange = { input ->
-                    if (input.length <= 25) password = input
-                },
+                onValueChange = { if (it.length <= 25) password = it },
                 label = { Text("Crie uma senha") },
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
                 textStyle = LocalTextStyle.current.copy(fontSize = 14.sp),
-                modifier = Modifier
-                    .widthIn(max = 600.dp)
-                    .fillMaxWidth(0.9f),
+                modifier = Modifier.widthIn(max = 600.dp).fillMaxWidth(0.9f),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedContainerColor = Color.White,
                     unfocusedContainerColor = Color.White,
-                    disabledContainerColor = Color.White,
-                    focusedLabelColor = Color.White,
+                    focusedLabelColor = Color.White
                 ),
                 shape = RoundedCornerShape(8.dp)
             )
@@ -257,25 +171,20 @@ fun RegisterScreen(onBackToLogin: () -> Unit) {
                         fontSize = 15.sp
                     )
                 }
-
                 Spacer(modifier = Modifier.height(12.dp))
             }
 
             Button(
-                onClick = { register() },
+                onClick = { presenter.register(username, email, password) },
                 colors = ButtonDefaults.buttonColors(containerColor = RoxoEscuro),
                 shape = RoundedCornerShape(8.dp),
-                modifier = Modifier
-                    .widthIn(max = 600.dp)
-                    .fillMaxWidth(0.9f)
-                    .height(45.dp)
+                modifier = Modifier.widthIn(max = 600.dp).fillMaxWidth(0.9f).height(45.dp)
             ) {
                 Text("Registrar", color = Color.White, fontSize = 14.sp)
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Botão Voltar ao Login
             TextButton(onClick = onBackToLogin) {
                 Text("Já tem conta? Faça o Login", color = Color.White, fontSize = 14.sp)
             }

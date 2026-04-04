@@ -2,6 +2,7 @@ package br.com.mochila.ui.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -17,10 +18,11 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import br.com.mochila.presenter.ItemRegisterPresenter
+import br.com.mochila.presenter.ItemRegisterView
+import br.com.mochila.ui.screens.components.BackButton
 import mochila_app.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.painterResource
-import br.com.mochila.data.*
-import androidx.compose.foundation.clickable
 
 @Composable
 fun ItemRegisterScreen(
@@ -35,14 +37,18 @@ fun ItemRegisterScreen(
 ) {
     val RoxoClaro = Color(0xFF7F55CE)
     val RoxoEscuro = Color(0xFF5336CB)
-    val VerdeLima = Color(0xFFC5E300)
 
     var showMenu by remember { mutableStateOf(false) }
-    var nomeUsuario by remember { mutableStateOf("Carregando...") }
+    var userName by remember { mutableStateOf("Carregando...") }
+
+    val presenter = remember {
+        object : ItemRegisterView {
+            override fun showUserName(name: String) { userName = name }
+        }.let { view -> ItemRegisterPresenter(view) }
+    }
 
     LaunchedEffect(userId) {
-        val usuario = UsuarioRepository.getUsuarioById(userId)
-        usuario?.let { nomeUsuario = it.nome }
+        presenter.loadUserName(userId)
     }
 
     Box(
@@ -56,7 +62,6 @@ fun ItemRegisterScreen(
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
         )
-
         Image(
             painter = painterResource(Res.drawable.star),
             contentDescription = "Decoração estrela",
@@ -66,7 +71,6 @@ fun ItemRegisterScreen(
                 .size(600.dp),
             contentScale = ContentScale.Fit
         )
-
         Image(
             painter = painterResource(Res.drawable.chevron),
             contentDescription = "Decoração chevron",
@@ -77,7 +81,6 @@ fun ItemRegisterScreen(
             contentScale = ContentScale.Fit
         )
 
-        // Conteúdo principal
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -85,7 +88,6 @@ fun ItemRegisterScreen(
                 .padding(horizontal = 24.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Botão Voltar
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -95,7 +97,6 @@ fun ItemRegisterScreen(
                 BackButton(onBack = onBack)
             }
 
-            // Cabeçalho
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.fillMaxWidth()
@@ -112,17 +113,11 @@ fun ItemRegisterScreen(
                         painter = painterResource(Res.drawable.user),
                         contentDescription = "Usuário",
                         contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .size(150.dp)
-                            .clip(CircleShape)
+                        modifier = Modifier.size(150.dp).clip(CircleShape)
                     )
                 }
                 Spacer(modifier = Modifier.height(12.dp))
-                Text(
-                    nomeUsuario,
-                    color = Color.Gray,
-                    fontSize = 22.sp
-                )
+                Text(userName, color = Color.Gray, fontSize = 22.sp)
             }
 
             Spacer(modifier = Modifier.height(40.dp))
@@ -137,21 +132,18 @@ fun ItemRegisterScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Botões principais
-            val botoes = listOf(
+            val buttons = listOf(
                 "Nova Matéria" to onNavigateToSubjectRegister,
-                // "Novo Evento" to { /* TODO */ },
                 "Nova Tarefa" to onNavigateToTaskRegister,
-                // "Nova Falta" to { /* TODO */ }
             )
 
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                botoes.forEach { (titulo, acao) ->
+                buttons.forEach { (title, action) ->
                     Button(
-                        onClick = acao,
+                        onClick = action,
                         colors = ButtonDefaults.buttonColors(containerColor = RoxoClaro),
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier
@@ -160,7 +152,7 @@ fun ItemRegisterScreen(
                             .padding(vertical = 8.dp)
                             .height(50.dp)
                     ) {
-                        Text(titulo, color = Color.White, fontSize = 15.sp)
+                        Text(title, color = Color.White, fontSize = 15.sp)
                     }
                 }
             }
@@ -193,7 +185,6 @@ fun ItemRegisterScreen(
                         modifier = Modifier.size(16.dp)
                     )
                 }
-
                 IconButton(onClick = onNavigateToHome) {
                     Image(
                         painter = painterResource(Res.drawable.home),
@@ -207,28 +198,11 @@ fun ItemRegisterScreen(
         if (showMenu) {
             MenuScreen(
                 userId = userId,
-
                 onCloseMenu = { showMenu = false },
-
-                onNavigateToHome = {
-                    showMenu = false
-                    onNavigateToHome()
-                },
-
-                onNavigateToTasksList = {
-                    showMenu = false
-                    onNavigateToTasksList()
-                },
-
-                onNavigateToAccountSettings = {
-                    showMenu = false
-                    onNavigateToAccountSettings()
-                },
-
-                onLogout = {
-                    showMenu = false
-                    onLogout()
-                }
+                onNavigateToHome = { showMenu = false; onNavigateToHome() },
+                onNavigateToTasksList = { showMenu = false; onNavigateToTasksList() },
+                onNavigateToAccountSettings = { showMenu = false; onNavigateToAccountSettings() },
+                onLogout = { showMenu = false; onLogout() }
             )
         }
     }
