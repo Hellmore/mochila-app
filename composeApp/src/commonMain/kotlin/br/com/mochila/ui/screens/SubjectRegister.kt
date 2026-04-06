@@ -20,7 +20,6 @@ import br.com.mochila.presenter.SubjectRegisterView
 import br.com.mochila.ui.screens.components.BackButton
 import mochila_app.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.painterResource
-
 @Composable
 fun SubjectRegisterScreen(
     userId: Int,
@@ -29,20 +28,23 @@ fun SubjectRegisterScreen(
     onLogout: () -> Unit,
     onOpenMenu: () -> Unit,
     isEditing: Boolean = false,
-    subjectData: Subject? = null
+    subjectId: Int? = null
 ) {
     val RoxoEscuro = Color(0xFF5336CB)
-    val RoxoClaro = Color(0xFF7F55CE)
-    val VerdeLima = Color(0xFFC5E300)
+    val RoxoClaro  = Color(0xFF7F55CE)
+    val VerdeLima  = Color(0xFFC5E300)
 
-    // Campos do formulário
-    var name by remember { mutableStateOf(subjectData?.name ?: "") }
-    var teacher by remember { mutableStateOf(subjectData?.teacher ?: "") }
-    var minFrequency by remember { mutableStateOf(if ((subjectData?.minFrequency ?: 0) > 0) "${subjectData!!.minFrequency}%" else "") }
-    var startDate by remember { mutableStateOf(subjectData?.startDate ?: "") }
-    var endDate by remember { mutableStateOf(subjectData?.endDate ?: "") }
-    var classHours by remember { mutableStateOf(if ((subjectData?.classHours ?: 0) > 0) "${subjectData!!.classHours}h" else "") }
-    var semester by remember { mutableStateOf(subjectData?.semester ?: "") }
+    // Estado dos campos do formulário
+    var name         by remember { mutableStateOf("") }
+    var teacher      by remember { mutableStateOf("") }
+    var minFrequency by remember { mutableStateOf("") }
+    var startDate    by remember { mutableStateOf("") }
+    var endDate      by remember { mutableStateOf("") }
+    var classHours   by remember { mutableStateOf("") }
+    var semester     by remember { mutableStateOf("") }
+
+    // ID interno salvo após carregar (necessário para o delete/update)
+    var loadedSubjectId by remember { mutableStateOf(0) }
 
     var message by remember { mutableStateOf<String?>(null) }
     var success by remember { mutableStateOf(false) }
@@ -56,7 +58,24 @@ fun SubjectRegisterScreen(
             }
             override fun showSaveError() { message = "Erro ao salvar matéria."; success = false }
             override fun navigateToHome() { onNavigateToHome() }
-        }.let { view -> SubjectRegisterPresenter(view) }
+        }.let { SubjectRegisterPresenter(it) }
+    }
+
+    // ✅ Carrega os dados via Presenter, não via Repository diretamente
+    LaunchedEffect(subjectId) {
+        if (isEditing && subjectId != null) {
+            val subject = presenter.loadSubjectForEdit(subjectId)
+            subject?.let { s ->
+                loadedSubjectId = s.id
+                name         = s.name
+                teacher      = s.teacher
+                minFrequency = if (s.minFrequency > 0) "${s.minFrequency}%" else ""
+                startDate    = s.startDate
+                endDate      = s.endDate
+                classHours   = if (s.classHours > 0) "${s.classHours}h" else ""
+                semester     = s.semester
+            }
+        }
     }
 
     @Composable
@@ -103,16 +122,16 @@ fun SubjectRegisterScreen(
 
     fun buildSubject(): Subject {
         val minFrequencyInt = minFrequency.filter { it.isDigit() }.toIntOrNull() ?: 0
-        val classHoursInt = classHours.filter { it.isDigit() }.toIntOrNull() ?: 0
+        val classHoursInt   = classHours.filter { it.isDigit() }.toIntOrNull() ?: 0
         return Subject(
-            id = subjectData?.id ?: 0,
-            name = name,
-            teacher = teacher,
+            id           = loadedSubjectId,
+            name         = name,
+            teacher      = teacher,
             minFrequency = minFrequencyInt,
-            startDate = startDate,
-            endDate = endDate,
-            classHours = classHoursInt,
-            semester = semester
+            startDate    = startDate,
+            endDate      = endDate,
+            classHours   = classHoursInt,
+            semester     = semester
         )
     }
 
@@ -284,10 +303,10 @@ fun SubjectRegisterScreen(
             }
 
             // Botão Excluir (apenas em modo edição)
-            if (isEditing && subjectData != null) {
+            if (isEditing && loadedSubjectId > 0) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Button(
-                    onClick = { presenter.deleteSubject(userId, subjectData.id) },
+                    onClick = { presenter.deleteSubject(userId, loadedSubjectId) },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F)),
                     shape = RoundedCornerShape(8.dp),
                     modifier = Modifier
