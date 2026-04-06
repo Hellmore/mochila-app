@@ -1,13 +1,15 @@
 package br.com.mochila.presenter
 
 import br.com.mochila.data.SubjectRepository
+import br.com.mochila.data.TaskRepository
 import br.com.mochila.model.Subject
+import br.com.mochila.model.Task
 
-// Contrato da Home
 interface HomeView {
     fun showSubjects(subjects: List<Subject>)
     fun showEmptyState()
     fun navigateToSubjectDetail(subjectId: Int)
+    fun showPendingTasks(tasks: List<Task>)
 }
 
 class HomePresenter(private val view: HomeView) {
@@ -19,6 +21,10 @@ class HomePresenter(private val view: HomeView) {
         } else {
             view.showSubjects(subjects)
         }
+    }
+    fun loadPendingTasks(userId: Int) {
+        val pending = TaskRepository.listByUser(userId).filter { it.status == "Pendente" }
+        view.showPendingTasks(pending)
     }
 
     fun onSubjectClicked(subjectId: Int) {
@@ -34,8 +40,7 @@ class HomePresenter(private val view: HomeView) {
             val matchesSemester =
                 selectedSemester == "Todos" ||
                         subject.semester.equals(selectedSemester, ignoreCase = false)
-            val matchesName =
-                subject.name.contains(searchText, ignoreCase = true)
+            val matchesName = subject.name.contains(searchText, ignoreCase = true)
             matchesSemester && matchesName
         }
     }

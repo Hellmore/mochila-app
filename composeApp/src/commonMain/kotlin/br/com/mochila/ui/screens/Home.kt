@@ -19,13 +19,12 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import br.com.mochila.data.TaskRepository
 import br.com.mochila.model.Subject
+import br.com.mochila.model.Task
 import br.com.mochila.presenter.HomePresenter
 import br.com.mochila.presenter.HomeView
 import mochila_app.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.painterResource
-
 @Composable
 fun HomeScreen(
     userId: Int,
@@ -42,22 +41,26 @@ fun HomeScreen(
 
     // Estado da View
     var subjects by remember { mutableStateOf<List<Subject>>(emptyList()) }
+    var pendingTasks by remember { mutableStateOf<List<Task>>(emptyList()) }
     var selectedSemester by remember { mutableStateOf("Todos") }
     var searchText by remember { mutableStateOf("") }
     var semesterMenuExpanded by remember { mutableStateOf(false) }
     var isSearchExpanded by remember { mutableStateOf(false) }
 
-    // Presenter
+    // Presenter — implementa HomeView inline e entrega ao Presenter
     val presenter = remember {
         object : HomeView {
             override fun showSubjects(list: List<Subject>) { subjects = list }
             override fun showEmptyState() { subjects = emptyList() }
             override fun navigateToSubjectDetail(subjectId: Int) { onNavigateToSubject(subjectId) }
+            // ✅ NOVO: Presenter entrega as tarefas prontas, sem que a View precise buscar
+            override fun showPendingTasks(tasks: List<Task>) { pendingTasks = tasks }
         }.let { view -> HomePresenter(view) }
     }
 
     LaunchedEffect(userId) {
         presenter.loadSubjects(userId)
+        presenter.loadPendingTasks(userId) // ✅ chama o Presenter, não o Repository
     }
 
     val semesters = remember(subjects) { presenter.getSemesters(subjects) }
@@ -210,7 +213,6 @@ fun HomeScreen(
                     }
                 }
 
-                // Campo colapsável de busca
                 if (isSearchExpanded) {
                     Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(

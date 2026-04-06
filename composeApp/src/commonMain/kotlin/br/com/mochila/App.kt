@@ -6,41 +6,34 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import br.com.mochila.data.*
-import br.com.mochila.model.*
 import br.com.mochila.ui.screens.*
-
 @Composable
 fun App() {
-    var currentUserId by remember { mutableStateOf<Int?>(null) }
-    var screenStack by remember { mutableStateOf(listOf("login")) }
-    var isMenuVisible by remember { mutableStateOf(false) }
+    var currentUserId    by remember { mutableStateOf<Int?>(null) }
+    var screenStack      by remember { mutableStateOf(listOf("login")) }
+    var isMenuVisible    by remember { mutableStateOf(false) }
     var selectedSubjectId by remember { mutableStateOf<Int?>(null) }
-    var selectedTaskId by remember { mutableStateOf<Int?>(null) }
+    var selectedTaskId   by remember { mutableStateOf<Int?>(null) }
 
     val currentScreen = screenStack.last()
 
     fun navigateTo(screen: String) {
-        if (screenStack.last() != screen) {
-            screenStack = screenStack + screen
-        }
+        if (screenStack.last() != screen) screenStack = screenStack + screen
     }
 
     fun goBack() {
-        if (screenStack.size > 1) {
-            screenStack = screenStack.dropLast(1)
-        }
+        if (screenStack.size > 1) screenStack = screenStack.dropLast(1)
     }
 
-    fun openMenu() { isMenuVisible = true }
+    fun openMenu()  { isMenuVisible = true  }
     fun closeMenu() { isMenuVisible = false }
 
     fun logout() {
-        currentUserId = null
-        isMenuVisible = false
-        screenStack = listOf("login")
+        currentUserId     = null
+        isMenuVisible     = false
+        screenStack       = listOf("login")
         selectedSubjectId = null
-        selectedTaskId = null
+        selectedTaskId    = null
     }
 
     fun onLoginSuccess(userId: Int) {
@@ -67,7 +60,7 @@ fun App() {
                         currentUserId?.let { userId ->
                             HomeScreen(
                                 userId = userId,
-                                onNavigateToHome = { /* já estamos na home */ },
+                                onNavigateToHome = {},
                                 onOpenMenu = { openMenu() },
                                 onNavigateToAdd = { navigateTo("item_register") },
                                 onNavigateToAccountSettings = { navigateTo("account_settings") },
@@ -132,18 +125,18 @@ fun App() {
                     "subject_edit" -> {
                         currentUserId?.let { userId ->
                             selectedSubjectId?.let { subjectId ->
-                                val subject: Subject? = SubjectRepository.findById(subjectId)
-                                subject?.let { s ->
-                                    SubjectRegisterScreen(
-                                        userId = userId,
-                                        onNavigateToHome = { navigateTo("home") },
-                                        onBack = { goBack() },
-                                        onLogout = { logout() },
-                                        onOpenMenu = { openMenu() },
-                                        isEditing = true,
-                                        subjectData = s
-                                    )
-                                } ?: goBack()
+                                // ✅ CORRIGIDO: não buscamos mais Subject aqui.
+                                // SubjectRegisterScreen recebe apenas o ID e carrega
+                                // os dados internamente via SubjectRegisterPresenter.loadSubjectForEdit()
+                                SubjectRegisterScreen(
+                                    userId = userId,
+                                    onNavigateToHome = { navigateTo("home") },
+                                    onBack = { goBack() },
+                                    onLogout = { logout() },
+                                    onOpenMenu = { openMenu() },
+                                    isEditing = true,
+                                    subjectId = subjectId
+                                )
                             } ?: goBack()
                         } ?: logout()
                     }
