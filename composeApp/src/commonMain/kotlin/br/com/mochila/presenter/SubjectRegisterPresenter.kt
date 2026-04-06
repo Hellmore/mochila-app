@@ -2,8 +2,8 @@ package br.com.mochila.presenter
 
 import br.com.mochila.data.SubjectRepository
 import br.com.mochila.model.Subject
+import br.com.mochila.util.DateValidator
 
-// Contrato do SubjectRegister
 interface SubjectRegisterView {
     fun showValidationError(message: String)
     fun showSaveSuccess(isEditing: Boolean)
@@ -12,18 +12,13 @@ interface SubjectRegisterView {
 }
 
 class SubjectRegisterPresenter(private val view: SubjectRegisterView) {
+    fun loadSubjectForEdit(subjectId: Int): Subject? {
+        return SubjectRepository.findById(subjectId)
+    }
 
-    fun saveSubject(
-        userId: Int,
-        subject: Subject,
-        isEditing: Boolean
-    ) {
-        // Validar campos vazios
-        if (
-            subject.name.isBlank() ||
-            subject.teacher.isBlank() ||
-            subject.startDate.isBlank() ||
-            subject.endDate.isBlank() ||
+    fun saveSubject(userId: Int, subject: Subject, isEditing: Boolean) {
+        if (subject.name.isBlank() || subject.teacher.isBlank() ||
+            subject.startDate.isBlank() || subject.endDate.isBlank() ||
             subject.semester.isBlank()
         ) {
             view.showValidationError("Nenhum campo pode estar vazio.")
@@ -40,18 +35,16 @@ class SubjectRegisterPresenter(private val view: SubjectRegisterView) {
             return
         }
 
-        // Validar datas
-        if (!isDateValid(subject.startDate)) {
+        if (!DateValidator.isValid(subject.startDate)) {
             view.showValidationError("Data de início inválida.")
             return
         }
 
-        if (!isDateValid(subject.endDate)) {
+        if (!DateValidator.isValid(subject.endDate)) {
             view.showValidationError("Data de término inválida.")
             return
         }
 
-        // Salvar
         val success = if (isEditing) {
             SubjectRepository.update(userId, subject)
         } else {
@@ -74,25 +67,5 @@ class SubjectRegisterPresenter(private val view: SubjectRegisterView) {
         } else {
             view.showSaveError()
         }
-    }
-
-    private fun isDateValid(date: String): Boolean {
-        if (!Regex("""\d{2}/\d{2}/\d{4}""").matches(date)) return false
-
-        val parts = date.split("/")
-        val day = parts[0].toIntOrNull() ?: return false
-        val month = parts[1].toIntOrNull() ?: return false
-        val year = parts[2].toIntOrNull() ?: return false
-
-        if (month !in 1..12) return false
-
-        val daysInMonth = when (month) {
-            1, 3, 5, 7, 8, 10, 12 -> 31
-            4, 6, 9, 11 -> 30
-            2 -> if ((year % 4 == 0 && year % 100 != 0) || year % 400 == 0) 29 else 28
-            else -> return false
-        }
-
-        return day in 1..daysInMonth
     }
 }
