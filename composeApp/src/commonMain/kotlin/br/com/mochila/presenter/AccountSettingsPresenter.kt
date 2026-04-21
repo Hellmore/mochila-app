@@ -5,8 +5,6 @@ import br.com.mochila.model.User
 
 interface AccountSettingsView {
     fun showUser(user: User)
-    fun showPasswordCheckSuccess()
-    fun showPasswordCheckError()
     fun showValidationError(message: String)
     fun showSaveSuccess()
     fun showSaveError()
@@ -25,22 +23,7 @@ class AccountSettingsPresenter(private val view: AccountSettingsView) {
         }
     }
 
-    fun checkPassword(userId: Int, inputPassword: String) {
-        val user = UserRepository.findById(userId)
-        if (user != null && user.password == inputPassword) {
-            view.showPasswordCheckSuccess()
-        } else {
-            view.showPasswordCheckError()
-        }
-    }
-
-    fun saveChanges(
-        userId: Int,
-        name: String,
-        email: String,
-        newPassword: String,
-        confirmPassword: String
-    ) {
+    fun saveChanges(userId: Int, name: String, email: String) {
         if (name.length !in 3..30) {
             view.showValidationError("O nome deve ter entre 3 e 30 caracteres.")
             return
@@ -51,22 +34,11 @@ class AccountSettingsPresenter(private val view: AccountSettingsView) {
             return
         }
 
-        if (newPassword.isNotBlank()) {
-            if (!Regex("""^(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,25}$""").matches(newPassword)) {
-                view.showValidationError("A senha deve ter 8–25 caracteres, incluir letra maiúscula, número e símbolo.")
-                return
-            }
-            if (newPassword != confirmPassword) {
-                view.showValidationError("As senhas não coincidem.")
-                return
-            }
-        }
-
         val success = UserRepository.update(
             userId = userId,
             name = name,
             email = email,
-            newPassword = if (newPassword.isBlank()) null else newPassword
+            newPassword = null
         )
 
         if (success) view.showSaveSuccess() else view.showSaveError()
