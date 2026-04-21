@@ -236,6 +236,7 @@ fun TaskDetailScreen(
 
                 if (showMenu) {
                     MenuScreen(
+                        userId = userId,
                         onCloseMenu = { showMenu = false },
                         onNavigateToHome = { showMenu = false; onNavigateToHome() },
                         onNavigateToTasksList = { showMenu = false; onNavigateToTasksList() },
