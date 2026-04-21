@@ -202,7 +202,7 @@ BEGIN
 END;
 
 ------------------------------------------------
--- Inserts iniciais para módulos free
+-- Módulos básicos gratuitos (catálogo SaaS)
 ------------------------------------------------
 INSERT OR IGNORE INTO modulo (nome, descricao, preco) VALUES
 ('Agenda', 'Gerenciamento de eventos e compromissos', 0.00),
