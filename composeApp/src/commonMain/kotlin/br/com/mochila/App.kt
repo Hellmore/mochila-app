@@ -236,17 +236,14 @@ fun App() {
                     }
                 }
 
-                if (isMenuVisible) {
-                    currentUserId?.let { userId ->
-                        MenuScreen(
-                            userId = userId,
-                            onCloseMenu = { closeMenu() },
-                            onNavigateToHome = { closeMenu(); navigateTo("home") },
-                            onNavigateToTasksList = { closeMenu(); navigateTo("tasks_list") },
-                            onNavigateToAccountSettings = { closeMenu(); navigateTo("account_settings") },
-                            onLogout = { logout() }
-                        )
-                    }
+                if (isMenuVisible && currentUserId != null) {
+                    MenuScreen(
+                        onCloseMenu = { closeMenu() },
+                        onNavigateToHome = { closeMenu(); navigateTo("home") },
+                        onNavigateToTasksList = { closeMenu(); navigateTo("tasks_list") },
+                        onNavigateToAccountSettings = { closeMenu(); navigateTo("account_settings") },
+                        onLogout = { logout() }
+                    )
                 }
             }
         }
