@@ -14,6 +14,7 @@ fun App() {
     var isMenuVisible    by remember { mutableStateOf(false) }
     var selectedSubjectId by remember { mutableStateOf<Int?>(null) }
     var selectedTaskId   by remember { mutableStateOf<Int?>(null) }
+    var accountPasswordFeedback by remember { mutableStateOf<Pair<String, Boolean>?>(null) }
 
     val currentScreen = screenStack.last()
 
@@ -213,23 +214,36 @@ fun App() {
                             AccountSettingsScreen(
                                 userId = userId,
                                 onBack = { goBack() },
-                                onLogout = { logout() }
+                                onLogout = { logout() },
+                                onNavigateToChangePassword = { navigateTo("signed_recovery") },
+                                passwordFlowMessage = accountPasswordFeedback,
+                                onPasswordFlowMessageConsumed = { accountPasswordFeedback = null }
+                            )
+                        } ?: logout()
+                    }
+
+                    "signed_recovery" -> {
+                        currentUserId?.let { userId ->
+                            SignedRecoveryScreen(
+                                userId = userId,
+                                onBack = { goBack() },
+                                onPasswordChangeFinished = { msg, ok ->
+                                    accountPasswordFeedback = msg to ok
+                                    goBack()
+                                }
                             )
                         } ?: logout()
                     }
                 }
 
-                if (isMenuVisible) {
-                    currentUserId?.let { userId ->
-                        MenuScreen(
-                            userId = userId,
-                            onCloseMenu = { closeMenu() },
-                            onNavigateToHome = { closeMenu(); navigateTo("home") },
-                            onNavigateToTasksList = { closeMenu(); navigateTo("tasks_list") },
-                            onNavigateToAccountSettings = { closeMenu(); navigateTo("account_settings") },
-                            onLogout = { logout() }
-                        )
-                    }
+                if (isMenuVisible && currentUserId != null) {
+                    MenuScreen(
+                        onCloseMenu = { closeMenu() },
+                        onNavigateToHome = { closeMenu(); navigateTo("home") },
+                        onNavigateToTasksList = { closeMenu(); navigateTo("tasks_list") },
+                        onNavigateToAccountSettings = { closeMenu(); navigateTo("account_settings") },
+                        onLogout = { logout() }
+                    )
                 }
             }
         }
