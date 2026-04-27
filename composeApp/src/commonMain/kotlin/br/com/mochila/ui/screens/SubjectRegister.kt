@@ -18,6 +18,7 @@ import br.com.mochila.model.Subject
 import br.com.mochila.presenter.SubjectRegisterPresenter
 import br.com.mochila.presenter.SubjectRegisterView
 import br.com.mochila.ui.screens.components.BackButton
+import br.com.mochila.ui.screens.components.UserAvatarButton
 import mochila_app.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.painterResource
 @Composable
@@ -182,20 +183,10 @@ fun SubjectRegisterScreen(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 BackButton(onBack = onBack)
-                Box(
-                    modifier = Modifier
-                        .size(60.dp)
-                        .clip(CircleShape)
-                        .background(RoxoClaro),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Image(
-                        painter = painterResource(Res.drawable.user),
-                        contentDescription = "Usuário",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.clip(CircleShape)
-                    )
-                }
+                UserAvatarButton(
+                    size = 60.dp,
+                    onClick = {}
+                )
             }
 
             Text(

@@ -44,10 +44,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.com.mochila.presenter.SignedRecoveryPresenter
 import br.com.mochila.presenter.SignedRecoveryView
+import br.com.mochila.data.UserSession
 import br.com.mochila.ui.screens.components.BackButton
-import mochila_app.composeapp.generated.resources.Res
-import mochila_app.composeapp.generated.resources.user
-import org.jetbrains.compose.resources.painterResource
+import br.com.mochila.ui.screens.components.ProfileAvatar
 
 private val signedRecoveryFormMaxWidth = 360.dp
 private val signedRecoveryFormHorizontalMargin = 48.dp
@@ -124,17 +123,13 @@ fun SignedRecoveryScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            Box(contentAlignment = Alignment.Center) {
-                Image(
-                    painter = painterResource(Res.drawable.user),
-                    contentDescription = "Foto do Perfil",
-                    modifier = Modifier
-                        .size(100.dp)
-                        .clip(CircleShape)
-                        .background(rosa.copy(alpha = 0.15f))
-                        .border(2.dp, rosa, CircleShape)
-                )
-            }
+            ProfileAvatar(
+                name = UserSession.currentUser?.name ?: "",
+                photoPath = UserSession.currentUser?.photoPath,
+                size = 100.dp,
+                accentColor = rosa,
+                onClick = {}
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
