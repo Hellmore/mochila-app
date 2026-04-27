@@ -22,7 +22,13 @@ class LoginPresenter(private val view: LoginView) {
             !emailExists && userId == null -> view.showError("E-mail e senha incorretos.")
             !emailExists -> view.showError("E-mail incorreto.")
             emailExists && userId == null -> view.showError("Senha incorreta.")
-            else -> view.navigateToHome(userId!!)
+            else -> {
+                if (!UserRepository.isEmailVerified(email)) {
+                    view.showError("E-mail não verificado. Verifique sua caixa de entrada e confirme o código de cadastro.")
+                } else {
+                    view.navigateToHome(userId!!)
+                }
+            }
         }
     }
 }

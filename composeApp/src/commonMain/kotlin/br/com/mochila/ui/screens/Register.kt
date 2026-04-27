@@ -14,12 +14,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -38,11 +40,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import br.com.mochila.data.TokenRepository
+import br.com.mochila.data.UserRepository
 import br.com.mochila.presenter.RegisterPresenter
 import br.com.mochila.presenter.RegisterView
 import br.com.mochila.ui.screens.components.BackButton
-import kotlinx.coroutines.delay
+import br.com.mochila.util.EmailService
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import mochila_app.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.painterResource
 
@@ -50,7 +56,10 @@ private val registerFormMaxWidth = 360.dp
 private val registerFormHorizontalMargin = 48.dp
 
 @Composable
-fun RegisterScreen(onBackToLogin: () -> Unit) {
+fun RegisterScreen(
+    onBackToLogin: () -> Unit,
+    onNavigateToEmailVerify: (email: String) -> Unit
+) {
     val fundoTela = Color(0xFFF8F8F8)
     val rosa = Color(0xFFFF6694)
     val logoArea = Color(0xFFD9D9D9)
@@ -60,21 +69,42 @@ fun RegisterScreen(onBackToLogin: () -> Unit) {
     var password by remember { mutableStateOf("") }
     var message by remember { mutableStateOf<String?>(null) }
     var success by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(false) }
 
     val scope = rememberCoroutineScope()
 
     val presenter = remember {
         object : RegisterView {
             override fun showValidationError(msg: String) { message = msg; success = false }
-            override fun showRegisterSuccess() {
-                message = "Usuário cadastrado com sucesso!"
-                success = true
-            }
+            override fun showRegisterSuccess() { message = "Usuário cadastrado! Enviando código de verificação..."; success = true }
             override fun showRegisterError(msg: String) { message = msg; success = false }
-            override fun navigateToLogin() {
+
+            override fun navigateToEmailVerify(registeredEmail: String) {
                 scope.launch {
-                    delay(3000)
-                    onBackToLogin()
+                    isLoading = true
+                    val shouldVerify = withContext(Dispatchers.Default) {
+                        if (!EmailService.isConfigured) {
+                            UserRepository.verifyEmail(registeredEmail)
+                            false
+                        } else {
+                            val code = (100000..999999).random().toString()
+                            TokenRepository.saveToken(registeredEmail, code)
+                            val sent = EmailService.sendVerificationEmail(registeredEmail, code)
+                            if (!sent) {
+                                UserRepository.verifyEmail(registeredEmail)
+                            }
+                            sent
+                        }
+                    }
+                    isLoading = false
+                    if (shouldVerify) {
+                        onNavigateToEmailVerify(registeredEmail)
+                    } else {
+                        message = "Conta criada com sucesso!"
+                        success = true
+                        kotlinx.coroutines.delay(2000)
+                        onBackToLogin()
+                    }
                 }
             }
         }.let { view -> RegisterPresenter(view) }
@@ -152,6 +182,7 @@ fun RegisterScreen(onBackToLogin: () -> Unit) {
                         )
                     },
                     singleLine = true,
+                    enabled = !isLoading,
                     textStyle = LocalTextStyle.current.copy(
                         fontSize = 14.sp,
                         lineHeight = 20.sp,
@@ -196,6 +227,7 @@ fun RegisterScreen(onBackToLogin: () -> Unit) {
                         )
                     },
                     singleLine = true,
+                    enabled = !isLoading,
                     textStyle = LocalTextStyle.current.copy(
                         fontSize = 14.sp,
                         lineHeight = 20.sp,
@@ -240,6 +272,7 @@ fun RegisterScreen(onBackToLogin: () -> Unit) {
                         )
                     },
                     singleLine = true,
+                    enabled = !isLoading,
                     visualTransformation = PasswordVisualTransformation(),
                     textStyle = LocalTextStyle.current.copy(
                         fontSize = 14.sp,
@@ -282,19 +315,28 @@ fun RegisterScreen(onBackToLogin: () -> Unit) {
 
             Button(
                 onClick = { presenter.register(username, email, password) },
+                enabled = !isLoading,
                 colors = ButtonDefaults.buttonColors(containerColor = rosa),
                 shape = RoundedCornerShape(8.dp),
                 border = BorderStroke(1.dp, Color.White),
                 modifier = Modifier.fillMaxWidth(),
                 contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
             ) {
-                Text(
-                    "Registrar",
-                    color = Color.White,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 16.sp,
-                    lineHeight = 22.sp
-                )
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        color = Color.White,
+                        strokeWidth = 2.dp,
+                        modifier = Modifier.size(20.dp)
+                    )
+                } else {
+                    Text(
+                        "Registrar",
+                        color = Color.White,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 16.sp,
+                        lineHeight = 22.sp
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(8.dp))

@@ -50,6 +50,45 @@ object DatabaseHelper {
             }
 
             rs.close()
+            runMigrations(conn)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun runMigrations(conn: Connection) {
+        try {
+            val stmt = conn.createStatement()
+
+            stmt.execute(
+                """CREATE TABLE IF NOT EXISTS token_recuperacao (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    email TEXT NOT NULL,
+                    token TEXT NOT NULL,
+                    expira_em DATETIME NOT NULL,
+                    usado INTEGER DEFAULT 0,
+                    criado_em DATETIME DEFAULT CURRENT_TIMESTAMP
+                )"""
+            )
+
+            // Adiciona email_verificado se ainda não existe; marca usuários antigos como verificados
+            val columns = conn.createStatement()
+                .executeQuery("PRAGMA table_info(usuario)")
+            var hasEmailVerificado = false
+            while (columns.next()) {
+                if (columns.getString("name") == "email_verificado") {
+                    hasEmailVerificado = true
+                    break
+                }
+            }
+            columns.close()
+
+            if (!hasEmailVerificado) {
+                stmt.execute("ALTER TABLE usuario ADD COLUMN email_verificado INTEGER DEFAULT 0")
+                stmt.execute("UPDATE usuario SET email_verificado = 1")
+            }
+
+            stmt.close()
         } catch (e: Exception) {
             e.printStackTrace()
         }
