@@ -21,3 +21,4 @@ sendgrid.properties
 **/sendgrid.properties
 mochila.db
 **/mochila.db
+.claude/
