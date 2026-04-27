@@ -1,6 +1,7 @@
 package br.com.mochila.data
 
 import br.com.mochila.model.User
+import br.com.mochila.util.PasswordHash
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 
@@ -20,7 +21,7 @@ object UserRepository {
             val stmt: PreparedStatement = conn.prepareStatement(sql)
             stmt.setString(1, user.name)
             stmt.setString(2, user.email)
-            stmt.setString(3, user.password)
+            stmt.setString(3, PasswordHash.hash(user.password))
             stmt.executeUpdate()
             stmt.close()
             println("✅ Usuário cadastrado: ${user.email}")
@@ -44,7 +45,7 @@ object UserRepository {
             var userId: Int? = null
             if (rs.next()) {
                 val storedPassword = rs.getString("senha")
-                if (storedPassword == password) {
+                if (PasswordHash.verify(password, storedPassword)) {
                     userId = rs.getInt("id_usuario")
                 }
             }
@@ -92,7 +93,7 @@ object UserRepository {
             if (newPassword.isNullOrBlank()) {
                 stmt.setInt(3, userId)
             } else {
-                stmt.setString(3, newPassword)
+                stmt.setString(3, PasswordHash.hash(newPassword))
                 stmt.setInt(4, userId)
             }
             val rows = stmt.executeUpdate()
