@@ -15,6 +15,7 @@ fun App() {
     var selectedSubjectId by remember { mutableStateOf<Int?>(null) }
     var selectedTaskId   by remember { mutableStateOf<Int?>(null) }
     var accountPasswordFeedback by remember { mutableStateOf<Pair<String, Boolean>?>(null) }
+    var pendingEmail     by remember { mutableStateOf("") }
 
     val currentScreen = screenStack.last()
 
@@ -53,9 +54,45 @@ fun App() {
                         onLoginSuccess = { userId -> onLoginSuccess(userId) }
                     )
 
-                    "register" -> RegisterScreen(onBackToLogin = { goBack() })
+                    "register" -> RegisterScreen(
+                        onBackToLogin = { goBack() },
+                        onNavigateToEmailVerify = { email ->
+                            pendingEmail = email
+                            navigateTo("email_verify")
+                        }
+                    )
 
-                    "recovery" -> RecoveryScreen(onBackToLogin = { goBack() })
+                    "email_verify" -> EmailVerifyScreen(
+                        email = pendingEmail,
+                        onBackToRegister = { goBack() },
+                        onNavigateToLogin = {
+                            pendingEmail = ""
+                            screenStack = listOf("login")
+                        }
+                    )
+
+                    "recovery" -> RecoveryScreen(
+                        onBackToLogin = { goBack() },
+                        onNavigateToCodeEntry = { email ->
+                            pendingEmail = email
+                            navigateTo("email_code")
+                        }
+                    )
+
+                    "email_code" -> EmailCodeScreen(
+                        email = pendingEmail,
+                        onBackToRecovery = { goBack() },
+                        onNavigateToNewPassword = { navigateTo("new_password") }
+                    )
+
+                    "new_password" -> NewPasswordScreen(
+                        email = pendingEmail,
+                        onNavigateToLogin = {
+                            pendingEmail = ""
+                            screenStack = listOf("login")
+                        },
+                        onBack = { goBack() }
+                    )
 
                     "home" -> {
                         currentUserId?.let { userId ->

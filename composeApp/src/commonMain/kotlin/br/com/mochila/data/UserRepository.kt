@@ -123,6 +123,63 @@ object UserRepository {
         }
     }
 
+    fun verifyEmail(email: String): Boolean {
+        val conn = DatabaseHelper.connect() ?: return false
+        return try {
+            val stmt = conn.prepareStatement(
+                "UPDATE usuario SET email_verificado = 1 WHERE email = ?"
+            )
+            stmt.setString(1, email)
+            val rows = stmt.executeUpdate()
+            stmt.close()
+            rows > 0
+        } catch (e: Exception) {
+            println("⚠️ Erro ao verificar e-mail: ${e.message}")
+            false
+        } finally {
+            conn.close()
+        }
+    }
+
+    fun isEmailVerified(email: String): Boolean {
+        val conn = DatabaseHelper.connect() ?: return false
+        return try {
+            val stmt = conn.prepareStatement(
+                "SELECT email_verificado FROM usuario WHERE email = ?"
+            )
+            stmt.setString(1, email)
+            val rs = stmt.executeQuery()
+            val verified = rs.next() && rs.getInt("email_verificado") == 1
+            rs.close()
+            stmt.close()
+            verified
+        } catch (e: Exception) {
+            println("⚠️ Erro ao checar verificação: ${e.message}")
+            false
+        } finally {
+            conn.close()
+        }
+    }
+
+    fun findByEmail(email: String): User? {
+        val conn = DatabaseHelper.connect() ?: return null
+        return try {
+            val sql = "SELECT id_usuario, nome, email, senha FROM usuario WHERE email = ?"
+            val stmt = conn.prepareStatement(sql)
+            stmt.setString(1, email)
+            val rs = stmt.executeQuery()
+            val user = if (rs.next()) rs.toUser() else null
+            rs.close()
+            stmt.close()
+            user
+        } catch (e: Exception) {
+            println("⚠️ Erro ao buscar usuário por email: ${e.message}")
+            null
+        } finally {
+            conn.close()
+        }
+    }
+
     fun emailExists(email: String): Boolean {
         val conn = DatabaseHelper.connect() ?: return false
         return try {

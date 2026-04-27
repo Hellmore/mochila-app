@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS usuario (
     nome TEXT NOT NULL,
     email TEXT UNIQUE NOT NULL,
     senha TEXT NOT NULL,
+    email_verificado INTEGER DEFAULT 0,
     criado_em DATETIME DEFAULT CURRENT_TIMESTAMP,
     atualizado_em DATETIME DEFAULT CURRENT_TIMESTAMP
 );
@@ -116,6 +117,18 @@ CREATE TABLE IF NOT EXISTS assinatura (
         ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (id_modulo) REFERENCES modulo (id_modulo)
         ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+------------------------------------------------
+-- Tokens de recuperação de senha (SendGrid)
+------------------------------------------------
+CREATE TABLE IF NOT EXISTS token_recuperacao (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT NOT NULL,
+    token TEXT NOT NULL,
+    expira_em DATETIME NOT NULL,
+    usado INTEGER DEFAULT 0,
+    criado_em DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 ------------------------------------------------

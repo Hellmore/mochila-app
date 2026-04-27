@@ -7,13 +7,12 @@ interface RegisterView {
     fun showValidationError(message: String)
     fun showRegisterSuccess()
     fun showRegisterError(message: String)
-    fun navigateToLogin()
+    fun navigateToEmailVerify(email: String)
 }
 
 class RegisterPresenter(private val view: RegisterView) {
 
     fun register(name: String, email: String, password: String) {
-        // Validações
         if (!isEmailValid(email) && !isNameValid(name) && !isPasswordValid(password)) {
             view.showValidationError("Todos os campos estão incorretos. Verifique e tente novamente.")
             return
@@ -38,7 +37,7 @@ class RegisterPresenter(private val view: RegisterView) {
 
         if (success) {
             view.showRegisterSuccess()
-            view.navigateToLogin()
+            view.navigateToEmailVerify(email)
         } else {
             view.showRegisterError("Erro ao cadastrar usuário. Verifique se o e-mail já existe.")
         }
