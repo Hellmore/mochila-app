@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import br.com.mochila.model.Task
 import br.com.mochila.presenter.TaskListPresenter
 import br.com.mochila.presenter.TaskListView
+import br.com.mochila.ui.screens.components.UserAvatarButton
 import mochila_app.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.painterResource
 
@@ -108,21 +109,10 @@ fun TaskListScreen(
                     fontSize = 28.sp,
                     fontWeight = FontWeight.Bold
                 )
-                Box(
-                    modifier = Modifier
-                        .size(60.dp)
-                        .clip(CircleShape)
-                        .background(RoxoClaro)
-                        .clickable { onNavigateToAccountSettings() },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Image(
-                        painter = painterResource(Res.drawable.user),
-                        contentDescription = "Usuário",
-                        modifier = Modifier.clip(CircleShape),
-                        contentScale = ContentScale.Crop
-                    )
-                }
+                UserAvatarButton(
+                    size = 60.dp,
+                    onClick = onNavigateToAccountSettings
+                )
             }
 
             // Botão de filtro

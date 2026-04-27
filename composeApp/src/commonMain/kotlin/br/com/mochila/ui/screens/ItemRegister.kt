@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.sp
 import br.com.mochila.presenter.ItemRegisterPresenter
 import br.com.mochila.presenter.ItemRegisterView
 import br.com.mochila.ui.screens.components.BackButton
+import br.com.mochila.ui.screens.components.UserAvatarButton
 import mochila_app.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.painterResource
 
@@ -101,21 +102,10 @@ fun ItemRegisterScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(150.dp)
-                        .clip(CircleShape)
-                        .background(RoxoEscuro)
-                        .clickable { onNavigateToAccountSettings() },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Image(
-                        painter = painterResource(Res.drawable.user),
-                        contentDescription = "Usuário",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.size(150.dp).clip(CircleShape)
-                    )
-                }
+                UserAvatarButton(
+                    size = 150.dp,
+                    onClick = onNavigateToAccountSettings
+                )
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(userName, color = Color.Gray, fontSize = 22.sp)
             }

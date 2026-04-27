@@ -23,6 +23,7 @@ import br.com.mochila.model.Subject
 import br.com.mochila.model.Task
 import br.com.mochila.presenter.HomePresenter
 import br.com.mochila.presenter.HomeView
+import br.com.mochila.ui.screens.components.UserAvatarButton
 import mochila_app.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.painterResource
 @Composable
@@ -118,21 +119,10 @@ fun HomeScreen(
                     fontSize = 28.sp,
                     fontWeight = FontWeight.Bold
                 )
-                Box(
-                    modifier = Modifier
-                        .size(60.dp)
-                        .clip(CircleShape)
-                        .background(RoxoClaro)
-                        .clickable { onNavigateToAccountSettings() },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Image(
-                        painter = painterResource(Res.drawable.user),
-                        contentDescription = "Usuário",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.clip(CircleShape)
-                    )
-                }
+                UserAvatarButton(
+                    size = 60.dp,
+                    onClick = onNavigateToAccountSettings
+                )
             }
 
             // Botões de Filtro

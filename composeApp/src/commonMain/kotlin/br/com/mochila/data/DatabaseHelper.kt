@@ -88,6 +88,16 @@ object DatabaseHelper {
                 stmt.execute("UPDATE usuario SET email_verificado = 1")
             }
 
+            val colsFoto = conn.createStatement().executeQuery("PRAGMA table_info(usuario)")
+            var hasFotoPerfil = false
+            while (colsFoto.next()) {
+                if (colsFoto.getString("name") == "foto_perfil") { hasFotoPerfil = true; break }
+            }
+            colsFoto.close()
+            if (!hasFotoPerfil) {
+                stmt.execute("ALTER TABLE usuario ADD COLUMN foto_perfil TEXT")
+            }
+
             stmt.close()
         } catch (e: Exception) {
             e.printStackTrace()

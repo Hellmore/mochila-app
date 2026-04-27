@@ -6,7 +6,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import br.com.mochila.data.UserRepository
+import br.com.mochila.data.UserSession
 import br.com.mochila.ui.screens.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 @Composable
 fun App() {
     var currentUserId    by remember { mutableStateOf<Int?>(null) }
@@ -36,11 +40,18 @@ fun App() {
         screenStack       = listOf("login")
         selectedSubjectId = null
         selectedTaskId    = null
+        UserSession.clear()
     }
 
     fun onLoginSuccess(userId: Int) {
         currentUserId = userId
         navigateTo("home")
+    }
+
+    LaunchedEffect(currentUserId) {
+        val uid = currentUserId ?: return@LaunchedEffect
+        val user = withContext(Dispatchers.IO) { UserRepository.findById(uid) }
+        if (user != null) UserSession.set(user)
     }
 
     MaterialTheme {

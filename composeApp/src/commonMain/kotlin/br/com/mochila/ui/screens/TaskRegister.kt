@@ -18,6 +18,7 @@ import br.com.mochila.model.Task
 import br.com.mochila.presenter.TaskRegisterPresenter
 import br.com.mochila.presenter.TaskRegisterView
 import br.com.mochila.ui.screens.components.BackButton
+import br.com.mochila.ui.screens.components.UserAvatarButton
 import mochila_app.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.painterResource
 
@@ -221,20 +222,10 @@ fun TaskRegisterScreen(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 BackButton(onBack = onBack)
-                Box(
-                    modifier = Modifier
-                        .size(60.dp)
-                        .clip(CircleShape)
-                        .background(RoxoClaro),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Image(
-                        painter = painterResource(Res.drawable.user),
-                        contentDescription = "Usuário",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.clip(CircleShape)
-                    )
-                }
+                UserAvatarButton(
+                    size = 60.dp,
+                    onClick = {}
+                )
             }
 
             Text(

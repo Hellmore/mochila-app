@@ -11,7 +11,8 @@ object UserRepository {
         id = getInt("id_usuario"),
         name = getString("nome"),
         email = getString("email"),
-        password = getString("senha")
+        password = getString("senha"),
+        photoPath = runCatching { getString("foto_perfil") }.getOrNull()
     )
 
     fun insert(user: User): Boolean {
@@ -63,7 +64,7 @@ object UserRepository {
     fun findById(userId: Int): User? {
         val conn = DatabaseHelper.connect() ?: return null
         return try {
-            val sql = "SELECT id_usuario, nome, email, senha FROM usuario WHERE id_usuario = ?"
+            val sql = "SELECT id_usuario, nome, email, senha, foto_perfil FROM usuario WHERE id_usuario = ?"
             val stmt = conn.prepareStatement(sql)
             stmt.setInt(1, userId)
             val rs = stmt.executeQuery()
@@ -101,6 +102,43 @@ object UserRepository {
             rows > 0
         } catch (e: Exception) {
             println("⚠️ Erro ao atualizar usuário: ${e.message}")
+            false
+        } finally {
+            conn.close()
+        }
+    }
+
+    fun removePhoto(userId: Int): Boolean {
+        val conn = DatabaseHelper.connect() ?: return false
+        return try {
+            val stmt = conn.prepareStatement(
+                "UPDATE usuario SET foto_perfil = NULL, atualizado_em = CURRENT_TIMESTAMP WHERE id_usuario = ?"
+            )
+            stmt.setInt(1, userId)
+            val rows = stmt.executeUpdate()
+            stmt.close()
+            rows > 0
+        } catch (e: Exception) {
+            println("⚠️ Erro ao remover foto: ${e.message}")
+            false
+        } finally {
+            conn.close()
+        }
+    }
+
+    fun updatePhoto(userId: Int, photoPath: String): Boolean {
+        val conn = DatabaseHelper.connect() ?: return false
+        return try {
+            val stmt = conn.prepareStatement(
+                "UPDATE usuario SET foto_perfil = ?, atualizado_em = CURRENT_TIMESTAMP WHERE id_usuario = ?"
+            )
+            stmt.setString(1, photoPath)
+            stmt.setInt(2, userId)
+            val rows = stmt.executeUpdate()
+            stmt.close()
+            rows > 0
+        } catch (e: Exception) {
+            println("⚠️ Erro ao atualizar foto: ${e.message}")
             false
         } finally {
             conn.close()
@@ -165,7 +203,7 @@ object UserRepository {
     fun findByEmail(email: String): User? {
         val conn = DatabaseHelper.connect() ?: return null
         return try {
-            val sql = "SELECT id_usuario, nome, email, senha FROM usuario WHERE email = ?"
+            val sql = "SELECT id_usuario, nome, email, senha, foto_perfil FROM usuario WHERE email = ?"
             val stmt = conn.prepareStatement(sql)
             stmt.setString(1, email)
             val rs = stmt.executeQuery()
