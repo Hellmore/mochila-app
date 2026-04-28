@@ -3,8 +3,10 @@ package br.com.mochila.ui.screens
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -78,12 +80,14 @@ fun NewPasswordScreen(
             contentScale = ContentScale.Crop
         )
 
+        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        val formWidth = minOf(maxWidth - 48.dp, 360.dp).coerceAtLeast(0.dp)
+
         Column(
             modifier = Modifier
+                .width(formWidth)
                 .align(Alignment.Center)
-                .padding(horizontal = 24.dp)
-                .widthIn(max = 600.dp)
-                .fillMaxWidth(),
+                .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Row(
@@ -199,6 +203,7 @@ fun NewPasswordScreen(
                     Text("Redefinir Senha", color = Color.White, fontSize = 14.sp)
                 }
             }
+        }
         }
     }
 }
