@@ -18,6 +18,7 @@ fun App() {
     var isMenuVisible    by remember { mutableStateOf(false) }
     var selectedSubjectId by remember { mutableStateOf<Int?>(null) }
     var selectedTaskId   by remember { mutableStateOf<Int?>(null) }
+    var selectedEventId  by remember { mutableStateOf<Int?>(null) }
     var accountPasswordFeedback by remember { mutableStateOf<Pair<String, Boolean>?>(null) }
     var pendingEmail     by remember { mutableStateOf("") }
 
@@ -40,6 +41,7 @@ fun App() {
         screenStack       = listOf("login")
         selectedSubjectId = null
         selectedTaskId    = null
+        selectedEventId   = null
         UserSession.clear()
     }
 
@@ -274,6 +276,60 @@ fun App() {
                             )
                         } ?: logout()
                     }
+
+                    "events_list" -> {
+                        currentUserId?.let { userId ->
+                            EventListScreen(
+                                userId = userId,
+                                onNavigateToHome = { navigateTo("home") },
+                                onOpenMenu = { openMenu() },
+                                onBack = { goBack() },
+                                onNavigateToAdd = { navigateTo("event_register") },
+                                onNavigateToEventEdit = { id ->
+                                    selectedEventId = id
+                                    navigateTo("event_edit")
+                                },
+                                onNavigateToAccountSettings = { navigateTo("account_settings") },
+                                onLogout = { logout() },
+                            )
+                        } ?: logout()
+                    }
+
+                    "event_register" -> {
+                        currentUserId?.let { userId ->
+                            EventRegisterScreen(
+                                userId = userId,
+                                onNavigateToHome = { navigateTo("home") },
+                                onBack = { goBack() },
+                                onLogout = { logout() },
+                                onOpenMenu = { openMenu() },
+                                onNavigateToEventsList = { goBack() },
+                                onNavigateToAccountSettings = { navigateTo("account_settings") },
+                            )
+                        } ?: logout()
+                    }
+
+                    "event_edit" -> {
+                        currentUserId?.let { userId ->
+                            selectedEventId?.let { eid ->
+                                EventRegisterScreen(
+                                    userId = userId,
+                                    isEditing = true,
+                                    eventId = eid,
+                                    onNavigateToHome = { navigateTo("home") },
+                                    onBack = { goBack() },
+                                    onLogout = { logout() },
+                                    onOpenMenu = { openMenu() },
+                                    onNavigateToEventsList = { goBack() },
+                                    onNavigateToAccountSettings = { navigateTo("account_settings") },
+                                )
+                            } ?: goBack()
+                        } ?: logout()
+                    }
+                }
+
+                currentUserId?.let { uid ->
+                    EventReminderMonitor(userId = uid)
                 }
 
                 if (isMenuVisible && currentUserId != null) {
@@ -281,6 +337,7 @@ fun App() {
                         onCloseMenu = { closeMenu() },
                         onNavigateToHome = { closeMenu(); navigateTo("home") },
                         onNavigateToTasksList = { closeMenu(); navigateTo("tasks_list") },
+                        onNavigateToEventos = { closeMenu(); navigateTo("events_list") },
                         onNavigateToAccountSettings = { closeMenu(); navigateTo("account_settings") },
                         onLogout = { logout() }
                     )

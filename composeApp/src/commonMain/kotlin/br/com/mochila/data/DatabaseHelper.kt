@@ -112,6 +112,34 @@ object DatabaseHelper {
                 stmt.execute("UPDATE disciplina SET cor_rgb = 3710463 WHERE cor_rgb IS NULL")
             }
 
+            val colsEvento = conn.createStatement().executeQuery("PRAGMA table_info(evento)")
+            var hasIdDisciplina = false
+            var hasEventCorRgb = false
+            var hasLembreteMinutos = false
+            var hasLembreteExibido = false
+            while (colsEvento.next()) {
+                when (colsEvento.getString("name")) {
+                    "id_disciplina" -> hasIdDisciplina = true
+                    "cor_rgb" -> hasEventCorRgb = true
+                    "lembrete_minutos" -> hasLembreteMinutos = true
+                    "lembrete_exibido" -> hasLembreteExibido = true
+                }
+            }
+            colsEvento.close()
+            if (!hasIdDisciplina) {
+                stmt.execute("ALTER TABLE evento ADD COLUMN id_disciplina INTEGER REFERENCES disciplina(id_disciplina)")
+            }
+            if (!hasEventCorRgb) {
+                stmt.execute("ALTER TABLE evento ADD COLUMN cor_rgb INTEGER")
+                stmt.execute("UPDATE evento SET cor_rgb = 6643029 WHERE cor_rgb IS NULL")
+            }
+            if (!hasLembreteMinutos) {
+                stmt.execute("ALTER TABLE evento ADD COLUMN lembrete_minutos INTEGER")
+            }
+            if (!hasLembreteExibido) {
+                stmt.execute("ALTER TABLE evento ADD COLUMN lembrete_exibido INTEGER DEFAULT 0")
+            }
+
             stmt.close()
         } catch (e: Exception) {
             e.printStackTrace()
