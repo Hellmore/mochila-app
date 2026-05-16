@@ -45,7 +45,7 @@ fun App() {
 
     fun onLoginSuccess(userId: Int) {
         currentUserId = userId
-        navigateTo("home")
+        screenStack = listOf("home")
     }
 
     LaunchedEffect(currentUserId) {
@@ -107,10 +107,12 @@ fun App() {
 
                     "home" -> {
                         currentUserId?.let { userId ->
-                            HomeScreen(
+                            // HomeScreen em stand-by; tela principal = lista de matérias
+                            SubjectListScreen(
                                 userId = userId,
                                 onNavigateToHome = {},
                                 onOpenMenu = { openMenu() },
+                                onBack = { goBack() },
                                 onNavigateToAdd = { navigateTo("item_register") },
                                 onNavigateToAccountSettings = { navigateTo("account_settings") },
                                 onNavigateToSubject = { subjectId ->
@@ -145,7 +147,8 @@ fun App() {
                                 onNavigateToHome = { navigateTo("home") },
                                 onBack = { goBack() },
                                 onLogout = { logout() },
-                                onOpenMenu = { openMenu() }
+                                onOpenMenu = { openMenu() },
+                                onNavigateToAccountSettings = { navigateTo("account_settings") },
                             )
                         } ?: logout()
                     }
@@ -183,6 +186,7 @@ fun App() {
                                     onBack = { goBack() },
                                     onLogout = { logout() },
                                     onOpenMenu = { openMenu() },
+                                    onNavigateToAccountSettings = { navigateTo("account_settings") },
                                     isEditing = true,
                                     subjectId = subjectId
                                 )

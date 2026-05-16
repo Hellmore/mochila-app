@@ -98,6 +98,20 @@ object DatabaseHelper {
                 stmt.execute("ALTER TABLE usuario ADD COLUMN foto_perfil TEXT")
             }
 
+            val colsDisc = conn.createStatement().executeQuery("PRAGMA table_info(disciplina)")
+            var hasCorRgb = false
+            while (colsDisc.next()) {
+                if (colsDisc.getString("name") == "cor_rgb") {
+                    hasCorRgb = true
+                    break
+                }
+            }
+            colsDisc.close()
+            if (!hasCorRgb) {
+                stmt.execute("ALTER TABLE disciplina ADD COLUMN cor_rgb INTEGER")
+                stmt.execute("UPDATE disciplina SET cor_rgb = 3710463 WHERE cor_rgb IS NULL")
+            }
+
             stmt.close()
         } catch (e: Exception) {
             e.printStackTrace()
