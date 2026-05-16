@@ -28,9 +28,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.com.mochila.data.UserSession
+import br.com.mochila.model.Subject
 import br.com.mochila.model.Task
-import br.com.mochila.presenter.TaskListPresenter
-import br.com.mochila.presenter.TaskListView
+import br.com.mochila.presenter.HomePresenter
+import br.com.mochila.presenter.HomeView
 import br.com.mochila.ui.screens.components.BackButton
 import br.com.mochila.ui.screens.components.ProfileAvatar
 import kotlinx.datetime.Clock
@@ -49,6 +50,13 @@ private val monthNamesPt = listOf(
     "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
     "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
 )
+
+private fun subjectCardBackground(rgb: Int): Color {
+    val r = ((rgb shr 16) and 0xFF) / 255f
+    val g = ((rgb shr 8) and 0xFF) / 255f
+    val b = (rgb and 0xFF) / 255f
+    return Color(r, g, b)
+}
 
 private fun formatDatePt(date: LocalDate): String {
     val dd = date.dayOfMonth.toString().padStart(2, '0')
@@ -71,7 +79,7 @@ private fun CalendarGlyph(
 }
 
 @Composable
-private fun TaskSearchBar(
+private fun SubjectSearchBar(
     query: String,
     onQueryChange: (String) -> Unit,
     modifier: Modifier = Modifier,
@@ -82,7 +90,7 @@ private fun TaskSearchBar(
         modifier = modifier.fillMaxWidth(),
         placeholder = {
             Text(
-                text = "Buscar tarefa",
+                text = "Buscar matéria",
                 color = Color.Gray,
                 fontSize = 12.sp,
             )
@@ -106,7 +114,7 @@ private fun TaskSearchBar(
 }
 
 @Composable
-private fun TaskListBottomBar(
+private fun SubjectListBottomBar(
     onOpenMenu: () -> Unit,
     onNavigateToAdd: () -> Unit,
     onNavigateToHome: () -> Unit,
@@ -153,42 +161,47 @@ private fun TaskListBottomBar(
 }
 
 @Composable
-fun TaskListScreen(
+fun SubjectListScreen(
     userId: Int,
     onNavigateToHome: () -> Unit,
     onOpenMenu: () -> Unit,
     onBack: () -> Unit,
     onNavigateToAdd: () -> Unit,
-    onNavigateToTaskDetail: (Int) -> Unit,
+    onNavigateToSubject: (Int) -> Unit,
+    onNavigateToTasksList: () -> Unit,
     onNavigateToAccountSettings: () -> Unit,
     onLogout: () -> Unit,
 ) {
-    var tasks by remember { mutableStateOf<List<Task>>(emptyList()) }
+    var subjects by remember { mutableStateOf<List<Subject>>(emptyList()) }
     var searchQuery by remember { mutableStateOf("") }
 
-    val filteredTasks = remember(tasks, searchQuery) {
-        if (searchQuery.isBlank()) tasks
-        else tasks.filter { it.title.contains(searchQuery, ignoreCase = true) }
+    val filteredSubjects = remember(subjects, searchQuery) {
+        if (searchQuery.isBlank()) subjects
+        else subjects.filter { it.name.contains(searchQuery, ignoreCase = true) }
     }
 
     val presenter = remember {
-        object : TaskListView {
-            override fun showTasks(list: List<Task>) {
-                tasks = list
+        object : HomeView {
+            override fun showSubjects(list: List<Subject>) {
+                subjects = list
             }
 
             override fun showEmptyState() {
-                tasks = emptyList()
+                subjects = emptyList()
             }
 
-            override fun navigateToTaskDetail(taskId: Int) {
-                onNavigateToTaskDetail(taskId)
+            override fun navigateToSubjectDetail(subjectId: Int) {
+                onNavigateToSubject(subjectId)
             }
-        }.let { TaskListPresenter(it) }
+
+            override fun showPendingTasks(tasks: List<Task>) {
+                /* não usado nesta tela */
+            }
+        }.let { view -> HomePresenter(view) }
     }
 
     LaunchedEffect(userId) {
-        presenter.loadTasks(userId)
+        presenter.loadSubjects(userId)
     }
 
     val today = remember {
@@ -204,9 +217,9 @@ fun TaskListScreen(
         val isWide = maxWidth >= 700.dp
 
         if (isWide) {
-            TaskListDesktopLayout(
-                tasks = tasks,
-                filteredTasks = filteredTasks,
+            SubjectListDesktopLayout(
+                subjects = subjects,
+                filteredSubjects = filteredSubjects,
                 searchQuery = searchQuery,
                 onSearchQueryChange = { searchQuery = it },
                 dateLabel = dateLabel,
@@ -215,12 +228,12 @@ fun TaskListScreen(
                 onOpenMenu = onOpenMenu,
                 onNavigateToHome = onNavigateToHome,
                 onNavigateToAccountSettings = onNavigateToAccountSettings,
-                onTaskClick = { id -> presenter.onTaskClicked(id) },
+                onSubjectClick = { id -> presenter.onSubjectClicked(id) },
             )
         } else {
-            TaskListMobileLayout(
-                tasks = tasks,
-                filteredTasks = filteredTasks,
+            SubjectListMobileLayout(
+                subjects = subjects,
+                filteredSubjects = filteredSubjects,
                 searchQuery = searchQuery,
                 onSearchQueryChange = { searchQuery = it },
                 dateLabel = dateLabel,
@@ -229,16 +242,16 @@ fun TaskListScreen(
                 onOpenMenu = onOpenMenu,
                 onNavigateToHome = onNavigateToHome,
                 onNavigateToAccountSettings = onNavigateToAccountSettings,
-                onTaskClick = { id -> presenter.onTaskClicked(id) },
+                onSubjectClick = { id -> presenter.onSubjectClicked(id) },
             )
         }
     }
 }
 
 @Composable
-private fun TaskListMobileLayout(
-    tasks: List<Task>,
-    filteredTasks: List<Task>,
+private fun SubjectListMobileLayout(
+    subjects: List<Subject>,
+    filteredSubjects: List<Subject>,
     searchQuery: String,
     onSearchQueryChange: (String) -> Unit,
     dateLabel: String,
@@ -247,12 +260,13 @@ private fun TaskListMobileLayout(
     onOpenMenu: () -> Unit,
     onNavigateToHome: () -> Unit,
     onNavigateToAccountSettings: () -> Unit,
-    onTaskClick: (Int) -> Unit,
+    onSubjectClick: (Int) -> Unit,
 ) {
     val user = UserSession.currentUser
     val name = user?.name.orEmpty()
 
     Column(Modifier.fillMaxSize()) {
+        // Cabeçalho mobile: voltar e data recuados da borda; avatar+nome no centro geométrico da faixa
         val headerEdgeInset = 22.dp
         Box(
             modifier = Modifier
@@ -320,7 +334,7 @@ private fun TaskListMobileLayout(
             }
         }
 
-        TaskSearchBar(
+        SubjectSearchBar(
             query = searchQuery,
             onQueryChange = onSearchQueryChange,
             modifier = Modifier
@@ -329,13 +343,13 @@ private fun TaskListMobileLayout(
                 .padding(top = 12.dp, bottom = 8.dp),
         )
 
-        TaskGrid(
-            tasks = filteredTasks,
-            allTasksEmpty = tasks.isEmpty(),
-            noSearchResults = tasks.isNotEmpty() && filteredTasks.isEmpty() && searchQuery.isNotBlank(),
+        SubjectGrid(
+            subjects = filteredSubjects,
+            allSubjectsEmpty = subjects.isEmpty(),
+            noSearchResults = subjects.isNotEmpty() && filteredSubjects.isEmpty() && searchQuery.isNotBlank(),
             columns = 2,
             onNavigateToAdd = onNavigateToAdd,
-            onTaskClick = onTaskClick,
+            onSubjectClick = onSubjectClick,
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
@@ -343,7 +357,7 @@ private fun TaskListMobileLayout(
                 .padding(bottom = 16.dp),
         )
 
-        TaskListBottomBar(
+        SubjectListBottomBar(
             onOpenMenu = onOpenMenu,
             onNavigateToAdd = onNavigateToAdd,
             onNavigateToHome = onNavigateToHome,
@@ -352,9 +366,9 @@ private fun TaskListMobileLayout(
 }
 
 @Composable
-private fun TaskListDesktopLayout(
-    tasks: List<Task>,
-    filteredTasks: List<Task>,
+private fun SubjectListDesktopLayout(
+    subjects: List<Subject>,
+    filteredSubjects: List<Subject>,
     searchQuery: String,
     onSearchQueryChange: (String) -> Unit,
     dateLabel: String,
@@ -363,7 +377,7 @@ private fun TaskListDesktopLayout(
     onOpenMenu: () -> Unit,
     onNavigateToHome: () -> Unit,
     onNavigateToAccountSettings: () -> Unit,
-    onTaskClick: (Int) -> Unit,
+    onSubjectClick: (Int) -> Unit,
 ) {
     val user = UserSession.currentUser
     val name = user?.name.orEmpty()
@@ -444,7 +458,7 @@ private fun TaskListDesktopLayout(
                 )
             }
 
-            TaskSearchBar(
+            SubjectSearchBar(
                 query = searchQuery,
                 onQueryChange = onSearchQueryChange,
                 modifier = Modifier
@@ -453,13 +467,13 @@ private fun TaskListDesktopLayout(
                     .padding(bottom = 8.dp),
             )
 
-            TaskGrid(
-                tasks = filteredTasks,
-                allTasksEmpty = tasks.isEmpty(),
-                noSearchResults = tasks.isNotEmpty() && filteredTasks.isEmpty() && searchQuery.isNotBlank(),
+            SubjectGrid(
+                subjects = filteredSubjects,
+                allSubjectsEmpty = subjects.isEmpty(),
+                noSearchResults = subjects.isNotEmpty() && filteredSubjects.isEmpty() && searchQuery.isNotBlank(),
                 columns = 3,
                 onNavigateToAdd = onNavigateToAdd,
-                onTaskClick = onTaskClick,
+                onSubjectClick = onSubjectClick,
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
@@ -467,7 +481,7 @@ private fun TaskListDesktopLayout(
                     .padding(bottom = 8.dp),
             )
 
-            TaskListBottomBar(
+            SubjectListBottomBar(
                 onOpenMenu = onOpenMenu,
                 onNavigateToAdd = onNavigateToAdd,
                 onNavigateToHome = onNavigateToHome,
@@ -477,16 +491,16 @@ private fun TaskListDesktopLayout(
 }
 
 @Composable
-private fun TaskGrid(
-    tasks: List<Task>,
-    allTasksEmpty: Boolean,
+private fun SubjectGrid(
+    subjects: List<Subject>,
+    allSubjectsEmpty: Boolean,
     noSearchResults: Boolean,
     columns: Int,
     onNavigateToAdd: () -> Unit,
-    onTaskClick: (Int) -> Unit,
+    onSubjectClick: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    if (allTasksEmpty) {
+    if (allSubjectsEmpty) {
         val gridSpacing = 16.dp
         BoxWithConstraints(modifier = modifier.verticalScroll(rememberScrollState())) {
             val cellWidth =
@@ -496,7 +510,7 @@ private fun TaskGrid(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Spacer(Modifier.height(24.dp))
-                AddTaskCell(
+                AddSubjectCell(
                     onClick = onNavigateToAdd,
                     modifier = Modifier
                         .width(cellWidth)
@@ -504,7 +518,7 @@ private fun TaskGrid(
                 )
                 Spacer(Modifier.height(16.dp))
                 Text(
-                    text = "Nenhuma tarefa cadastrada",
+                    text = "Nenhuma matéria cadastrada",
                     color = Color.Gray,
                     fontSize = 16.sp,
                 )
@@ -522,7 +536,7 @@ private fun TaskGrid(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                AddTaskCell(
+                AddSubjectCell(
                     onClick = onNavigateToAdd,
                     modifier = Modifier
                         .width(cellWidth)
@@ -530,7 +544,7 @@ private fun TaskGrid(
                 )
                 Spacer(Modifier.height(16.dp))
                 Text(
-                    text = "Nenhuma tarefa encontrada",
+                    text = "Nenhuma matéria encontrada",
                     color = Color.Gray,
                     fontSize = 16.sp,
                 )
@@ -546,24 +560,25 @@ private fun TaskGrid(
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         item {
-            AddTaskCell(
+            AddSubjectCell(
                 onClick = onNavigateToAdd,
                 modifier = Modifier
                     .fillMaxWidth()
                     .heightIn(min = 87.dp),
             )
         }
-        itemsIndexed(tasks, key = { _, t -> t.id }) { _, task ->
-            TaskCard(
-                task = task,
-                onClick = { onTaskClick(task.id) },
+        itemsIndexed(subjects, key = { _, s -> s.id }) { _, subject ->
+            SubjectCard(
+                subject = subject,
+                backgroundColor = subjectCardBackground(subject.colorRgb),
+                onClick = { onSubjectClick(subject.id) },
             )
         }
     }
 }
 
 @Composable
-private fun AddTaskCell(
+private fun AddSubjectCell(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -576,7 +591,7 @@ private fun AddTaskCell(
     ) {
         Image(
             painter = painterResource(Res.drawable.add),
-            contentDescription = "Adicionar tarefa",
+            contentDescription = "Adicionar matéria",
             modifier = Modifier.size(28.dp),
             colorFilter = ColorFilter.tint(rosa),
         )
@@ -584,8 +599,9 @@ private fun AddTaskCell(
 }
 
 @Composable
-private fun TaskCard(
-    task: Task,
+private fun SubjectCard(
+    subject: Subject,
+    backgroundColor: Color,
     onClick: () -> Unit,
 ) {
     Column(
@@ -593,14 +609,14 @@ private fun TaskCard(
             .fillMaxWidth()
             .heightIn(min = 87.dp)
             .clip(RoundedCornerShape(9.dp))
-            .background(laranjaHeader)
+            .background(backgroundColor)
             .clickable(onClick = onClick)
             .padding(horizontal = 8.dp, vertical = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
         Text(
-            text = task.title,
+            text = subject.name,
             color = Color.White,
             fontSize = 13.sp,
             fontWeight = FontWeight.Bold,
@@ -609,10 +625,10 @@ private fun TaskCard(
             overflow = TextOverflow.Ellipsis,
             lineHeight = 14.sp,
         )
-        if (task.status.isNotBlank()) {
+        if (subject.teacher.isNotBlank()) {
             Spacer(Modifier.height(6.dp))
             Text(
-                text = task.status,
+                text = subject.teacher,
                 color = Color.White,
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Normal,

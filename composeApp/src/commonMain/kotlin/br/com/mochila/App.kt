@@ -18,6 +18,7 @@ fun App() {
     var isMenuVisible    by remember { mutableStateOf(false) }
     var selectedSubjectId by remember { mutableStateOf<Int?>(null) }
     var selectedTaskId   by remember { mutableStateOf<Int?>(null) }
+    var selectedEventId  by remember { mutableStateOf<Int?>(null) }
     var accountPasswordFeedback by remember { mutableStateOf<Pair<String, Boolean>?>(null) }
     var pendingEmail     by remember { mutableStateOf("") }
 
@@ -40,12 +41,13 @@ fun App() {
         screenStack       = listOf("login")
         selectedSubjectId = null
         selectedTaskId    = null
+        selectedEventId   = null
         UserSession.clear()
     }
 
     fun onLoginSuccess(userId: Int) {
         currentUserId = userId
-        navigateTo("home")
+        screenStack = listOf("home")
     }
 
     LaunchedEffect(currentUserId) {
@@ -107,32 +109,19 @@ fun App() {
 
                     "home" -> {
                         currentUserId?.let { userId ->
-                            HomeScreen(
+                            // HomeScreen em stand-by; tela principal = lista de matérias
+                            SubjectListScreen(
                                 userId = userId,
                                 onNavigateToHome = {},
                                 onOpenMenu = { openMenu() },
-                                onNavigateToAdd = { navigateTo("item_register") },
+                                onBack = { goBack() },
+                                onNavigateToAdd = { navigateTo("subject_register") },
                                 onNavigateToAccountSettings = { navigateTo("account_settings") },
                                 onNavigateToSubject = { subjectId ->
                                     selectedSubjectId = subjectId
                                     navigateTo("subject_detail")
                                 },
                                 onNavigateToTasksList = { navigateTo("tasks_list") },
-                                onLogout = { logout() }
-                            )
-                        } ?: logout()
-                    }
-
-                    "item_register" -> {
-                        currentUserId?.let { userId ->
-                            ItemRegisterScreen(
-                                userId = userId,
-                                onNavigateToHome = { navigateTo("home") },
-                                onNavigateToSubjectRegister = { navigateTo("subject_register") },
-                                onNavigateToTaskRegister = { navigateTo("task_register") },
-                                onBack = { goBack() },
-                                onNavigateToTasksList = { navigateTo("tasks_list") },
-                                onNavigateToAccountSettings = { navigateTo("account_settings") },
                                 onLogout = { logout() }
                             )
                         } ?: logout()
@@ -145,7 +134,8 @@ fun App() {
                                 onNavigateToHome = { navigateTo("home") },
                                 onBack = { goBack() },
                                 onLogout = { logout() },
-                                onOpenMenu = { openMenu() }
+                                onOpenMenu = { openMenu() },
+                                onNavigateToAccountSettings = { navigateTo("account_settings") },
                             )
                         } ?: logout()
                     }
@@ -160,7 +150,7 @@ fun App() {
                                         selectedSubjectId = subject.id
                                         navigateTo("subject_edit")
                                     },
-                                    onNavigateToItemRegister = { navigateTo("item_register") },
+                                    onNavigateToTaskRegister = { navigateTo("task_register") },
                                     onNavigateToHome = { navigateTo("home") },
                                     onBack = { goBack() },
                                     onNavigateToTasksList = { navigateTo("tasks_list") },
@@ -183,6 +173,7 @@ fun App() {
                                     onBack = { goBack() },
                                     onLogout = { logout() },
                                     onOpenMenu = { openMenu() },
+                                    onNavigateToAccountSettings = { navigateTo("account_settings") },
                                     isEditing = true,
                                     subjectId = subjectId
                                 )
@@ -198,7 +189,8 @@ fun App() {
                                 onBack = { goBack() },
                                 onLogout = { logout() },
                                 onNavigateToTasksList = { navigateTo("tasks_list") },
-                                onOpenMenu = { openMenu() }
+                                onOpenMenu = { openMenu() },
+                                onNavigateToAccountSettings = { navigateTo("account_settings") },
                             )
                         } ?: logout()
                     }
@@ -211,11 +203,12 @@ fun App() {
                                     selectedTaskId = id
                                     navigateTo("task_detail")
                                 },
-                                onNavigateBack = { goBack() },
+                                onBack = { goBack() },
                                 onOpenMenu = { openMenu() },
-                                onNavigateToAdd = { navigateTo("item_register") },
+                                onNavigateToAdd = { navigateTo("task_register") },
                                 onNavigateToAccountSettings = { navigateTo("account_settings") },
-                                onNavigateToHome = { navigateTo("home") }
+                                onNavigateToHome = { navigateTo("home") },
+                                onLogout = { logout() },
                             )
                         } ?: logout()
                     }
@@ -251,7 +244,8 @@ fun App() {
                                     onBack = { goBack() },
                                     onLogout = { logout() },
                                     onNavigateToTasksList = { navigateTo("tasks_list") },
-                                    onOpenMenu = { openMenu() }
+                                    onOpenMenu = { openMenu() },
+                                    onNavigateToAccountSettings = { navigateTo("account_settings") },
                                 )
                             } ?: goBack()
                         } ?: logout()
@@ -282,6 +276,60 @@ fun App() {
                             )
                         } ?: logout()
                     }
+
+                    "events_list" -> {
+                        currentUserId?.let { userId ->
+                            EventListScreen(
+                                userId = userId,
+                                onNavigateToHome = { navigateTo("home") },
+                                onOpenMenu = { openMenu() },
+                                onBack = { goBack() },
+                                onNavigateToAdd = { navigateTo("event_register") },
+                                onNavigateToEventEdit = { id ->
+                                    selectedEventId = id
+                                    navigateTo("event_edit")
+                                },
+                                onNavigateToAccountSettings = { navigateTo("account_settings") },
+                                onLogout = { logout() },
+                            )
+                        } ?: logout()
+                    }
+
+                    "event_register" -> {
+                        currentUserId?.let { userId ->
+                            EventRegisterScreen(
+                                userId = userId,
+                                onNavigateToHome = { navigateTo("home") },
+                                onBack = { goBack() },
+                                onLogout = { logout() },
+                                onOpenMenu = { openMenu() },
+                                onNavigateToEventsList = { goBack() },
+                                onNavigateToAccountSettings = { navigateTo("account_settings") },
+                            )
+                        } ?: logout()
+                    }
+
+                    "event_edit" -> {
+                        currentUserId?.let { userId ->
+                            selectedEventId?.let { eid ->
+                                EventRegisterScreen(
+                                    userId = userId,
+                                    isEditing = true,
+                                    eventId = eid,
+                                    onNavigateToHome = { navigateTo("home") },
+                                    onBack = { goBack() },
+                                    onLogout = { logout() },
+                                    onOpenMenu = { openMenu() },
+                                    onNavigateToEventsList = { goBack() },
+                                    onNavigateToAccountSettings = { navigateTo("account_settings") },
+                                )
+                            } ?: goBack()
+                        } ?: logout()
+                    }
+                }
+
+                currentUserId?.let { uid ->
+                    EventReminderMonitor(userId = uid)
                 }
 
                 if (isMenuVisible && currentUserId != null) {
@@ -289,6 +337,7 @@ fun App() {
                         onCloseMenu = { closeMenu() },
                         onNavigateToHome = { closeMenu(); navigateTo("home") },
                         onNavigateToTasksList = { closeMenu(); navigateTo("tasks_list") },
+                        onNavigateToEventos = { closeMenu(); navigateTo("events_list") },
                         onNavigateToAccountSettings = { closeMenu(); navigateTo("account_settings") },
                         onLogout = { logout() }
                     )

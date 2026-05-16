@@ -15,17 +15,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.loadImageBitmap
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.com.mochila.data.UserSession
-import java.awt.FileDialog
-import java.awt.Frame
-import java.io.File
+
+expect fun pickImageFile(userId: Int): String?
+
+expect fun decodeProfilePhotoPainter(photoPath: String): Painter?
 
 @Composable
 fun ProfileAvatar(
@@ -33,7 +33,7 @@ fun ProfileAvatar(
     photoPath: String?,
     size: Dp = 100.dp,
     accentColor: Color,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     Box(
         modifier = Modifier
@@ -42,12 +42,10 @@ fun ProfileAvatar(
             .background(accentColor.copy(alpha = 0.15f))
             .border(2.dp, accentColor, CircleShape)
             .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         val painter = remember(photoPath) {
-            if (photoPath != null) runCatching {
-                BitmapPainter(loadImageBitmap(File(photoPath).inputStream()))
-            }.getOrNull() else null
+            if (photoPath != null) decodeProfilePhotoPainter(photoPath) else null
         }
 
         if (painter != null) {
@@ -55,14 +53,14 @@ fun ProfileAvatar(
                 painter = painter,
                 contentDescription = "Foto do Perfil",
                 modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop
+                contentScale = ContentScale.Crop,
             )
         } else {
             Text(
                 text = name.firstOrNull()?.uppercaseChar()?.toString() ?: "?",
                 color = accentColor,
                 fontSize = (size.value * 0.4f).sp,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
             )
         }
     }
@@ -73,7 +71,7 @@ private val rosa = Color(0xFFFF6694)
 @Composable
 fun UserAvatarButton(
     size: Dp = 60.dp,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     val user = UserSession.currentUser
     ProfileAvatar(
@@ -81,23 +79,6 @@ fun UserAvatarButton(
         photoPath = user?.photoPath,
         size = size,
         accentColor = rosa,
-        onClick = onClick
+        onClick = onClick,
     )
-}
-
-fun pickImageFile(userId: Int): String? {
-    val dialog = FileDialog(null as Frame?, "Selecionar foto de perfil", FileDialog.LOAD)
-    dialog.setFilenameFilter { _, name ->
-        name.lowercase().let { it.endsWith(".jpg") || it.endsWith(".jpeg") || it.endsWith(".png") }
-    }
-    dialog.isVisible = true
-    val fileName = dialog.file ?: return null
-    val dirName = dialog.directory ?: return null
-
-    val selected = File(dirName, fileName)
-    val destDir = File(System.getProperty("user.home"), ".mochila/avatars")
-    destDir.mkdirs()
-    val dest = File(destDir, "${userId}_${System.currentTimeMillis()}.${selected.extension}")
-    selected.copyTo(dest, overwrite = true)
-    return dest.absolutePath
 }

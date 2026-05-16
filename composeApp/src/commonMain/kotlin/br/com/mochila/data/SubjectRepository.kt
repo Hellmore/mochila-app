@@ -1,5 +1,6 @@
 package br.com.mochila.data
 
+import br.com.mochila.model.DEFAULT_SUBJECT_COLOR_RGB
 import br.com.mochila.model.Subject
 import java.sql.PreparedStatement
 import java.sql.ResultSet
@@ -14,7 +15,8 @@ object SubjectRepository {
         startDate = getString("data_inicio"),
         endDate = getString("data_fim"),
         classHours = getInt("hora_aula"),
-        semester = getString("semestre")
+        semester = getString("semestre"),
+        colorRgb = getInt("cor_rgb").let { if (wasNull()) DEFAULT_SUBJECT_COLOR_RGB else it },
     )
 
     fun insert(
@@ -25,8 +27,8 @@ object SubjectRepository {
         return try {
             val sql = """
                 INSERT INTO disciplina 
-                (id_usuario, nome, professor, frequencia_minima, data_inicio, data_fim, hora_aula, semestre)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                (id_usuario, nome, professor, frequencia_minima, data_inicio, data_fim, hora_aula, semestre, cor_rgb)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """
             val stmt: PreparedStatement = conn.prepareStatement(sql)
             stmt.setInt(1, userId)
@@ -37,6 +39,7 @@ object SubjectRepository {
             stmt.setString(6, subject.endDate)
             stmt.setInt(7, subject.classHours)
             stmt.setString(8, subject.semester)
+            stmt.setInt(9, subject.colorRgb)
             stmt.executeUpdate()
             stmt.close()
             println("✅ Disciplina cadastrada: ${subject.name} para o usuário ID=$userId")
@@ -80,7 +83,7 @@ object SubjectRepository {
         return try {
             val sql = """
                 UPDATE disciplina
-                SET nome = ?, professor = ?, frequencia_minima = ?, data_inicio = ?, data_fim = ?, hora_aula = ?, semestre = ?, atualizado_em = CURRENT_TIMESTAMP
+                SET nome = ?, professor = ?, frequencia_minima = ?, data_inicio = ?, data_fim = ?, hora_aula = ?, semestre = ?, cor_rgb = ?, atualizado_em = CURRENT_TIMESTAMP
                 WHERE id_disciplina = ? AND id_usuario = ?
             """
             val stmt = conn.prepareStatement(sql)
@@ -91,8 +94,9 @@ object SubjectRepository {
             stmt.setString(5, subject.endDate)
             stmt.setInt(6, subject.classHours)
             stmt.setString(7, subject.semester)
-            stmt.setInt(8, subject.id)
-            stmt.setInt(9, userId)
+            stmt.setInt(8, subject.colorRgb)
+            stmt.setInt(9, subject.id)
+            stmt.setInt(10, userId)
             val rows = stmt.executeUpdate()
             stmt.close()
             rows > 0
@@ -118,6 +122,32 @@ object SubjectRepository {
         } catch (e: Exception) {
             println("⚠️ Erro ao deletar disciplina: ${e.message}")
             false
+        } finally {
+            conn.close()
+        }
+    }
+
+    fun listDistinctSemesters(userId: Int): List<String> {
+        val conn = DatabaseHelper.connect() ?: return emptyList()
+        return try {
+            val sql = """
+                SELECT DISTINCT semestre FROM disciplina
+                WHERE id_usuario = ? AND TRIM(semestre) != ''
+                ORDER BY semestre
+            """.trimIndent()
+            val stmt = conn.prepareStatement(sql)
+            stmt.setInt(1, userId)
+            val rs = stmt.executeQuery()
+            val out = mutableListOf<String>()
+            while (rs.next()) {
+                out.add(rs.getString("semestre"))
+            }
+            rs.close()
+            stmt.close()
+            out
+        } catch (e: Exception) {
+            println("⚠️ Erro ao listar semestres: ${e.message}")
+            emptyList()
         } finally {
             conn.close()
         }
