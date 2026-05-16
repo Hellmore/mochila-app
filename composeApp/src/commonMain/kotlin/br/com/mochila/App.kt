@@ -113,28 +113,13 @@ fun App() {
                                 onNavigateToHome = {},
                                 onOpenMenu = { openMenu() },
                                 onBack = { goBack() },
-                                onNavigateToAdd = { navigateTo("item_register") },
+                                onNavigateToAdd = { navigateTo("subject_register") },
                                 onNavigateToAccountSettings = { navigateTo("account_settings") },
                                 onNavigateToSubject = { subjectId ->
                                     selectedSubjectId = subjectId
                                     navigateTo("subject_detail")
                                 },
                                 onNavigateToTasksList = { navigateTo("tasks_list") },
-                                onLogout = { logout() }
-                            )
-                        } ?: logout()
-                    }
-
-                    "item_register" -> {
-                        currentUserId?.let { userId ->
-                            ItemRegisterScreen(
-                                userId = userId,
-                                onNavigateToHome = { navigateTo("home") },
-                                onNavigateToSubjectRegister = { navigateTo("subject_register") },
-                                onNavigateToTaskRegister = { navigateTo("task_register") },
-                                onBack = { goBack() },
-                                onNavigateToTasksList = { navigateTo("tasks_list") },
-                                onNavigateToAccountSettings = { navigateTo("account_settings") },
                                 onLogout = { logout() }
                             )
                         } ?: logout()
@@ -163,7 +148,7 @@ fun App() {
                                         selectedSubjectId = subject.id
                                         navigateTo("subject_edit")
                                     },
-                                    onNavigateToItemRegister = { navigateTo("item_register") },
+                                    onNavigateToTaskRegister = { navigateTo("task_register") },
                                     onNavigateToHome = { navigateTo("home") },
                                     onBack = { goBack() },
                                     onNavigateToTasksList = { navigateTo("tasks_list") },
@@ -202,7 +187,8 @@ fun App() {
                                 onBack = { goBack() },
                                 onLogout = { logout() },
                                 onNavigateToTasksList = { navigateTo("tasks_list") },
-                                onOpenMenu = { openMenu() }
+                                onOpenMenu = { openMenu() },
+                                onNavigateToAccountSettings = { navigateTo("account_settings") },
                             )
                         } ?: logout()
                     }
@@ -215,11 +201,12 @@ fun App() {
                                     selectedTaskId = id
                                     navigateTo("task_detail")
                                 },
-                                onNavigateBack = { goBack() },
+                                onBack = { goBack() },
                                 onOpenMenu = { openMenu() },
-                                onNavigateToAdd = { navigateTo("item_register") },
+                                onNavigateToAdd = { navigateTo("task_register") },
                                 onNavigateToAccountSettings = { navigateTo("account_settings") },
-                                onNavigateToHome = { navigateTo("home") }
+                                onNavigateToHome = { navigateTo("home") },
+                                onLogout = { logout() },
                             )
                         } ?: logout()
                     }
@@ -255,7 +242,8 @@ fun App() {
                                     onBack = { goBack() },
                                     onLogout = { logout() },
                                     onNavigateToTasksList = { navigateTo("tasks_list") },
-                                    onOpenMenu = { openMenu() }
+                                    onOpenMenu = { openMenu() },
+                                    onNavigateToAccountSettings = { navigateTo("account_settings") },
                                 )
                             } ?: goBack()
                         } ?: logout()

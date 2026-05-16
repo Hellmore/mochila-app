@@ -295,17 +295,18 @@ fun SubjectRegisterScreen(
     var success by remember { mutableStateOf(false) }
 
     var semesterOptions by remember { mutableStateOf<List<String>>(emptyList()) }
-    var semesterMenuExpanded by remember { mutableStateOf(false) }
 
     LaunchedEffect(userId) {
         semesterOptions = SubjectRepository.listDistinctSemesters(userId)
     }
 
-    val semesterChoices = remember(semesterOptions, semester) {
-        buildList {
-            addAll(semesterOptions)
-            if (semester.isNotBlank() && semester !in semesterOptions) add(semester)
-        }.distinct()
+    fun updateSemesterInput(input: String) {
+        if (input.length < semester.length) {
+            semester = input.filter { it.isDigit() }
+            return
+        }
+        val digits = input.filter { it.isDigit() }.take(2)
+        semester = if (digits.isNotEmpty()) "$digits°" else digits
     }
 
     val presenter = remember {
@@ -461,13 +462,55 @@ fun SubjectRegisterScreen(
     }
 
     @Composable
-    fun FormBody(modifier: Modifier = Modifier) {
-        Column(
-            modifier = modifier
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp, vertical = 20.dp),
+    fun SemesterField() {
+        var pickerExpanded by remember { mutableStateOf(false) }
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
+            FieldRoxo(
+                valor = semester,
+                onChange = ::updateSemesterInput,
+                modifier = Modifier.weight(1f),
+            )
+            if (semesterOptions.isNotEmpty()) {
+                Box {
+                    IconButton(onClick = { pickerExpanded = true }) {
+                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = pickerExpanded)
+                    }
+                    DropdownMenu(
+                        expanded = pickerExpanded,
+                        onDismissRequest = { pickerExpanded = false },
+                    ) {
+                        semesterOptions.forEach { choice ->
+                            DropdownMenuItem(
+                                text = { Text(choice) },
+                                onClick = {
+                                    semester = choice
+                                    pickerExpanded = false
+                                },
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @Composable
+    fun FormBody(modifier: Modifier = Modifier, fieldsMaxWidth: Dp? = null) {
+        val widthCap = fieldsMaxWidth?.let { Modifier.widthIn(max = it) } ?: Modifier
+        Box(
+            modifier = modifier.fillMaxWidth(),
+            contentAlignment = Alignment.TopCenter,
+        ) {
+            Column(
+                modifier = widthCap
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 20.dp, vertical = 20.dp),
+            ) {
             Text(
                 text = if (isEditing) "Editar Matéria" else "Nova Matéria",
                 color = laranjaHeader,
@@ -503,67 +546,7 @@ fun SubjectRegisterScreen(
             Spacer(Modifier.height(14.dp))
 
             FormLabel("Semestre:")
-            if (semesterChoices.isEmpty()) {
-                FieldRoxo(
-                    valor = semester,
-                    onChange = { input ->
-                        if (input.length < semester.length) {
-                            semester = input.filter { it.isDigit() }
-                            return@FieldRoxo
-                        }
-                        val digits = input.filter { it.isDigit() }.take(2)
-                        semester = if (digits.isNotEmpty()) "$digits°" else digits
-                    },
-                )
-            } else {
-                ExposedDropdownMenuBox(
-                    expanded = semesterMenuExpanded,
-                    onExpandedChange = { semesterMenuExpanded = it },
-                ) {
-                    OutlinedTextField(
-                        value = semester,
-                        onValueChange = {},
-                        readOnly = true,
-                        singleLine = true,
-                        trailingIcon = {
-                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = semesterMenuExpanded)
-                        },
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedContainerColor = Color.White,
-                            unfocusedContainerColor = Color.White,
-                            focusedBorderColor = rosa,
-                            unfocusedBorderColor = rosa,
-                            focusedTextColor = rosa,
-                            unfocusedTextColor = rosa,
-                            cursorColor = rosa,
-                        ),
-                        textStyle = LocalTextStyle.current.copy(
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.ExtraLight,
-                            color = rosa,
-                        ),
-                        shape = RoundedCornerShape(7.dp),
-                        modifier = Modifier
-                            .menuAnchor()
-                            .heightIn(min = 46.dp)
-                            .fillMaxWidth(),
-                    )
-                    ExposedDropdownMenu(
-                        expanded = semesterMenuExpanded,
-                        onDismissRequest = { semesterMenuExpanded = false },
-                    ) {
-                        semesterChoices.forEach { choice ->
-                            DropdownMenuItem(
-                                text = { Text(choice) },
-                                onClick = {
-                                    semester = choice
-                                    semesterMenuExpanded = false
-                                },
-                            )
-                        }
-                    }
-                }
-            }
+            SemesterField()
 
             Spacer(Modifier.height(14.dp))
 
@@ -706,6 +689,7 @@ fun SubjectRegisterScreen(
             }
 
             Spacer(Modifier.height(24.dp))
+            }
         }
     }
 
@@ -726,7 +710,7 @@ fun SubjectRegisterScreen(
                         .fillMaxHeight(),
                 ) {
                     OrangeHeaderBar(includeCenterProfile = false)
-                    FormBody(modifier = Modifier.weight(1f))
+                    FormBody(modifier = Modifier.weight(1f), fieldsMaxWidth = 600.dp)
                     SubjectRegisterBottomBar(
                         onOpenMenu = onOpenMenu,
                         onNavigateToHome = onNavigateToHome,

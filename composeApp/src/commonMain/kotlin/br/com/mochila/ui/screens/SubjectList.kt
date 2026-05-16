@@ -12,6 +12,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -76,6 +79,41 @@ private fun CalendarGlyph(
 }
 
 @Composable
+private fun SubjectSearchBar(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    OutlinedTextField(
+        value = query,
+        onValueChange = onQueryChange,
+        modifier = modifier.fillMaxWidth(),
+        placeholder = {
+            Text(
+                text = "Buscar matéria",
+                color = Color.Gray,
+                fontSize = 12.sp,
+            )
+        },
+        singleLine = true,
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedContainerColor = Color.White,
+            unfocusedContainerColor = Color.White,
+            focusedBorderColor = rosa,
+            unfocusedBorderColor = rosa.copy(alpha = 0.6f),
+            focusedTextColor = Color(0xFF333333),
+            unfocusedTextColor = Color(0xFF333333),
+            cursorColor = rosa,
+        ),
+        textStyle = LocalTextStyle.current.copy(
+            fontSize = 13.sp,
+            color = Color(0xFF333333),
+        ),
+        shape = RoundedCornerShape(7.dp),
+    )
+}
+
+@Composable
 private fun SubjectListBottomBar(
     onOpenMenu: () -> Unit,
     onNavigateToAdd: () -> Unit,
@@ -135,6 +173,12 @@ fun SubjectListScreen(
     onLogout: () -> Unit,
 ) {
     var subjects by remember { mutableStateOf<List<Subject>>(emptyList()) }
+    var searchQuery by remember { mutableStateOf("") }
+
+    val filteredSubjects = remember(subjects, searchQuery) {
+        if (searchQuery.isBlank()) subjects
+        else subjects.filter { it.name.contains(searchQuery, ignoreCase = true) }
+    }
 
     val presenter = remember {
         object : HomeView {
@@ -175,6 +219,9 @@ fun SubjectListScreen(
         if (isWide) {
             SubjectListDesktopLayout(
                 subjects = subjects,
+                filteredSubjects = filteredSubjects,
+                searchQuery = searchQuery,
+                onSearchQueryChange = { searchQuery = it },
                 dateLabel = dateLabel,
                 onBack = onBack,
                 onNavigateToAdd = onNavigateToAdd,
@@ -186,6 +233,9 @@ fun SubjectListScreen(
         } else {
             SubjectListMobileLayout(
                 subjects = subjects,
+                filteredSubjects = filteredSubjects,
+                searchQuery = searchQuery,
+                onSearchQueryChange = { searchQuery = it },
                 dateLabel = dateLabel,
                 onBack = onBack,
                 onNavigateToAdd = onNavigateToAdd,
@@ -201,6 +251,9 @@ fun SubjectListScreen(
 @Composable
 private fun SubjectListMobileLayout(
     subjects: List<Subject>,
+    filteredSubjects: List<Subject>,
+    searchQuery: String,
+    onSearchQueryChange: (String) -> Unit,
     dateLabel: String,
     onBack: () -> Unit,
     onNavigateToAdd: () -> Unit,
@@ -281,15 +334,27 @@ private fun SubjectListMobileLayout(
             }
         }
 
+        SubjectSearchBar(
+            query = searchQuery,
+            onQueryChange = onSearchQueryChange,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .padding(top = 12.dp, bottom = 8.dp),
+        )
+
         SubjectGrid(
-            subjects = subjects,
+            subjects = filteredSubjects,
+            allSubjectsEmpty = subjects.isEmpty(),
+            noSearchResults = subjects.isNotEmpty() && filteredSubjects.isEmpty() && searchQuery.isNotBlank(),
             columns = 2,
             onNavigateToAdd = onNavigateToAdd,
             onSubjectClick = onSubjectClick,
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 16.dp),
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp),
         )
 
         SubjectListBottomBar(
@@ -303,6 +368,9 @@ private fun SubjectListMobileLayout(
 @Composable
 private fun SubjectListDesktopLayout(
     subjects: List<Subject>,
+    filteredSubjects: List<Subject>,
+    searchQuery: String,
+    onSearchQueryChange: (String) -> Unit,
     dateLabel: String,
     onBack: () -> Unit,
     onNavigateToAdd: () -> Unit,
@@ -390,8 +458,19 @@ private fun SubjectListDesktopLayout(
                 )
             }
 
+            SubjectSearchBar(
+                query = searchQuery,
+                onQueryChange = onSearchQueryChange,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+                    .padding(bottom = 8.dp),
+            )
+
             SubjectGrid(
-                subjects = subjects,
+                subjects = filteredSubjects,
+                allSubjectsEmpty = subjects.isEmpty(),
+                noSearchResults = subjects.isNotEmpty() && filteredSubjects.isEmpty() && searchQuery.isNotBlank(),
                 columns = 3,
                 onNavigateToAdd = onNavigateToAdd,
                 onSubjectClick = onSubjectClick,
@@ -414,12 +493,14 @@ private fun SubjectListDesktopLayout(
 @Composable
 private fun SubjectGrid(
     subjects: List<Subject>,
+    allSubjectsEmpty: Boolean,
+    noSearchResults: Boolean,
     columns: Int,
     onNavigateToAdd: () -> Unit,
     onSubjectClick: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    if (subjects.isEmpty()) {
+    if (allSubjectsEmpty) {
         val gridSpacing = 16.dp
         BoxWithConstraints(modifier = modifier.verticalScroll(rememberScrollState())) {
             val cellWidth =
@@ -438,6 +519,32 @@ private fun SubjectGrid(
                 Spacer(Modifier.height(16.dp))
                 Text(
                     text = "Nenhuma matéria cadastrada",
+                    color = Color.Gray,
+                    fontSize = 16.sp,
+                )
+            }
+        }
+        return
+    }
+
+    if (noSearchResults) {
+        BoxWithConstraints(modifier = modifier.verticalScroll(rememberScrollState())) {
+            val gridSpacing = 16.dp
+            val cellWidth =
+                ((maxWidth - gridSpacing * (columns - 1)) / columns).coerceAtLeast(0.dp)
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                AddSubjectCell(
+                    onClick = onNavigateToAdd,
+                    modifier = Modifier
+                        .width(cellWidth)
+                        .heightIn(min = 87.dp),
+                )
+                Spacer(Modifier.height(16.dp))
+                Text(
+                    text = "Nenhuma matéria encontrada",
                     color = Color.Gray,
                     fontSize = 16.sp,
                 )

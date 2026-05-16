@@ -31,7 +31,7 @@ fun SubjectDetailScreen(
     subjectId: Int,
     onNavigateToEdit: (Subject) -> Unit,
     onNavigateToHome: () -> Unit,
-    onNavigateToItemRegister: () -> Unit,
+    onNavigateToTaskRegister: () -> Unit,
     onNavigateToTasksList: () -> Unit,
     onNavigateToAccountSettings: () -> Unit,
     onBack: () -> Unit,
@@ -254,7 +254,7 @@ fun SubjectDetailScreen(
                                 modifier = Modifier.size(16.dp)
                             )
                         }
-                        IconButton(onClick = onNavigateToItemRegister) {
+                        IconButton(onClick = onNavigateToTaskRegister) {
                             Image(
                                 painter = painterResource(Res.drawable.add),
                                 contentDescription = "Registrar item",
