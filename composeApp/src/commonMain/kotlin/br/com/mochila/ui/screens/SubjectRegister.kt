@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -35,6 +36,7 @@ import br.com.mochila.model.Subject
 import br.com.mochila.presenter.SubjectRegisterPresenter
 import br.com.mochila.presenter.SubjectRegisterView
 import br.com.mochila.ui.screens.components.BackButton
+import br.com.mochila.ui.screens.components.CalendarPicker
 import br.com.mochila.ui.screens.components.ProfileAvatar
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDate
@@ -235,35 +237,52 @@ private fun DesktopProfileStrip(
     ) {
         Column(
             modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(top = 20.dp, start = 16.dp)
+                .align(Alignment.Center)
                 .fillMaxWidth(),
-            horizontalAlignment = Alignment.Start,
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Start,
+            Box(
+                modifier = Modifier
+                    .size(160.dp)
+                    .background(Color.White.copy(alpha = 0.15f), RoundedCornerShape(16.dp)),
+                contentAlignment = Alignment.Center,
             ) {
-                ProfileAvatar(
-                    name = name,
-                    photoPath = user?.photoPath,
-                    size = 48.dp,
-                    accentColor = Color.White,
-                    onClick = onNavigateToAccountSettings,
-                )
-                Spacer(Modifier.width(12.dp))
-                Text(
-                    text = name.ifBlank { " " },
-                    color = Color.White,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    textAlign = TextAlign.Start,
-                    modifier = Modifier.weight(1f),
+                Image(
+                    painter = painterResource(Res.drawable.logo),
+                    contentDescription = "Logo Mochila Hub",
+                    modifier = Modifier.fillMaxSize().padding(16.dp),
                 )
             }
+            Spacer(Modifier.height(16.dp))
+            Text("Mochila Hub", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+            Spacer(Modifier.height(4.dp))
+            Text("Organize sua vida acadêmica", color = Color.White.copy(alpha = 0.85f), fontSize = 10.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 8.dp))
+        }
+        Row(
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            ProfileAvatar(
+                name = name,
+                photoPath = user?.photoPath,
+                size = 48.dp,
+                accentColor = Color.White,
+                onClick = onNavigateToAccountSettings,
+            )
+            Spacer(Modifier.width(12.dp))
+            Text(
+                text = name.ifBlank { " " },
+                color = Color.White,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Start,
+                modifier = Modifier.weight(1f),
+            )
         }
     }
 }
@@ -359,7 +378,6 @@ fun SubjectRegisterScreen(
     }
     val dateLabel = remember(today) { formatDatePt(today) }
 
-    val headerEdgeInset = 22.dp
     val selectedSwatchColor = remember(subjectColorRgb) { rgbToColor(subjectColorRgb) }
 
     @Composable
@@ -395,68 +413,62 @@ fun SubjectRegisterScreen(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 52.dp)
-                .clip(RoundedCornerShape(bottomStart = 48.dp, bottomEnd = 48.dp))
+                .clip(RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp))
                 .background(laranjaHeader)
-                .padding(vertical = 12.dp),
+                .padding(vertical = 20.dp, horizontal = 22.dp),
         ) {
-            BackButton(
-                onBack = onBack,
-                backgroundColor = rosa.copy(alpha = 0.92f),
-                iconTint = Color.White,
-                buttonSize = 34.dp,
-                iconSize = 18.dp,
-                modifier = Modifier
-                    .align(Alignment.CenterStart)
-                    .padding(start = headerEdgeInset),
-            )
-            if (includeCenterProfile) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
                 Row(
-                    modifier = Modifier.align(Alignment.Center),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    ProfileAvatar(
-                        name = displayName,
-                        photoPath = user?.photoPath,
-                        size = 40.dp,
-                        accentColor = Color.White,
-                        onClick = onNavigateToAccountSettings,
+                    BackButton(
+                        onBack = onBack,
+                        backgroundColor = Color.Transparent,
+                        iconTint = Color.White,
+                        buttonSize = 40.dp,
+                        iconSize = 22.dp,
                     )
-                    Spacer(Modifier.width(10.dp))
+                    if (includeCenterProfile) {
+                        ProfileAvatar(
+                            name = displayName,
+                            photoPath = user?.photoPath,
+                            size = 40.dp,
+                            accentColor = Color.White,
+                            onClick = onNavigateToAccountSettings,
+                        )
+                        Text(
+                            text = displayName.ifBlank { " " },
+                            color = Color.White,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Medium,
+                            lineHeight = 20.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.widthIn(max = 120.dp),
+                        )
+                    }
+                }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
                     Text(
-                        text = displayName.ifBlank { " " },
+                        text = dateLabel,
                         color = Color.White,
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Medium,
                         lineHeight = 20.sp,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.widthIn(max = 160.dp),
+                    )
+                    CalendarGlyph(
+                        tint = Color.White,
+                        modifier = Modifier.size(22.dp),
                     )
                 }
-            }
-            Row(
-                modifier = Modifier
-                    .align(Alignment.CenterEnd)
-                    .padding(end = headerEdgeInset),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.End,
-            ) {
-                Text(
-                    text = dateLabel,
-                    color = Color.White,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Medium,
-                    lineHeight = 20.sp,
-                    textAlign = TextAlign.End,
-                )
-                Spacer(Modifier.width(6.dp))
-                CalendarGlyph(
-                    tint = Color.White,
-                    modifier = Modifier.size(22.dp),
-                )
             }
         }
     }
@@ -477,7 +489,20 @@ fun SubjectRegisterScreen(
             if (semesterOptions.isNotEmpty()) {
                 Box {
                     IconButton(onClick = { pickerExpanded = true }) {
-                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = pickerExpanded)
+                        Box(
+                            modifier = Modifier
+                                .size(28.dp)
+                                .clip(RoundedCornerShape(4.dp))
+                                .background(laranjaHeader),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Image(
+                                painter = painterResource(Res.drawable.drop),
+                                contentDescription = "Selecionar semestre",
+                                modifier = Modifier.size(14.dp),
+                                colorFilter = ColorFilter.tint(Color.White),
+                            )
+                        }
                     }
                     DropdownMenu(
                         expanded = pickerExpanded,
@@ -509,7 +534,7 @@ fun SubjectRegisterScreen(
                 modifier = widthCap
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 20.dp, vertical = 20.dp),
+                    .padding(horizontal = 36.dp, vertical = 20.dp),
             ) {
             Text(
                 text = if (isEditing) "Editar Matéria" else "Nova Matéria",
@@ -567,43 +592,19 @@ fun SubjectRegisterScreen(
             Spacer(Modifier.height(14.dp))
 
             FormLabel("Data de Início")
-            FieldRoxo(
-                valor = startDate,
-                onChange = { input ->
-                    if (input.length < startDate.length) {
-                        startDate = input
-                        return@FieldRoxo
-                    }
-                    val digits = input.filter { it.isDigit() }.take(8)
-                    startDate = buildString {
-                        for (i in digits.indices) {
-                            append(digits[i])
-                            if (i == 1 || i == 3) append('/')
-                        }
-                    }
-                },
-                minHeight = 42.dp,
+            CalendarPicker(
+                selectedDate = startDate,
+                onDateSelected = { startDate = it },
+                accentColor = rosa,
             )
 
             Spacer(Modifier.height(14.dp))
 
             FormLabel("Data de Fim")
-            FieldRoxo(
-                valor = endDate,
-                onChange = { input ->
-                    if (input.length < endDate.length) {
-                        endDate = input
-                        return@FieldRoxo
-                    }
-                    val digits = input.filter { it.isDigit() }.take(8)
-                    endDate = buildString {
-                        for (i in digits.indices) {
-                            append(digits[i])
-                            if (i == 1 || i == 3) append('/')
-                        }
-                    }
-                },
-                minHeight = 42.dp,
+            CalendarPicker(
+                selectedDate = endDate,
+                onDateSelected = { endDate = it },
+                accentColor = rosa,
             )
 
             Spacer(Modifier.height(14.dp))
@@ -698,18 +699,48 @@ fun SubjectRegisterScreen(
             .fillMaxSize()
             .background(fundoTela),
     ) {
+        Image(
+            painter = painterResource(Res.drawable.background),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop,
+            alpha = 0.50f,
+        )
         val wide = maxWidth >= 700.dp
         if (wide) {
             Row(Modifier.fillMaxSize()) {
-                Box(Modifier.weight(0.22f).fillMaxHeight()) {
+                Box(Modifier.weight(0.4f).fillMaxHeight()) {
                     DesktopProfileStrip(onNavigateToAccountSettings = onNavigateToAccountSettings)
                 }
                 Column(
                     modifier = Modifier
-                        .weight(0.78f)
+                        .weight(0.6f)
                         .fillMaxHeight(),
                 ) {
-                    OrangeHeaderBar(includeCenterProfile = false)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp, vertical = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        BackButton(
+                            onBack = onBack,
+                            backgroundColor = rosa.copy(alpha = 0.92f),
+                            iconTint = Color.White,
+                        )
+                        Spacer(Modifier.weight(1f))
+                        Text(
+                            text = dateLabel,
+                            color = Color(0xFF333333),
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Medium,
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        CalendarGlyph(
+                            tint = rosa,
+                            modifier = Modifier.size(22.dp),
+                        )
+                    }
                     FormBody(modifier = Modifier.weight(1f), fieldsMaxWidth = 600.dp)
                     SubjectRegisterBottomBar(
                         onOpenMenu = onOpenMenu,

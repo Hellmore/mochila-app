@@ -6,284 +6,431 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import br.com.mochila.data.FaltaRepository
+import br.com.mochila.data.SubjectRepository
+import br.com.mochila.data.TaskRepository
+import br.com.mochila.data.UserSession
 import br.com.mochila.model.Subject
 import br.com.mochila.model.Task
-import br.com.mochila.presenter.HomePresenter
-import br.com.mochila.presenter.HomeView
-import br.com.mochila.ui.screens.components.UserAvatarButton
+import br.com.mochila.ui.screens.components.ProfileAvatar
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
+import kotlinx.datetime.plus
+import kotlinx.datetime.toLocalDateTime
+import mochila_app.composeapp.generated.resources.Res
 import mochila_app.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.painterResource
+
+private val homeBg = Color(0xFFF8F8F8)
+private val orange = Color(0xFFFFBA5E)
+private val pink = Color(0xFFFF6694)
+
+private val taskRowColors = listOf(
+    Color(0xFFEE74C1).copy(alpha = 0.4f),
+    Color(0xFFFFBA5E).copy(alpha = 0.4f),
+    Color(0xFF65D145).copy(alpha = 0.4f),
+)
+private val taskTextColors = listOf(
+    Color(0xFFFF6694),
+    Color(0xFFEC9C30),
+    Color(0xFF35841D).copy(alpha = 0.4f),
+)
+private val absenceCardColors = listOf(
+    Color(0xFFFF6694).copy(alpha = 0.8f),
+    Color(0xFFFFBA5E),
+    Color(0xFF65D145).copy(alpha = 0.4f),
+)
+
+private val monthNamesPt = listOf(
+    "Jan", "Fev", "Mar", "Abr", "Mai", "Jun",
+    "Jul", "Ago", "Set", "Out", "Nov", "Dez",
+)
+
 @Composable
 fun HomeScreen(
     userId: Int,
-    onNavigateToHome: () -> Unit,
     onOpenMenu: () -> Unit,
     onNavigateToAdd: () -> Unit,
+    onNavigateToSubjectsList: () -> Unit,
     onNavigateToSubject: (Int) -> Unit,
     onNavigateToTasksList: () -> Unit,
     onNavigateToAccountSettings: () -> Unit,
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
 ) {
-    val RoxoEscuro = Color(0xFF5336CB)
-    val RoxoClaro = Color(0xFF7F55CE)
-
-    // Estado da View
-    var subjects by remember { mutableStateOf<List<Subject>>(emptyList()) }
-    var pendingTasks by remember { mutableStateOf<List<Task>>(emptyList()) }
-    var selectedSemester by remember { mutableStateOf("Todos") }
-    var searchText by remember { mutableStateOf("") }
-    var semesterMenuExpanded by remember { mutableStateOf(false) }
-    var isSearchExpanded by remember { mutableStateOf(false) }
-
-    // Presenter — implementa HomeView inline e entrega ao Presenter
-    val presenter = remember {
-        object : HomeView {
-            override fun showSubjects(list: List<Subject>) { subjects = list }
-            override fun showEmptyState() { subjects = emptyList() }
-            override fun navigateToSubjectDetail(subjectId: Int) { onNavigateToSubject(subjectId) }
-            // ✅ NOVO: Presenter entrega as tarefas prontas, sem que a View precise buscar
-            override fun showPendingTasks(tasks: List<Task>) { pendingTasks = tasks }
-        }.let { view -> HomePresenter(view) }
+    val today = remember {
+        Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
     }
+    val todayDayIndex = remember(today) { today.dayOfWeek.ordinal }
+
+    var selectedDayIndex by remember { mutableStateOf(todayDayIndex) }
+    var subjects by remember { mutableStateOf<List<Subject>>(emptyList()) }
+    var tasks by remember { mutableStateOf<List<Task>>(emptyList()) }
+    var absencesBySubject by remember { mutableStateOf<Map<Int, Int>>(emptyMap()) }
 
     LaunchedEffect(userId) {
-        presenter.loadSubjects(userId)
-        presenter.loadPendingTasks(userId) // ✅ chama o Presenter, não o Repository
+        subjects = SubjectRepository.listByUser(userId)
+        tasks = TaskRepository.listByUser(userId)
+            .filter { it.status == "Pendente" || it.status == "Em andamento" }
+        absencesBySubject = FaltaRepository.countByUser(userId)
     }
 
-    val semesters = remember(subjects) { presenter.getSemesters(subjects) }
-
-    val filteredSubjects = remember(subjects, selectedSemester, searchText) {
-        presenter.filterSubjects(subjects, selectedSemester, searchText)
+    val weekDays = remember(today) {
+        val monday = today.minus(todayDayIndex, DateTimeUnit.DAY)
+        (0..6).map { monday.plus(it, DateTimeUnit.DAY) }
     }
 
-    Box(
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(homeBg),
     ) {
-        Image(
-            painter = painterResource(Res.drawable.fundo_quadriculado),
-            contentDescription = null,
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
+        if (maxWidth >= 700.dp) {
+            HomeDesktopLayout(
+                today = today,
+                weekDays = weekDays,
+                todayDayIndex = todayDayIndex,
+                selectedDayIndex = selectedDayIndex,
+                onDaySelected = { selectedDayIndex = it },
+                subjects = subjects,
+                tasks = tasks,
+                absencesBySubject = absencesBySubject,
+                onOpenMenu = onOpenMenu,
+                onNavigateToAdd = onNavigateToAdd,
+                onNavigateToSubjectsList = onNavigateToSubjectsList,
+                onNavigateToSubject = onNavigateToSubject,
+                onNavigateToTasksList = onNavigateToTasksList,
+                onNavigateToAccountSettings = onNavigateToAccountSettings,
+            )
+        } else {
+            Image(
+                painter = painterResource(Res.drawable.background),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop,
+                alpha = 0.50f,
+            )
+            HomeMobileLayout(
+                today = today,
+                weekDays = weekDays,
+                todayDayIndex = todayDayIndex,
+                selectedDayIndex = selectedDayIndex,
+                onDaySelected = { selectedDayIndex = it },
+                subjects = subjects,
+                tasks = tasks,
+                absencesBySubject = absencesBySubject,
+                onOpenMenu = onOpenMenu,
+                onNavigateToAdd = onNavigateToAdd,
+                onNavigateToSubjectsList = onNavigateToSubjectsList,
+                onNavigateToSubject = onNavigateToSubject,
+                onNavigateToTasksList = onNavigateToTasksList,
+                onNavigateToAccountSettings = onNavigateToAccountSettings,
+            )
+        }
+    }
+}
+
+@Composable
+private fun HomeMobileLayout(
+    today: LocalDate,
+    weekDays: List<LocalDate>,
+    todayDayIndex: Int,
+    selectedDayIndex: Int,
+    onDaySelected: (Int) -> Unit,
+    subjects: List<Subject>,
+    tasks: List<Task>,
+    absencesBySubject: Map<Int, Int>,
+    onOpenMenu: () -> Unit,
+    onNavigateToAdd: () -> Unit,
+    onNavigateToSubjectsList: () -> Unit,
+    onNavigateToSubject: (Int) -> Unit,
+    onNavigateToTasksList: () -> Unit,
+    onNavigateToAccountSettings: () -> Unit,
+) {
+    Column(Modifier.fillMaxSize()) {
+        HomeMobileHeader(
+            today = today,
+            onNavigateToAccountSettings = onNavigateToAccountSettings,
         )
 
-        Image(
-            painter = painterResource(Res.drawable.pin),
-            contentDescription = "Pin decorativo",
+        HomeDashboardContent(
+            weekDays = weekDays,
+            todayDayIndex = todayDayIndex,
+            selectedDayIndex = selectedDayIndex,
+            onDaySelected = onDaySelected,
+            subjects = subjects,
+            tasks = tasks,
+            absencesBySubject = absencesBySubject,
+            onNavigateToSubjectsList = onNavigateToSubjectsList,
+            onNavigateToSubject = onNavigateToSubject,
+            onNavigateToTasksList = onNavigateToTasksList,
             modifier = Modifier
-                .align(Alignment.TopEnd)
-                .fillMaxHeight(0.95f),
-            contentScale = ContentScale.FillHeight
-        )
-        Image(
-            painter = painterResource(Res.drawable.mochila),
-            contentDescription = "Mochila decorativa",
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .fillMaxWidth(0.65f)
-                .aspectRatio(1f),
-            contentScale = ContentScale.Fit
+                .weight(1f)
+                .fillMaxWidth()
+                .padding(horizontal = 36.dp),
         )
 
-        Column(
+        HomeBottomBar(
+            onOpenMenu = onOpenMenu,
+            onNavigateToAdd = onNavigateToAdd,
+        )
+    }
+}
+
+@Composable
+private fun HomeDesktopLayout(
+    today: LocalDate,
+    weekDays: List<LocalDate>,
+    todayDayIndex: Int,
+    selectedDayIndex: Int,
+    onDaySelected: (Int) -> Unit,
+    subjects: List<Subject>,
+    tasks: List<Task>,
+    absencesBySubject: Map<Int, Int>,
+    onOpenMenu: () -> Unit,
+    onNavigateToAdd: () -> Unit,
+    onNavigateToSubjectsList: () -> Unit,
+    onNavigateToSubject: (Int) -> Unit,
+    onNavigateToTasksList: () -> Unit,
+    onNavigateToAccountSettings: () -> Unit,
+) {
+    val user = UserSession.currentUser
+    val name = user?.name.orEmpty()
+    val dateLabel = "${today.dayOfMonth.toString().padStart(2, '0')} ${monthNamesPt[today.monthNumber - 1]} ${(today.year % 100).toString().padStart(2, '0')}"
+
+    Row(Modifier.fillMaxSize()) {
+        // Sidebar permanente
+        Box(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(top = 16.dp)
+                .weight(0.4f)
+                .fillMaxHeight()
+                .background(pink),
         ) {
-            // Cabeçalho
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    "Matérias",
-                    color = RoxoEscuro,
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                UserAvatarButton(
-                    size = 60.dp,
-                    onClick = onNavigateToAccountSettings
-                )
-            }
-
-            // Botões de Filtro
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .align(Alignment.Center)
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Botão Pesquisa
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(50.dp))
-                            .background(RoxoClaro)
-                            .clickable { isSearchExpanded = !isSearchExpanded }
-                            .padding(horizontal = 16.dp, vertical = 8.dp)
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(text = "Pesquisa", color = Color.White, fontSize = 14.sp)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Image(
-                                painter = painterResource(Res.drawable.drop),
-                                contentDescription = "Abrir filtro",
-                                modifier = Modifier.size(16.dp)
-                            )
-                        }
-                    }
-
-                    // Botão Semestre
-                    Box {
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(50.dp))
-                                .background(RoxoClaro)
-                                .clickable { semesterMenuExpanded = true }
-                                .padding(horizontal = 16.dp, vertical = 8.dp)
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(
-                                    text = if (selectedSemester == "Todos") "Semestre" else selectedSemester,
-                                    color = Color.White,
-                                    fontSize = 14.sp
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Image(
-                                    painter = painterResource(Res.drawable.drop),
-                                    contentDescription = "Selecionar semestre",
-                                    modifier = Modifier.size(16.dp)
-                                )
-                            }
-                        }
-
-                        DropdownMenu(
-                            expanded = semesterMenuExpanded,
-                            onDismissRequest = { semesterMenuExpanded = false }
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text("Todos") },
-                                onClick = {
-                                    selectedSemester = "Todos"
-                                    semesterMenuExpanded = false
-                                }
-                            )
-                            semesters.forEach { semester ->
-                                DropdownMenuItem(
-                                    text = { Text(semester) },
-                                    onClick = {
-                                        selectedSemester = semester
-                                        semesterMenuExpanded = false
-                                    }
-                                )
-                            }
-                        }
-                    }
-                }
-
-                if (isSearchExpanded) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = searchText,
-                        onValueChange = { searchText = it },
-                        modifier = Modifier.fillMaxWidth(),
-                        label = { Text("Buscar matéria pelo nome") },
-                        singleLine = true
-                    )
-                }
-            }
-
-            // Lista filtrada
-            if (filteredSubjects.isEmpty()) {
                 Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
+                    modifier = Modifier
+                        .size(160.dp)
+                        .background(Color.White.copy(alpha = 0.15f), RoundedCornerShape(16.dp)),
+                    contentAlignment = Alignment.Center,
                 ) {
-                    Text(
-                        if (subjects.isEmpty())
-                            "Nenhuma matéria cadastrada"
-                        else
-                            "Nenhuma matéria encontrada com esses filtros",
-                        color = Color.Gray,
-                        fontSize = 16.sp
+                    Image(
+                        painter = painterResource(Res.drawable.logo),
+                        contentDescription = "Logo Mochila Hub",
+                        modifier = Modifier.fillMaxSize().padding(16.dp),
                     )
                 }
-            } else {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 16.dp)
-                ) {
-                    items(filteredSubjects) { subject ->
-                        SubjectItem(subject) { subjectId ->
-                            presenter.onSubjectClicked(subjectId)
-                        }
-                        Spacer(modifier = Modifier.height(12.dp))
-                    }
-                }
+                Spacer(Modifier.height(16.dp))
+                Text("Mochila Hub", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+                Spacer(Modifier.height(4.dp))
+                Text("Organize sua vida acadêmica", color = Color.White.copy(alpha = 0.85f), fontSize = 10.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 8.dp))
+            }
+            Row(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                ProfileAvatar(
+                    name = name,
+                    photoPath = user?.photoPath,
+                    size = 48.dp,
+                    accentColor = Color.White,
+                    onClick = onNavigateToAccountSettings,
+                )
+                Spacer(Modifier.width(12.dp))
+                Text(
+                    text = name.ifBlank { " " },
+                    color = Color.White,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
             }
         }
 
-        // Menu inferior
-        Row(
+        // Área de conteúdo
+        Box(
             modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .padding(bottom = 20.dp),
-            horizontalArrangement = Arrangement.Center
+                .weight(0.6f)
+                .fillMaxHeight()
+                .background(homeBg),
         ) {
+            Image(
+                painter = painterResource(Res.drawable.background),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop,
+                alpha = 0.50f,
+            )
+            Column(
+                modifier = Modifier.fillMaxSize(),
+            ) {
+            // Cabeçalho desktop: data + calendário
             Row(
                 modifier = Modifier
-                    .background(
-                        color = RoxoEscuro.copy(alpha = 0.95f),
-                        shape = RoundedCornerShape(8.dp)
-                    )
-                    .padding(horizontal = 20.dp),
-                horizontalArrangement = Arrangement.spacedBy(5.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.End,
             ) {
-                IconButton(onClick = onOpenMenu) {
-                    Image(
-                        painter = painterResource(Res.drawable.menu),
-                        contentDescription = "Menu lateral",
-                        modifier = Modifier.size(16.dp)
+                Text(
+                    text = dateLabel,
+                    color = Color(0xFF333333),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                )
+                Spacer(Modifier.width(8.dp))
+                Image(
+                    painter = painterResource(Res.drawable.menu_icon_today),
+                    contentDescription = "Calendário",
+                    modifier = Modifier.size(22.dp),
+                    colorFilter = ColorFilter.tint(orange),
+                )
+            }
+
+            HomeDashboardContent(
+                weekDays = weekDays,
+                todayDayIndex = todayDayIndex,
+                selectedDayIndex = selectedDayIndex,
+                onDaySelected = onDaySelected,
+                subjects = subjects,
+                tasks = tasks,
+                absencesBySubject = absencesBySubject,
+                onNavigateToSubjectsList = onNavigateToSubjectsList,
+                onNavigateToSubject = onNavigateToSubject,
+                onNavigateToTasksList = onNavigateToTasksList,
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(horizontal = 36.dp),
+            )
+
+            HomeBottomBar(
+                onOpenMenu = onOpenMenu,
+                onNavigateToAdd = onNavigateToAdd,
+            )
+        }
+        }
+    }
+}
+
+@Composable
+private fun HomeDashboardContent(
+    weekDays: List<LocalDate>,
+    todayDayIndex: Int,
+    selectedDayIndex: Int,
+    onDaySelected: (Int) -> Unit,
+    subjects: List<Subject>,
+    tasks: List<Task>,
+    absencesBySubject: Map<Int, Int>,
+    onNavigateToSubjectsList: () -> Unit,
+    onNavigateToSubject: (Int) -> Unit,
+    onNavigateToTasksList: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    LazyColumn(
+        modifier = modifier,
+        contentPadding = PaddingValues(vertical = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(28.dp),
+    ) {
+        item {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = "Atividades de Hoje",
+                    color = orange,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+                AtividadesCard(
+                    weekDays = weekDays,
+                    selectedDay = selectedDayIndex,
+                    onDaySelected = onDaySelected,
+                    tasks = tasks.take(3),
+                    onVerMais = onNavigateToTasksList,
+                )
+            }
+        }
+
+        item {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = "Controle de Faltas",
+                    color = orange,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+                FaltasRow(
+                    subjects = subjects,
+                    absences = absencesBySubject,
+                )
+            }
+        }
+
+        item {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = "Matérias",
+                        color = orange,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Text(
+                        text = "ver mais",
+                        color = orange,
+                        fontSize = 11.sp,
+                        modifier = Modifier.clickable { onNavigateToSubjectsList() },
                     )
                 }
-                IconButton(onClick = onNavigateToAdd) {
-                    Image(
-                        painter = painterResource(Res.drawable.add),
-                        contentDescription = "Adicionar",
-                        modifier = Modifier.size(16.dp)
-                    )
-                }
-                IconButton(onClick = onNavigateToHome) {
-                    Image(
-                        painter = painterResource(Res.drawable.home),
-                        contentDescription = "Início",
-                        modifier = Modifier.size(16.dp)
-                    )
+                if (subjects.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text("Nenhuma matéria cadastrada", color = Color.Gray, fontSize = 13.sp)
+                    }
+                } else {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        subjects.forEach { subject ->
+                            SubjectRowItem(
+                                subject = subject,
+                                onClick = { onNavigateToSubject(subject.id) },
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -291,20 +438,346 @@ fun HomeScreen(
 }
 
 @Composable
-fun SubjectItem(subject: Subject, onClick: (Int) -> Unit) {
-    val VerdeClaro = Color(0xFFE6F5B0)
+private fun HomeMobileHeader(
+    today: LocalDate,
+    onNavigateToAccountSettings: () -> Unit,
+) {
+    val user = UserSession.currentUser
+    val name = user?.name.orEmpty()
+    val dateLabel = "${today.dayOfMonth.toString().padStart(2, '0')} ${monthNamesPt[today.monthNumber - 1]} ${(today.year % 100).toString().padStart(2, '0')}"
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp))
+            .background(orange)
+            .padding(vertical = 20.dp, horizontal = 22.dp),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                ProfileAvatar(
+                    name = name,
+                    photoPath = user?.photoPath,
+                    size = 43.dp,
+                    accentColor = Color.White,
+                    onClick = onNavigateToAccountSettings,
+                )
+                Text(
+                    text = name.ifBlank { " " },
+                    color = Color.White,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.widthIn(max = 130.dp),
+                )
+            }
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                Text(
+                    text = dateLabel,
+                    color = Color.White,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium,
+                )
+                Image(
+                    painter = painterResource(Res.drawable.menu_icon_today),
+                    contentDescription = "Calendário",
+                    modifier = Modifier.size(22.dp),
+                    colorFilter = ColorFilter.tint(Color.White),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun AtividadesCard(
+    weekDays: List<LocalDate>,
+    selectedDay: Int,
+    onDaySelected: (Int) -> Unit,
+    tasks: List<Task>,
+    onVerMais: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(1.dp, orange, RoundedCornerShape(16.dp))
+            .padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(54.dp))
+                .background(orange)
+                .padding(vertical = 6.dp, horizontal = 8.dp),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                weekDays.forEachIndexed { index, day ->
+                    val isSelected = index == selectedDay
+                    Box(
+                        modifier = Modifier
+                            .size(30.dp)
+                            .clip(CircleShape)
+                            .background(if (isSelected) pink else Color.White)
+                            .clickable { onDaySelected(index) },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = day.dayOfMonth.toString(),
+                            color = if (isSelected) Color.White else pink,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center,
+                        )
+                    }
+                }
+            }
+        }
+
+        if (tasks.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 16.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text("Sem atividades pendentes", color = orange, fontSize = 11.sp)
+            }
+        } else {
+            tasks.forEachIndexed { index, task ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(taskRowColors[index % taskRowColors.size])
+                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = task.title,
+                            color = taskTextColors[index % taskTextColors.size],
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        Text(
+                            text = task.status,
+                            color = taskTextColors[index % taskTextColors.size].copy(alpha = 0.7f),
+                            fontSize = 7.sp,
+                        )
+                    }
+                    Spacer(Modifier.width(8.dp))
+                    Box(
+                        modifier = Modifier
+                            .size(18.dp)
+                            .border(1.dp, taskTextColors[index % taskTextColors.size], CircleShape),
+                    )
+                }
+            }
+        }
+
+        Text(
+            text = "ver mais",
+            color = orange,
+            fontSize = 11.sp,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onVerMais() }
+                .padding(top = 4.dp),
+        )
+    }
+}
+
+@Composable
+private fun FaltasRow(
+    subjects: List<Subject>,
+    absences: Map<Int, Int>,
+) {
+    if (subjects.isEmpty()) {
+        Text("Sem matérias cadastradas", color = Color.Gray, fontSize = 12.sp)
+        return
+    }
+    LazyRow(
+        horizontalArrangement = Arrangement.spacedBy(13.dp),
+    ) {
+        itemsIndexed(subjects) { index, subject ->
+            val faltaCount = absences[subject.id] ?: 0
+            val maxFaltas = (subject.classHours * (100 - subject.minFrequency) / 100)
+                .coerceAtLeast(1)
+            val pct = (faltaCount.toFloat() / maxFaltas.toFloat() * 100)
+                .toInt().coerceIn(0, 100)
+            val isWarning = faltaCount >= maxFaltas
+            val cardColor = absenceCardColors[index % absenceCardColors.size]
+
+            Column(
+                modifier = Modifier
+                    .width(117.dp)
+                    .height(87.dp)
+                    .clip(RoundedCornerShape(9.dp))
+                    .background(cardColor)
+                    .padding(horizontal = 8.dp, vertical = 6.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text(
+                    text = subject.name,
+                    color = Color.White,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    lineHeight = 14.sp,
+                    letterSpacing = 0.6.sp,
+                )
+                Text(
+                    text = "$faltaCount/$maxFaltas",
+                    color = Color.White,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(Color.White)
+                        .padding(horizontal = 4.dp, vertical = 2.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = "$pct%",
+                        color = Color.Black.copy(alpha = 0.72f),
+                        fontSize = 8.sp,
+                        textAlign = TextAlign.Center,
+                        letterSpacing = 0.6.sp,
+                    )
+                    if (isWarning) {
+                        Spacer(Modifier.width(4.dp))
+                        Box(
+                            modifier = Modifier
+                                .size(13.dp)
+                                .clip(CircleShape)
+                                .border(2.dp, Color(0xFFD61E1E), CircleShape),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                text = "!",
+                                color = Color(0xFFD61E1E),
+                                fontSize = 8.sp,
+                                fontWeight = FontWeight.Bold,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SubjectRowItem(
+    subject: Subject,
+    onClick: () -> Unit,
+) {
+    val r = ((subject.colorRgb shr 16) and 0xFF) / 255f
+    val g = ((subject.colorRgb shr 8) and 0xFF) / 255f
+    val b = (subject.colorRgb and 0xFF) / 255f
+    val cardColor = Color(r, g, b)
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(VerdeClaro, shape = RoundedCornerShape(12.dp))
-            .border(1.dp, Color.Gray, RoundedCornerShape(12.dp))
-            .padding(20.dp)
-            .clickable { onClick(subject.id) },
+            .clip(RoundedCornerShape(4.dp))
+            .background(cardColor)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 13.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+        horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        Text(subject.name, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-        Text(">", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = Color.Gray)
+        Text(
+            text = subject.name,
+            color = Color.White,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Normal,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f),
+        )
+        if (subject.semester.isNotBlank()) {
+            Text(
+                text = subject.semester,
+                color = Color.White,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Normal,
+            )
+        }
+    }
+}
+
+@Composable
+private fun HomeBottomBar(
+    onOpenMenu: () -> Unit,
+    onNavigateToAdd: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 20.dp),
+        horizontalArrangement = Arrangement.Center,
+    ) {
+        Row(
+            modifier = Modifier
+                .background(Color.White, RoundedCornerShape(38.dp))
+                .border(0.5.dp, Color.LightGray, RoundedCornerShape(38.dp))
+                .padding(horizontal = 20.dp),
+            horizontalArrangement = Arrangement.spacedBy(5.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            IconButton(onClick = onOpenMenu) {
+                Image(
+                    painter = painterResource(Res.drawable.menu),
+                    contentDescription = "Menu lateral",
+                    modifier = Modifier.size(16.dp),
+                    colorFilter = ColorFilter.tint(pink),
+                )
+            }
+            IconButton(onClick = onNavigateToAdd) {
+                Image(
+                    painter = painterResource(Res.drawable.add),
+                    contentDescription = "Adicionar",
+                    modifier = Modifier.size(16.dp),
+                    colorFilter = ColorFilter.tint(pink),
+                )
+            }
+            IconButton(onClick = {}) {
+                Image(
+                    painter = painterResource(Res.drawable.home),
+                    contentDescription = "Início",
+                    modifier = Modifier.size(16.dp),
+                    colorFilter = ColorFilter.tint(pink),
+                )
+            }
+        }
     }
 }

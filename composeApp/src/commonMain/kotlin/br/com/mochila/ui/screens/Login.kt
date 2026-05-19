@@ -12,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -90,6 +91,13 @@ fun LoginScreen(
                         .background(fundoTela),
                     contentAlignment = Alignment.Center
                 ) {
+                    Image(
+                        painter = painterResource(Res.drawable.background),
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop,
+                        alpha = 1f,
+                    )
                     Column(
                         modifier = Modifier
                             .widthIn(max = 420.dp)
@@ -110,7 +118,7 @@ fun LoginScreen(
                             Text("E-mail", color = rosa, fontSize = 14.sp, fontWeight = FontWeight.Medium, lineHeight = 20.sp)
                             OutlinedTextField(
                                 value = email,
-                                onValueChange = { if (it.length <= 30) email = it },
+                                onValueChange = { if (it.length <= 30) email = it.filter { c -> c != ' ' } },
                                 modifier = Modifier.fillMaxWidth(),
                                 placeholder = { Text("Insira o seu e-mail", color = rosa.copy(alpha = 0.8f), fontSize = 14.sp, lineHeight = 20.sp) },
                                 singleLine = true,
@@ -131,7 +139,7 @@ fun LoginScreen(
                             Text("Senha", color = rosa, fontSize = 14.sp, fontWeight = FontWeight.Medium, lineHeight = 20.sp)
                             OutlinedTextField(
                                 value = password,
-                                onValueChange = { if (it.length <= 25) password = it },
+                                onValueChange = { if (it.length <= 25) password = it.filter { c -> c != ' ' } },
                                 modifier = Modifier.fillMaxWidth(),
                                 placeholder = { Text("Insira a sua senha", color = rosa.copy(alpha = 0.8f), fontSize = 14.sp, lineHeight = 20.sp) },
                                 singleLine = true,
@@ -193,6 +201,13 @@ fun LoginScreen(
                 }
             }
         } else {
+            Image(
+                painter = painterResource(Res.drawable.background),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop,
+                alpha = 1f,
+            )
             val formWidth = minOf(maxWidth - loginFormHorizontalMargin, loginFormMaxWidth).coerceAtLeast(0.dp)
             Column(
                 modifier = Modifier
@@ -229,7 +244,7 @@ fun LoginScreen(
                     Text("E-mail", color = rosa, fontSize = 14.sp, fontWeight = FontWeight.Medium, lineHeight = 20.sp)
                     OutlinedTextField(
                         value = email,
-                        onValueChange = { if (it.length <= 30) email = it },
+                        onValueChange = { if (it.length <= 30) email = it.filter { c -> c != ' ' } },
                         modifier = Modifier.fillMaxWidth(),
                         placeholder = { Text("Insira o seu e-mail", color = rosa.copy(alpha = 0.8f), fontSize = 14.sp, lineHeight = 20.sp) },
                         singleLine = true,
@@ -250,7 +265,7 @@ fun LoginScreen(
                     Text("Senha", color = rosa, fontSize = 14.sp, fontWeight = FontWeight.Medium, lineHeight = 20.sp)
                     OutlinedTextField(
                         value = password,
-                        onValueChange = { if (it.length <= 25) password = it },
+                        onValueChange = { if (it.length <= 25) password = it.filter { c -> c != ' ' } },
                         modifier = Modifier.fillMaxWidth(),
                         placeholder = { Text("Insira a sua senha", color = rosa.copy(alpha = 0.8f), fontSize = 14.sp, lineHeight = 20.sp) },
                         singleLine = true,

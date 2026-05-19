@@ -52,6 +52,7 @@ fun MenuScreen(
     onNavigateToTasksList: () -> Unit,
     onNavigateToAccountSettings: () -> Unit,
     onLogout: () -> Unit,
+    onNavigateToSubjectsList: () -> Unit = onNavigateToHome,
     onNavigateToPlanoFaltas: () -> Unit = {},
     onNavigateToEventos: () -> Unit = {},
     onNavigateToPlus: () -> Unit = {},
@@ -110,7 +111,7 @@ fun MenuScreen(
                             icon = Res.drawable.menu_icon_mobile_check,
                             onClick = {
                                 onCloseMenu()
-                                onNavigateToHome()
+                                onNavigateToSubjectsList()
                             }
                         )
                         MenuSideItem(

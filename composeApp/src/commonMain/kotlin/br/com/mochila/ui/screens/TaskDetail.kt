@@ -4,15 +4,14 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -36,8 +35,8 @@ fun TaskDetailScreen(
     onBack: () -> Unit,
     onLogout: () -> Unit
 ) {
-    val RoxoEscuro = Color(0xFF5336CB)
-    val RoxoClaro = Color(0xFF7F55CE)
+    val rosa = Color(0xFFFF6694)
+    val fundoTela = Color(0xFFF8F8F8)
 
     var task by remember { mutableStateOf<Task?>(null) }
     var showDeleteDialog by remember { mutableStateOf(false) }
@@ -46,7 +45,7 @@ fun TaskDetailScreen(
     val presenter = remember {
         object : TaskDetailView {
             override fun showTask(t: Task) { task = t }
-            override fun showTaskNotFound() { /* navega de volta via navigateBack */ }
+            override fun showTaskNotFound() {}
             override fun showDeleteSuccess() {}
             override fun showDeleteError() {}
             override fun navigateToTasksList() { onNavigateToTasksList() }
@@ -65,15 +64,15 @@ fun TaskDetailScreen(
             value = value,
             onValueChange = {},
             readOnly = true,
-            label = { Text(text = label, color = RoxoClaro, fontSize = 14.sp) },
+            label = { Text(text = label, color = rosa, fontSize = 14.sp) },
             singleLine = false,
             colors = OutlinedTextFieldDefaults.colors(
                 focusedContainerColor = Color.White,
                 unfocusedContainerColor = Color.White,
-                focusedBorderColor = RoxoClaro,
-                unfocusedBorderColor = RoxoClaro,
-                focusedLabelColor = RoxoClaro,
-                unfocusedLabelColor = RoxoClaro,
+                focusedBorderColor = rosa,
+                unfocusedBorderColor = rosa,
+                focusedLabelColor = rosa,
+                unfocusedLabelColor = rosa,
                 focusedTextColor = Color.Black.copy(alpha = 0.85f),
                 unfocusedTextColor = Color.Black.copy(alpha = 0.85f),
                 cursorColor = Color.Transparent
@@ -89,33 +88,15 @@ fun TaskDetailScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(fundoTela)
     ) {
         Image(
-            painter = painterResource(Res.drawable.fundo_quadriculado),
+            painter = painterResource(Res.drawable.background),
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
+            contentScale = ContentScale.Crop,
+            alpha = 0.50f,
         )
-        Image(
-            painter = painterResource(Res.drawable.star),
-            contentDescription = "Decoração estrela",
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .offset(x = 600.dp, y = (-150).dp)
-                .size(600.dp),
-            contentScale = ContentScale.Fit
-        )
-        Image(
-            painter = painterResource(Res.drawable.chevron),
-            contentDescription = "Decoração chevron",
-            modifier = Modifier
-                .align(Alignment.CenterStart)
-                .offset(x = (-100).dp, y = 260.dp)
-                .size(600.dp),
-            contentScale = ContentScale.Fit
-        )
-
         task?.let { t ->
             Column(
                 modifier = Modifier
@@ -124,7 +105,6 @@ fun TaskDetailScreen(
                     .padding(horizontal = 24.dp, vertical = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Cabeçalho
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -132,18 +112,15 @@ fun TaskDetailScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    BackButton(onBack = onBack)
-                    UserAvatarButton(
-                        size = 60.dp,
-                        onClick = onNavigateToAccountSettings
-                    )
+                    BackButton(onBack = onBack, backgroundColor = rosa, iconTint = Color.White)
+                    UserAvatarButton(size = 60.dp, onClick = onNavigateToAccountSettings)
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
                     text = "Tarefa",
-                    color = RoxoEscuro,
+                    color = rosa,
                     fontSize = 28.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -158,10 +135,9 @@ fun TaskDetailScreen(
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                // Botão Editar
                 Button(
                     onClick = { presenter.onEditClicked(t) },
-                    colors = ButtonDefaults.buttonColors(containerColor = RoxoClaro),
+                    colors = ButtonDefaults.buttonColors(containerColor = rosa),
                     shape = RoundedCornerShape(8.dp),
                     modifier = Modifier
                         .widthIn(max = 600.dp)
@@ -173,7 +149,6 @@ fun TaskDetailScreen(
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                // Botão Excluir
                 Button(
                     onClick = { showDeleteDialog = true },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD9534F)),
@@ -190,27 +165,17 @@ fun TaskDetailScreen(
                     AlertDialog(
                         onDismissRequest = { showDeleteDialog = false },
                         title = {
-                            Text(
-                                "Confirmar Exclusão",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 18.sp
-                            )
+                            Text("Confirmar Exclusão", fontWeight = FontWeight.Bold, fontSize = 18.sp)
                         },
                         text = {
                             Text("Tem certeza que deseja excluir a tarefa \"${t.title}\"?")
                         },
                         confirmButton = {
-                            TextButton(
-                                onClick = {
-                                    showDeleteDialog = false
-                                    presenter.onDeleteConfirmed(userId, t)
-                                }
-                            ) {
-                                Text(
-                                    "Excluir",
-                                    color = Color(0xFFD9534F),
-                                    fontWeight = FontWeight.Bold
-                                )
+                            TextButton(onClick = {
+                                showDeleteDialog = false
+                                presenter.onDeleteConfirmed(userId, t)
+                            }) {
+                                Text("Excluir", color = Color(0xFFD9534F), fontWeight = FontWeight.Bold)
                             }
                         },
                         dismissButton = {
@@ -225,16 +190,56 @@ fun TaskDetailScreen(
 
                 Spacer(modifier = Modifier.height(120.dp))
 
-                if (showMenu) {
-                    MenuScreen(
-                        onCloseMenu = { showMenu = false },
-                        onNavigateToHome = { showMenu = false; onNavigateToHome() },
-                        onNavigateToTasksList = { showMenu = false; onNavigateToTasksList() },
-                        onNavigateToAccountSettings = { showMenu = false; onNavigateToAccountSettings() },
-                        onLogout = { showMenu = false; onLogout() }
-                    )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 20.dp),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .background(rosa.copy(alpha = 0.95f), RoundedCornerShape(8.dp))
+                            .padding(horizontal = 20.dp),
+                        horizontalArrangement = Arrangement.spacedBy(5.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        IconButton(onClick = { showMenu = true }) {
+                            Image(
+                                painter = painterResource(Res.drawable.menu),
+                                contentDescription = "Menu lateral",
+                                modifier = Modifier.size(16.dp),
+                                colorFilter = ColorFilter.tint(Color.White)
+                            )
+                        }
+                        IconButton(onClick = onNavigateToTasksList) {
+                            Image(
+                                painter = painterResource(Res.drawable.add),
+                                contentDescription = "Lista de tarefas",
+                                modifier = Modifier.size(16.dp),
+                                colorFilter = ColorFilter.tint(Color.White)
+                            )
+                        }
+                        IconButton(onClick = onNavigateToHome) {
+                            Image(
+                                painter = painterResource(Res.drawable.home),
+                                contentDescription = "Home",
+                                modifier = Modifier.size(16.dp),
+                                colorFilter = ColorFilter.tint(Color.White)
+                            )
+                        }
+                    }
                 }
             }
         }
+    }
+
+    if (showMenu) {
+        MenuScreen(
+            onCloseMenu = { showMenu = false },
+            onNavigateToHome = { showMenu = false; onNavigateToHome() },
+            onNavigateToTasksList = { showMenu = false; onNavigateToTasksList() },
+            onNavigateToAccountSettings = { showMenu = false; onNavigateToAccountSettings() },
+            onLogout = { showMenu = false; onLogout() }
+        )
     }
 }
