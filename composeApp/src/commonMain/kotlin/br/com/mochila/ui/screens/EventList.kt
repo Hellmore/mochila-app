@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -336,6 +337,13 @@ fun EventListScreen(
             .fillMaxSize()
             .background(fundoTela),
     ) {
+        Image(
+            painter = painterResource(Res.drawable.background),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop,
+            alpha = 0.50f,
+        )
         val isWide = maxWidth >= 700.dp
         if (isWide) {
             EventListDesktopLayout(
@@ -397,70 +405,66 @@ private fun EventListMobileLayout(
 ) {
     val user = UserSession.currentUser
     val name = user?.name.orEmpty()
-    val headerEdgeInset = 22.dp
-
     Column(Modifier.fillMaxSize()) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 52.dp)
-                .clip(RoundedCornerShape(bottomStart = 48.dp, bottomEnd = 48.dp))
+                .clip(RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp))
                 .background(laranjaHeader)
-                .padding(vertical = 12.dp),
+                .padding(vertical = 20.dp, horizontal = 22.dp),
         ) {
-            BackButton(
-                onBack = onBack,
-                backgroundColor = rosa.copy(alpha = 0.92f),
-                iconTint = Color.White,
-                buttonSize = 34.dp,
-                iconSize = 18.dp,
-                modifier = Modifier
-                    .align(Alignment.CenterStart)
-                    .padding(start = headerEdgeInset),
-            )
             Row(
-                modifier = Modifier.align(Alignment.Center),
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                ProfileAvatar(
-                    name = name,
-                    photoPath = user?.photoPath,
-                    size = 40.dp,
-                    accentColor = Color.White,
-                    onClick = onNavigateToAccountSettings,
-                )
-                Spacer(Modifier.width(10.dp))
-                Text(
-                    text = name.ifBlank { " " },
-                    color = Color.White,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Medium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.widthIn(max = 160.dp),
-                )
-            }
-            Row(
-                modifier = Modifier
-                    .align(Alignment.CenterEnd)
-                    .padding(end = headerEdgeInset),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = dateLabel,
-                    color = Color.White,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Medium,
-                )
-                Spacer(Modifier.width(6.dp))
-                CalendarGlyph(tint = Color.White, modifier = Modifier.size(22.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    BackButton(
+                        onBack = onBack,
+                        backgroundColor = Color.Transparent,
+                        iconTint = Color.White,
+                        buttonSize = 40.dp,
+                        iconSize = 22.dp,
+                    )
+                    ProfileAvatar(
+                        name = name,
+                        photoPath = user?.photoPath,
+                        size = 40.dp,
+                        accentColor = Color.White,
+                        onClick = onNavigateToAccountSettings,
+                    )
+                    Text(
+                        text = name.ifBlank { " " },
+                        color = Color.White,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Medium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.widthIn(max = 120.dp),
+                    )
+                }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    Text(
+                        text = dateLabel,
+                        color = Color.White,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Medium,
+                    )
+                    CalendarGlyph(tint = Color.White, modifier = Modifier.size(22.dp))
+                }
             }
         }
 
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .padding(horizontal = 36.dp, vertical = 12.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             FilterDropdown(
@@ -486,7 +490,7 @@ private fun EventListMobileLayout(
             color = laranjaHeader,
             fontSize = 18.sp,
             fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+            modifier = Modifier.padding(horizontal = 36.dp, vertical = 4.dp),
         )
 
         EventListContent(
@@ -497,7 +501,7 @@ private fun EventListMobileLayout(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp),
+                .padding(horizontal = 36.dp),
         )
 
         EventListBottomBar(
@@ -532,39 +536,62 @@ private fun EventListDesktopLayout(
     Row(Modifier.fillMaxSize()) {
         Box(
             modifier = Modifier
-                .weight(0.22f)
+                .weight(0.4f)
                 .fillMaxHeight()
                 .background(rosa),
         ) {
             Column(
                 modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(top = 20.dp, start = 16.dp),
+                    .align(Alignment.Center)
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    ProfileAvatar(
-                        name = name,
-                        photoPath = user?.photoPath,
-                        size = 48.dp,
-                        accentColor = Color.White,
-                        onClick = onNavigateToAccountSettings,
-                    )
-                    Spacer(Modifier.width(12.dp))
-                    Text(
-                        text = name.ifBlank { " " },
-                        color = Color.White,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
+                Box(
+                    modifier = Modifier
+                        .size(160.dp)
+                        .background(Color.White.copy(alpha = 0.15f), RoundedCornerShape(16.dp)),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Image(
+                        painter = painterResource(Res.drawable.logo),
+                        contentDescription = "Logo Mochila Hub",
+                        modifier = Modifier.fillMaxSize().padding(16.dp),
                     )
                 }
+                Spacer(Modifier.height(16.dp))
+                Text("Mochila Hub", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+                Spacer(Modifier.height(4.dp))
+                Text("Organize sua vida acadêmica", color = Color.White.copy(alpha = 0.85f), fontSize = 10.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 8.dp))
+            }
+            Row(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                ProfileAvatar(
+                    name = name,
+                    photoPath = user?.photoPath,
+                    size = 48.dp,
+                    accentColor = Color.White,
+                    onClick = onNavigateToAccountSettings,
+                )
+                Spacer(Modifier.width(12.dp))
+                Text(
+                    text = name.ifBlank { " " },
+                    color = Color.White,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
             }
         }
 
         Column(
             modifier = Modifier
-                .weight(0.78f)
+                .weight(0.6f)
                 .fillMaxHeight(),
         ) {
             Row(
@@ -600,7 +627,7 @@ private fun EventListDesktopLayout(
                         .widthIn(max = desktopContentMaxWidth)
                         .fillMaxWidth()
                         .fillMaxHeight()
-                        .padding(horizontal = 20.dp),
+                        .padding(horizontal = 36.dp),
                 ) {
                     Row(
                         modifier = Modifier

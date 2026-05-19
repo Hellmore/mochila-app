@@ -1,17 +1,16 @@
 package br.com.mochila.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -27,13 +26,18 @@ import kotlinx.coroutines.withContext
 import mochila_app.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.painterResource
 
+private val verifyFormMaxWidth = 360.dp
+private val verifyFormHorizontalMargin = 48.dp
+
 @Composable
 fun EmailVerifyScreen(
     email: String,
     onBackToRegister: () -> Unit,
-    onNavigateToLogin: () -> Unit
+    onNavigateToLogin: () -> Unit,
 ) {
-    val RoxoEscuro = Color(0xFF5336CB)
+    val fundoTela = Color(0xFFF8F8F8)
+    val rosa = Color(0xFFFF6694)
+    val logoArea = Color(0xFFD9D9D9)
 
     var code by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -61,149 +65,309 @@ fun EmailVerifyScreen(
         }
     }
 
-    Box(
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(fundoTela),
     ) {
-        Image(
-            painter = painterResource(Res.drawable.fundo_quadriculado),
-            contentDescription = null,
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
-        )
-        Image(
-            painter = painterResource(Res.drawable.fundo_curvas),
-            contentDescription = null,
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
-        )
+        val isWide = maxWidth >= 700.dp
 
-        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-        val formWidth = minOf(maxWidth - 48.dp, 360.dp).coerceAtLeast(0.dp)
-
-        Column(
-            modifier = Modifier
-                .width(formWidth)
-                .align(Alignment.Center)
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 40.dp, start = 8.dp, bottom = 16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                BackButton(onBack = onBackToRegister)
-            }
-
-            Box(
-                modifier = Modifier
-                    .size(180.dp)
-                    .background(RoxoEscuro, shape = CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Image(
-                    painter = painterResource(Res.drawable.logo),
-                    contentDescription = "Logo Mochila Hub",
-                    modifier = Modifier.clip(CircleShape),
-                    contentScale = ContentScale.Crop
-                )
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Text(
-                text = "Confirme seu cadastro",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = "Enviamos um código de 6 dígitos para\n$email",
-                fontSize = 14.sp,
-                color = Color.White,
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            OutlinedTextField(
-                value = code,
-                onValueChange = { if (it.length <= 6 && it.all { c -> c.isDigit() }) code = it },
-                placeholder = { Text("Código de 6 dígitos", textAlign = TextAlign.Center) },
-                singleLine = true,
-                enabled = !isLoading,
-                textStyle = LocalTextStyle.current.copy(
-                    fontSize = 24.sp,
-                    textAlign = TextAlign.Center,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 8.sp
-                ),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White
-                ),
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(8.dp)
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            errorMessage?.let { msg ->
+        if (isWide) {
+            Row(modifier = Modifier.fillMaxSize()) {
+                // Painel esquerdo com logo
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color(0xFFFFCDD2), shape = RoundedCornerShape(12.dp))
-                        .padding(16.dp)
+                        .weight(0.4f)
+                        .fillMaxHeight()
+                        .background(rosa),
+                    contentAlignment = Alignment.Center,
                 ) {
-                    Text(text = msg, color = Color(0xFFB71C1C), fontSize = 15.sp)
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Box(
+                            modifier = Modifier
+                                .size(160.dp)
+                                .background(Color.White.copy(alpha = 0.15f), RoundedCornerShape(16.dp)),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Image(
+                                painter = painterResource(Res.drawable.logo),
+                                contentDescription = "Logo Mochila Hub",
+                                modifier = Modifier.fillMaxSize().padding(16.dp),
+                            )
+                        }
+                        Spacer(Modifier.height(24.dp))
+                        Text("Mochila Hub", color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.Bold)
+                        Spacer(Modifier.height(8.dp))
+                        Text("Organize sua vida acadêmica", color = Color.White.copy(alpha = 0.85f), fontSize = 15.sp)
+                    }
                 }
-                Spacer(modifier = Modifier.height(12.dp))
-            }
 
-            successMessage?.let { msg ->
+                // Painel direito com formulário
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color(0xFFB9F6CA), shape = RoundedCornerShape(12.dp))
-                        .padding(16.dp)
+                        .weight(0.6f)
+                        .fillMaxHeight()
+                        .background(fundoTela),
+                    contentAlignment = Alignment.Center,
                 ) {
-                    Text(text = msg, color = Color(0xFF1B5E20), fontSize = 15.sp)
-                }
-                Spacer(modifier = Modifier.height(12.dp))
-            }
-
-            Button(
-                onClick = { onVerify() },
-                enabled = !isLoading,
-                colors = ButtonDefaults.buttonColors(containerColor = RoxoEscuro),
-                shape = RoundedCornerShape(8.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(42.dp)
-            ) {
-                if (isLoading) {
-                    CircularProgressIndicator(
-                        color = Color.White,
-                        strokeWidth = 2.dp,
-                        modifier = Modifier.size(20.dp)
+                    Image(
+                        painter = painterResource(Res.drawable.background),
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop,
+                        alpha = 1f,
                     )
-                } else {
-                    Text("Confirmar Cadastro", color = Color.White, fontSize = 14.sp)
+                    Column(
+                        modifier = Modifier
+                            .widthIn(max = 420.dp)
+                            .fillMaxWidth()
+                            .padding(horizontal = 32.dp)
+                            .verticalScroll(rememberScrollState()),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Spacer(Modifier.height(32.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            BackButton(onBack = onBackToRegister, backgroundColor = rosa, iconTint = Color.White)
+                        }
+
+                        Text(
+                            text = "Confirme seu cadastro",
+                            color = rosa,
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold,
+                            lineHeight = 28.sp,
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            text = "Enviamos um código de 6 dígitos para\n$email",
+                            color = Color(0xFF555555),
+                            fontSize = 14.sp,
+                            lineHeight = 20.sp,
+                            textAlign = TextAlign.Center,
+                        )
+
+                        Spacer(Modifier.height(24.dp))
+
+                        Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text("Código de verificação", color = rosa, fontSize = 14.sp, fontWeight = FontWeight.Medium, lineHeight = 20.sp)
+                            OutlinedTextField(
+                                value = code,
+                                onValueChange = { if (it.length <= 6 && it.all { c -> c.isDigit() }) code = it },
+                                modifier = Modifier.fillMaxWidth(),
+                                placeholder = {
+                                    Text("000000", color = rosa.copy(alpha = 0.5f), fontSize = 24.sp,
+                                        textAlign = TextAlign.Center, letterSpacing = 8.sp)
+                                },
+                                singleLine = true,
+                                enabled = !isLoading,
+                                textStyle = LocalTextStyle.current.copy(
+                                    fontSize = 24.sp,
+                                    textAlign = TextAlign.Center,
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = 8.sp,
+                                    color = rosa,
+                                ),
+                                shape = RoundedCornerShape(6.dp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    unfocusedContainerColor = Color.White, focusedContainerColor = Color.White,
+                                    unfocusedBorderColor = rosa, focusedBorderColor = rosa,
+                                    cursorColor = rosa,
+                                ),
+                            )
+                        }
+
+                        Spacer(Modifier.height(24.dp))
+
+                        errorMessage?.let { msg ->
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(Color(0xFFFFCDD2), RoundedCornerShape(12.dp))
+                                    .padding(16.dp),
+                            ) { Text(msg, color = Color(0xFFB71C1C), fontSize = 15.sp) }
+                            Spacer(Modifier.height(12.dp))
+                        }
+
+                        successMessage?.let { msg ->
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(Color(0xFFB9F6CA), RoundedCornerShape(12.dp))
+                                    .padding(16.dp),
+                            ) { Text(msg, color = Color(0xFF1B5E20), fontSize = 15.sp) }
+                            Spacer(Modifier.height(12.dp))
+                        }
+
+                        Button(
+                            onClick = { onVerify() },
+                            enabled = !isLoading,
+                            colors = ButtonDefaults.buttonColors(containerColor = rosa),
+                            shape = RoundedCornerShape(8.dp),
+                            border = BorderStroke(1.dp, Color.White),
+                            modifier = Modifier.fillMaxWidth(),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
+                        ) {
+                            if (isLoading) {
+                                CircularProgressIndicator(color = Color.White, strokeWidth = 2.dp, modifier = Modifier.size(20.dp))
+                            } else {
+                                Text("Confirmar Cadastro", color = Color.White, fontWeight = FontWeight.Medium, fontSize = 16.sp, lineHeight = 22.sp)
+                            }
+                        }
+
+                        Spacer(Modifier.height(8.dp))
+
+                        TextButton(
+                            onClick = onBackToRegister,
+                            colors = ButtonDefaults.textButtonColors(contentColor = rosa),
+                        ) {
+                            Text("Não recebi o código", fontWeight = FontWeight.Medium, fontSize = 16.sp, lineHeight = 22.sp)
+                        }
+
+                        Spacer(Modifier.height(32.dp))
+                    }
                 }
             }
+        } else {
+            Image(
+                painter = painterResource(Res.drawable.background),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop,
+                alpha = 1f,
+            )
+            val formWidth = minOf(maxWidth - verifyFormHorizontalMargin, verifyFormMaxWidth).coerceAtLeast(0.dp)
+            Column(
+                modifier = Modifier
+                    .width(formWidth)
+                    .align(Alignment.Center)
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(top = 32.dp, bottom = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    BackButton(onBack = onBackToRegister, backgroundColor = rosa, iconTint = Color.White)
+                }
 
-            Spacer(modifier = Modifier.height(12.dp))
+                Spacer(Modifier.height(8.dp))
 
-            TextButton(onClick = onBackToRegister) {
-                Text("Não recebi o código", color = Color.White, fontSize = 14.sp)
+                Box(
+                    modifier = Modifier
+                        .width(151.dp)
+                        .height(140.dp)
+                        .background(logoArea, RoundedCornerShape(8.dp)),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Image(
+                        painter = painterResource(Res.drawable.logo),
+                        contentDescription = "Logo Mochila Hub",
+                        modifier = Modifier.fillMaxSize().padding(12.dp),
+                    )
+                }
+
+                Spacer(Modifier.height(24.dp))
+
+                Text(
+                    text = "Confirme seu cadastro",
+                    color = rosa,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    lineHeight = 26.sp,
+                    textAlign = TextAlign.Center,
+                )
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text = "Enviamos um código de 6 dígitos para\n$email",
+                    color = Color(0xFF555555),
+                    fontSize = 14.sp,
+                    lineHeight = 20.sp,
+                    textAlign = TextAlign.Center,
+                )
+
+                Spacer(Modifier.height(24.dp))
+
+                Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text("Código de verificação", color = rosa, fontSize = 14.sp, fontWeight = FontWeight.Medium, lineHeight = 20.sp)
+                    OutlinedTextField(
+                        value = code,
+                        onValueChange = { if (it.length <= 6 && it.all { c -> c.isDigit() }) code = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = {
+                            Text("000000", color = rosa.copy(alpha = 0.5f), fontSize = 24.sp,
+                                textAlign = TextAlign.Center, letterSpacing = 8.sp)
+                        },
+                        singleLine = true,
+                        enabled = !isLoading,
+                        textStyle = LocalTextStyle.current.copy(
+                            fontSize = 24.sp,
+                            textAlign = TextAlign.Center,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 8.sp,
+                            color = rosa,
+                        ),
+                        shape = RoundedCornerShape(6.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            unfocusedContainerColor = Color.White, focusedContainerColor = Color.White,
+                            unfocusedBorderColor = rosa, focusedBorderColor = rosa,
+                            cursorColor = rosa,
+                        ),
+                    )
+                }
+
+                Spacer(Modifier.height(24.dp))
+
+                errorMessage?.let { msg ->
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color(0xFFFFCDD2), RoundedCornerShape(12.dp))
+                            .padding(16.dp),
+                    ) { Text(msg, color = Color(0xFFB71C1C), fontSize = 15.sp) }
+                    Spacer(Modifier.height(12.dp))
+                }
+
+                successMessage?.let { msg ->
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color(0xFFB9F6CA), RoundedCornerShape(12.dp))
+                            .padding(16.dp),
+                    ) { Text(msg, color = Color(0xFF1B5E20), fontSize = 15.sp) }
+                    Spacer(Modifier.height(12.dp))
+                }
+
+                Button(
+                    onClick = { onVerify() },
+                    enabled = !isLoading,
+                    colors = ButtonDefaults.buttonColors(containerColor = rosa),
+                    shape = RoundedCornerShape(8.dp),
+                    border = BorderStroke(1.dp, Color.White),
+                    modifier = Modifier.fillMaxWidth(),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
+                ) {
+                    if (isLoading) {
+                        CircularProgressIndicator(color = Color.White, strokeWidth = 2.dp, modifier = Modifier.size(20.dp))
+                    } else {
+                        Text("Confirmar Cadastro", color = Color.White, fontWeight = FontWeight.Medium, fontSize = 16.sp, lineHeight = 22.sp)
+                    }
+                }
+
+                Spacer(Modifier.height(8.dp))
+
+                TextButton(
+                    onClick = onBackToRegister,
+                    colors = ButtonDefaults.textButtonColors(contentColor = rosa),
+                ) {
+                    Text("Não recebi o código", fontWeight = FontWeight.Medium, fontSize = 16.sp, lineHeight = 22.sp)
+                }
+
+                Spacer(Modifier.height(32.dp))
             }
-        }
         }
     }
 }

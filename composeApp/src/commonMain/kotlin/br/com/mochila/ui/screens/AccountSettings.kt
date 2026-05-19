@@ -1,6 +1,7 @@
 package br.com.mochila.ui.screens
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -11,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -25,6 +27,9 @@ import br.com.mochila.ui.screens.components.pickImageFile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import mochila_app.composeapp.generated.resources.Res
+import mochila_app.composeapp.generated.resources.*
+import org.jetbrains.compose.resources.painterResource
 
 private val accountFormMaxWidth = 360.dp
 private val accountFormHorizontalMargin = 48.dp
@@ -95,16 +100,33 @@ fun AccountSettingsScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.padding(horizontal = 24.dp)
                     ) {
+                        Box(
+                            modifier = Modifier
+                                .size(160.dp)
+                                .background(Color.White.copy(alpha = 0.15f), RoundedCornerShape(16.dp)),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Image(
+                                painter = painterResource(Res.drawable.logo),
+                                contentDescription = "Logo Mochila Hub",
+                                modifier = Modifier.fillMaxSize().padding(16.dp),
+                            )
+                        }
+                        Spacer(Modifier.height(24.dp))
+                        Text("Mochila Hub", color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.Bold)
+                        Spacer(Modifier.height(8.dp))
+                        Text("Organize sua vida acadêmica", color = Color.White.copy(alpha = 0.85f), fontSize = 15.sp)
+                        Spacer(Modifier.height(32.dp))
                         ProfileAvatar(
                             name = name,
                             photoPath = photoPath,
-                            size = 120.dp,
+                            size = 72.dp,
                             accentColor = Color.White,
                             onClick = {}
                         )
-                        Spacer(Modifier.height(16.dp))
+                        Spacer(Modifier.height(12.dp))
                         if (name.isNotBlank()) {
-                            Text(name, color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                            Text(name, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
                             Spacer(Modifier.height(4.dp))
                         }
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -140,6 +162,13 @@ fun AccountSettingsScreen(
                         .background(fundoTela),
                     contentAlignment = Alignment.Center
                 ) {
+                    Image(
+                        painter = painterResource(Res.drawable.background),
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop,
+                        alpha = 1f,
+                    )
                 Column(
                     modifier = Modifier
                         .widthIn(max = 420.dp)
@@ -186,7 +215,7 @@ fun AccountSettingsScreen(
                         Text("E-mail", color = rosa, fontSize = 14.sp, fontWeight = FontWeight.Medium, lineHeight = 20.sp)
                         OutlinedTextField(
                             value = email,
-                            onValueChange = { if (it.length <= 30) email = it },
+                            onValueChange = { if (it.length <= 30) email = it.filter { c -> c != ' ' } },
                             modifier = Modifier.fillMaxWidth(),
                             placeholder = { Text("Insira o seu e-mail", color = rosa.copy(alpha = 0.8f), fontSize = 14.sp, lineHeight = 20.sp) },
                             singleLine = true,
@@ -263,6 +292,13 @@ fun AccountSettingsScreen(
                 }
             }
         } else {
+            Image(
+                painter = painterResource(Res.drawable.background),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop,
+                alpha = 1f,
+            )
             val formWidth = minOf(maxWidth - accountFormHorizontalMargin, accountFormMaxWidth).coerceAtLeast(0.dp)
             Column(
                 modifier = Modifier
@@ -333,7 +369,7 @@ fun AccountSettingsScreen(
                     Text("E-mail", color = rosa, fontSize = 14.sp, fontWeight = FontWeight.Medium, lineHeight = 20.sp)
                     OutlinedTextField(
                         value = email,
-                        onValueChange = { if (it.length <= 30) email = it },
+                        onValueChange = { if (it.length <= 30) email = it.filter { c -> c != ' ' } },
                         modifier = Modifier.fillMaxWidth(),
                         placeholder = { Text("Insira o seu e-mail", color = rosa.copy(alpha = 0.8f), fontSize = 14.sp, lineHeight = 20.sp) },
                         singleLine = true,

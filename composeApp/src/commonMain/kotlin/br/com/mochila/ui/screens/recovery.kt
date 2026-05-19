@@ -12,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -102,6 +103,13 @@ fun RecoveryScreen(
                         .background(fundoTela),
                     contentAlignment = Alignment.Center
                 ) {
+                    Image(
+                        painter = painterResource(Res.drawable.background),
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop,
+                        alpha = 1f,
+                    )
                     Column(
                         modifier = Modifier
                             .widthIn(max = 420.dp)
@@ -123,7 +131,7 @@ fun RecoveryScreen(
                             Text("E-mail", color = rosa, fontSize = 14.sp, fontWeight = FontWeight.Medium, lineHeight = 20.sp)
                             OutlinedTextField(
                                 value = email,
-                                onValueChange = { email = it },
+                                onValueChange = { email = it.filter { c -> c != ' ' } },
                                 modifier = Modifier.fillMaxWidth(),
                                 placeholder = { Text("Insira o seu e-mail", color = rosa.copy(alpha = 0.8f), fontSize = 14.sp, lineHeight = 20.sp) },
                                 singleLine = true,
@@ -145,7 +153,7 @@ fun RecoveryScreen(
                             Text("Confirme o e-mail", color = rosa, fontSize = 14.sp, fontWeight = FontWeight.Medium, lineHeight = 20.sp)
                             OutlinedTextField(
                                 value = confirmEmail,
-                                onValueChange = { confirmEmail = it },
+                                onValueChange = { confirmEmail = it.filter { c -> c != ' ' } },
                                 modifier = Modifier.fillMaxWidth(),
                                 placeholder = { Text("Insira o seu e-mail novamente", color = rosa.copy(alpha = 0.8f), fontSize = 14.sp, lineHeight = 20.sp) },
                                 singleLine = true,
@@ -203,6 +211,13 @@ fun RecoveryScreen(
                 }
             }
         } else {
+            Image(
+                painter = painterResource(Res.drawable.background),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop,
+                alpha = 1f,
+            )
             val formWidth = minOf(maxWidth - recoveryFormHorizontalMargin, recoveryFormMaxWidth).coerceAtLeast(0.dp)
             Column(
                 modifier = Modifier
@@ -240,7 +255,7 @@ fun RecoveryScreen(
                     Text("E-mail", color = rosa, fontSize = 14.sp, fontWeight = FontWeight.Medium, lineHeight = 20.sp)
                     OutlinedTextField(
                         value = email,
-                        onValueChange = { email = it },
+                        onValueChange = { email = it.filter { c -> c != ' ' } },
                         modifier = Modifier.fillMaxWidth(),
                         placeholder = { Text("Insira o seu e-mail", color = rosa.copy(alpha = 0.8f), fontSize = 14.sp, lineHeight = 20.sp) },
                         singleLine = true,
@@ -262,7 +277,7 @@ fun RecoveryScreen(
                     Text("Confirme o e-mail", color = rosa, fontSize = 14.sp, fontWeight = FontWeight.Medium, lineHeight = 20.sp)
                     OutlinedTextField(
                         value = confirmEmail,
-                        onValueChange = { confirmEmail = it },
+                        onValueChange = { confirmEmail = it.filter { c -> c != ' ' } },
                         modifier = Modifier.fillMaxWidth(),
                         placeholder = { Text("Insira o seu e-mail novamente", color = rosa.copy(alpha = 0.8f), fontSize = 14.sp, lineHeight = 20.sp) },
                         singleLine = true,

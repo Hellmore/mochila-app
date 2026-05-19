@@ -1,6 +1,7 @@
 package br.com.mochila.ui.screens
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -11,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -20,6 +22,9 @@ import br.com.mochila.presenter.SignedRecoveryPresenter
 import br.com.mochila.presenter.SignedRecoveryView
 import br.com.mochila.ui.screens.components.BackButton
 import br.com.mochila.ui.screens.components.ProfileAvatar
+import mochila_app.composeapp.generated.resources.Res
+import mochila_app.composeapp.generated.resources.*
+import org.jetbrains.compose.resources.painterResource
 
 private val signedRecoveryFormMaxWidth = 360.dp
 private val signedRecoveryFormHorizontalMargin = 48.dp
@@ -69,16 +74,33 @@ fun SignedRecoveryScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.padding(horizontal = 24.dp)
                     ) {
+                        Box(
+                            modifier = Modifier
+                                .size(160.dp)
+                                .background(Color.White.copy(alpha = 0.15f), RoundedCornerShape(16.dp)),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Image(
+                                painter = painterResource(Res.drawable.logo),
+                                contentDescription = "Logo Mochila Hub",
+                                modifier = Modifier.fillMaxSize().padding(16.dp),
+                            )
+                        }
+                        Spacer(Modifier.height(24.dp))
+                        Text("Mochila Hub", color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.Bold)
+                        Spacer(Modifier.height(8.dp))
+                        Text("Organize sua vida acadêmica", color = Color.White.copy(alpha = 0.85f), fontSize = 15.sp)
+                        Spacer(Modifier.height(32.dp))
                         ProfileAvatar(
                             name = UserSession.currentUser?.name ?: "",
                             photoPath = UserSession.currentUser?.photoPath,
-                            size = 120.dp,
+                            size = 72.dp,
                             accentColor = Color.White,
                             onClick = {}
                         )
-                        Spacer(Modifier.height(16.dp))
+                        Spacer(Modifier.height(12.dp))
                         UserSession.currentUser?.name?.takeIf { it.isNotBlank() }?.let { name ->
-                            Text(name, color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                            Text(name, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
                             Spacer(Modifier.height(4.dp))
                         }
                     }
@@ -92,6 +114,13 @@ fun SignedRecoveryScreen(
                         .background(fundoTela),
                     contentAlignment = Alignment.Center
                 ) {
+                    Image(
+                        painter = painterResource(Res.drawable.background),
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop,
+                        alpha = 1f,
+                    )
                     Column(
                         modifier = Modifier
                             .widthIn(max = 420.dp)
@@ -100,9 +129,8 @@ fun SignedRecoveryScreen(
                             .verticalScroll(rememberScrollState()),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Spacer(Modifier.height(16.dp))
                         Row(
-                            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                            modifier = Modifier.fillMaxWidth().padding(top = 32.dp, bottom = 8.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             BackButton(onBack = onBack, backgroundColor = rosa, iconTint = Color.White)
@@ -127,11 +155,11 @@ fun SignedRecoveryScreen(
 
                         PasswordFields(
                             currentPassword = currentPassword,
-                            onCurrentPasswordChange = { if (it.length <= 25) currentPassword = it },
+                            onCurrentPasswordChange = { if (it.length <= 25) currentPassword = it.filter { c -> c != ' ' } },
                             newPassword = newPassword,
-                            onNewPasswordChange = { if (it.length <= 25) newPassword = it },
+                            onNewPasswordChange = { if (it.length <= 25) newPassword = it.filter { c -> c != ' ' } },
                             confirmPassword = confirmPassword,
-                            onConfirmPasswordChange = { if (it.length <= 25) confirmPassword = it },
+                            onConfirmPasswordChange = { if (it.length <= 25) confirmPassword = it.filter { c -> c != ' ' } },
                             rosa = rosa
                         )
 
@@ -167,10 +195,19 @@ fun SignedRecoveryScreen(
                         ) { Text("Cancelar", fontWeight = FontWeight.Medium, fontSize = 16.sp) }
 
                         Spacer(Modifier.height(32.dp))
+
+                        Spacer(Modifier.height(32.dp))
                     }
                 }
             }
         } else {
+            Image(
+                painter = painterResource(Res.drawable.background),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop,
+                alpha = 1f,
+            )
             val formWidth = minOf(maxWidth - signedRecoveryFormHorizontalMargin, signedRecoveryFormMaxWidth).coerceAtLeast(0.dp)
             Column(
                 modifier = Modifier
@@ -215,11 +252,11 @@ fun SignedRecoveryScreen(
 
                 PasswordFields(
                     currentPassword = currentPassword,
-                    onCurrentPasswordChange = { if (it.length <= 25) currentPassword = it },
+                    onCurrentPasswordChange = { if (it.length <= 25) currentPassword = it.filter { c -> c != ' ' } },
                     newPassword = newPassword,
-                    onNewPasswordChange = { if (it.length <= 25) newPassword = it },
+                    onNewPasswordChange = { if (it.length <= 25) newPassword = it.filter { c -> c != ' ' } },
                     confirmPassword = confirmPassword,
-                    onConfirmPasswordChange = { if (it.length <= 25) confirmPassword = it },
+                    onConfirmPasswordChange = { if (it.length <= 25) confirmPassword = it.filter { c -> c != ' ' } },
                     rosa = rosa
                 )
 

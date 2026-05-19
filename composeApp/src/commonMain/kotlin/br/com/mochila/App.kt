@@ -109,10 +109,27 @@ fun App() {
 
                     "home" -> {
                         currentUserId?.let { userId ->
-                            // HomeScreen em stand-by; tela principal = lista de matérias
+                            HomeScreen(
+                                userId = userId,
+                                onOpenMenu = { openMenu() },
+                                onNavigateToAdd = { navigateTo("subject_register") },
+                                onNavigateToSubjectsList = { navigateTo("subjects_list") },
+                                onNavigateToSubject = { subjectId ->
+                                    selectedSubjectId = subjectId
+                                    navigateTo("subject_detail")
+                                },
+                                onNavigateToTasksList = { navigateTo("tasks_list") },
+                                onNavigateToAccountSettings = { navigateTo("account_settings") },
+                                onLogout = { logout() }
+                            )
+                        } ?: logout()
+                    }
+
+                    "subjects_list" -> {
+                        currentUserId?.let { userId ->
                             SubjectListScreen(
                                 userId = userId,
-                                onNavigateToHome = {},
+                                onNavigateToHome = { navigateTo("home") },
                                 onOpenMenu = { openMenu() },
                                 onBack = { goBack() },
                                 onNavigateToAdd = { navigateTo("subject_register") },
@@ -336,6 +353,7 @@ fun App() {
                     MenuScreen(
                         onCloseMenu = { closeMenu() },
                         onNavigateToHome = { closeMenu(); navigateTo("home") },
+                        onNavigateToSubjectsList = { closeMenu(); navigateTo("subjects_list") },
                         onNavigateToTasksList = { closeMenu(); navigateTo("tasks_list") },
                         onNavigateToEventos = { closeMenu(); navigateTo("events_list") },
                         onNavigateToAccountSettings = { closeMenu(); navigateTo("account_settings") },
