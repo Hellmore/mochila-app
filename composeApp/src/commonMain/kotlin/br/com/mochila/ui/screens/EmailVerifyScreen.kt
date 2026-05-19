@@ -37,7 +37,7 @@ fun EmailVerifyScreen(
 ) {
     val fundoTela = Color(0xFFF8F8F8)
     val rosa = Color(0xFFFF6694)
-    val logoArea = Color(0xFFD9D9D9)
+    val logoArea = Color(0xFFFF6694)
 
     var code by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }

@@ -35,7 +35,7 @@ fun LoginScreen(
     val fundoTela = Color(0xFFF8F8F8)
     val rosa = Color(0xFFFF6694)
     val laranja = Color(0xFFFFBA5E)
-    val logoArea = Color(0xFFD9D9D9)
+    val logoArea = Color(0xFFFF6694)
 
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }

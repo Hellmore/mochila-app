@@ -19,6 +19,7 @@ fun App() {
     var selectedSubjectId by remember { mutableStateOf<Int?>(null) }
     var selectedTaskId   by remember { mutableStateOf<Int?>(null) }
     var selectedEventId  by remember { mutableStateOf<Int?>(null) }
+    var selectedFaltaId  by remember { mutableStateOf<Int?>(null) }
     var accountPasswordFeedback by remember { mutableStateOf<Pair<String, Boolean>?>(null) }
     var pendingEmail     by remember { mutableStateOf("") }
 
@@ -326,6 +327,56 @@ fun App() {
                         } ?: logout()
                     }
 
+                    "faltas_list" -> {
+                        currentUserId?.let { userId ->
+                            FaltaListScreen(
+                                userId = userId,
+                                onNavigateToHome = { navigateTo("home") },
+                                onOpenMenu = { openMenu() },
+                                onBack = { goBack() },
+                                onNavigateToAdd = { navigateTo("falta_register") },
+                                onNavigateToFaltaEdit = { id ->
+                                    selectedFaltaId = id
+                                    navigateTo("falta_edit")
+                                },
+                                onNavigateToAccountSettings = { navigateTo("account_settings") },
+                                onLogout = { logout() },
+                            )
+                        } ?: logout()
+                    }
+
+                    "falta_register" -> {
+                        currentUserId?.let { userId ->
+                            FaltaRegisterScreen(
+                                userId = userId,
+                                onNavigateToHome = { navigateTo("home") },
+                                onBack = { goBack() },
+                                onLogout = { logout() },
+                                onOpenMenu = { openMenu() },
+                                onNavigateToFaltasList = { goBack() },
+                                onNavigateToAccountSettings = { navigateTo("account_settings") },
+                            )
+                        } ?: logout()
+                    }
+
+                    "falta_edit" -> {
+                        currentUserId?.let { userId ->
+                            selectedFaltaId?.let { fid ->
+                                FaltaRegisterScreen(
+                                    userId = userId,
+                                    isEditing = true,
+                                    faltaId = fid,
+                                    onNavigateToHome = { navigateTo("home") },
+                                    onBack = { goBack() },
+                                    onLogout = { logout() },
+                                    onOpenMenu = { openMenu() },
+                                    onNavigateToFaltasList = { goBack() },
+                                    onNavigateToAccountSettings = { navigateTo("account_settings") },
+                                )
+                            } ?: goBack()
+                        } ?: logout()
+                    }
+
                     "event_edit" -> {
                         currentUserId?.let { userId ->
                             selectedEventId?.let { eid ->
@@ -356,6 +407,7 @@ fun App() {
                         onNavigateToSubjectsList = { closeMenu(); navigateTo("subjects_list") },
                         onNavigateToTasksList = { closeMenu(); navigateTo("tasks_list") },
                         onNavigateToEventos = { closeMenu(); navigateTo("events_list") },
+                        onNavigateToPlanoFaltas = { closeMenu(); navigateTo("faltas_list") },
                         onNavigateToAccountSettings = { closeMenu(); navigateTo("account_settings") },
                         onLogout = { logout() }
                     )
