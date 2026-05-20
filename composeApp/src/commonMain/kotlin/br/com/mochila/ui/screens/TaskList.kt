@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package br.com.mochila.ui.screens
 
 import androidx.compose.foundation.Image
@@ -11,6 +13,9 @@ import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.OutlinedTextField
@@ -40,11 +45,25 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import mochila_app.composeapp.generated.resources.Res
 import mochila_app.composeapp.generated.resources.*
+import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 
 private val fundoTela = Color(0xFFF8F8F8)
 private val laranjaHeader = Color(0xFFFFBA5E)
 private val rosa = Color(0xFFFF6694)
+private val verdeConclusao = Color(0xFF6B9A78)
+private val vermelhoCancelamento = Color(0xFFC47A7A)
+private val taskCellHeight = 110.dp
+private val taskCardPadding = 10.dp
+private val taskActionHeight = 28.dp
+
+private val taskStatusFilterOptions = listOf(
+    "Todos",
+    "Pendente",
+    "Em andamento",
+    "Cancelada",
+    "Concluida",
+)
 
 private val monthNamesPt = listOf(
     "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
@@ -107,6 +126,77 @@ private fun TaskSearchBar(
 }
 
 @Composable
+private fun TaskStatusFilterDropdown(
+    value: String,
+    onSelect: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    Column(modifier = modifier) {
+        Text(
+            text = "Status",
+            color = laranjaHeader,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Normal,
+            modifier = Modifier.padding(bottom = 4.dp),
+        )
+        Box {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(32.dp)
+                    .clip(RoundedCornerShape(7.dp))
+                    .background(Color.White)
+                    .border(1.dp, rosa, RoundedCornerShape(7.dp))
+                    .clickable { expanded = true }
+                    .padding(start = 10.dp, end = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = value,
+                    color = rosa,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Light,
+                    modifier = Modifier.weight(1f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Box(
+                    modifier = Modifier
+                        .size(28.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(rosa)
+                        .clickable { expanded = true },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Image(
+                        painter = painterResource(Res.drawable.drop),
+                        contentDescription = "Abrir filtro de status",
+                        modifier = Modifier.size(14.dp),
+                        colorFilter = ColorFilter.tint(Color.White),
+                    )
+                }
+            }
+            DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                taskStatusFilterOptions.forEach { option ->
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                text = option,
+                                fontSize = 12.sp,
+                                color = if (option == value) rosa else Color(0xFF333333),
+                                fontWeight = if (option == value) FontWeight.Bold else FontWeight.Normal,
+                            )
+                        },
+                        onClick = { onSelect(option); expanded = false },
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun TaskListBottomBar(
     onOpenMenu: () -> Unit,
     onNavigateToAdd: () -> Unit,
@@ -166,11 +256,7 @@ fun TaskListScreen(
 ) {
     var tasks by remember { mutableStateOf<List<Task>>(emptyList()) }
     var searchQuery by remember { mutableStateOf("") }
-
-    val filteredTasks = remember(tasks, searchQuery) {
-        if (searchQuery.isBlank()) tasks
-        else tasks.filter { it.title.contains(searchQuery, ignoreCase = true) }
-    }
+    var statusFilter by remember { mutableStateOf("Todos") }
 
     val presenter = remember {
         object : TaskListView {
@@ -186,6 +272,10 @@ fun TaskListScreen(
                 onNavigateToTaskDetail(taskId)
             }
         }.let { TaskListPresenter(it) }
+    }
+
+    val filteredTasks = remember(tasks, searchQuery, statusFilter) {
+        presenter.filterTasks(tasks, searchQuery, statusFilter)
     }
 
     LaunchedEffect(userId) {
@@ -210,6 +300,8 @@ fun TaskListScreen(
                 filteredTasks = filteredTasks,
                 searchQuery = searchQuery,
                 onSearchQueryChange = { searchQuery = it },
+                statusFilter = statusFilter,
+                onStatusFilterChange = { statusFilter = it },
                 dateLabel = dateLabel,
                 onBack = onBack,
                 onNavigateToAdd = onNavigateToAdd,
@@ -217,6 +309,8 @@ fun TaskListScreen(
                 onNavigateToHome = onNavigateToHome,
                 onNavigateToAccountSettings = onNavigateToAccountSettings,
                 onTaskClick = { id -> presenter.onTaskClicked(id) },
+                onCompleteTask = { task -> presenter.completeTask(userId, task) },
+                onCancelTask = { task -> presenter.cancelTask(userId, task) },
             )
         } else {
             Image(
@@ -231,6 +325,8 @@ fun TaskListScreen(
                 filteredTasks = filteredTasks,
                 searchQuery = searchQuery,
                 onSearchQueryChange = { searchQuery = it },
+                statusFilter = statusFilter,
+                onStatusFilterChange = { statusFilter = it },
                 dateLabel = dateLabel,
                 onBack = onBack,
                 onNavigateToAdd = onNavigateToAdd,
@@ -238,6 +334,8 @@ fun TaskListScreen(
                 onNavigateToHome = onNavigateToHome,
                 onNavigateToAccountSettings = onNavigateToAccountSettings,
                 onTaskClick = { id -> presenter.onTaskClicked(id) },
+                onCompleteTask = { task -> presenter.completeTask(userId, task) },
+                onCancelTask = { task -> presenter.cancelTask(userId, task) },
             )
         }
     }
@@ -249,6 +347,8 @@ private fun TaskListMobileLayout(
     filteredTasks: List<Task>,
     searchQuery: String,
     onSearchQueryChange: (String) -> Unit,
+    statusFilter: String,
+    onStatusFilterChange: (String) -> Unit,
     dateLabel: String,
     onBack: () -> Unit,
     onNavigateToAdd: () -> Unit,
@@ -256,7 +356,10 @@ private fun TaskListMobileLayout(
     onNavigateToHome: () -> Unit,
     onNavigateToAccountSettings: () -> Unit,
     onTaskClick: (Int) -> Unit,
+    onCompleteTask: (Task) -> Unit,
+    onCancelTask: (Task) -> Unit,
 ) {
+    val hasActiveFilters = searchQuery.isNotBlank() || statusFilter != "Todos"
     val user = UserSession.currentUser
     val name = user?.name.orEmpty()
 
@@ -321,22 +424,35 @@ private fun TaskListMobileLayout(
             }
         }
 
-        TaskSearchBar(
-            query = searchQuery,
-            onQueryChange = onSearchQueryChange,
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 36.dp)
                 .padding(top = 12.dp, bottom = 8.dp),
-        )
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.Bottom,
+        ) {
+            TaskSearchBar(
+                query = searchQuery,
+                onQueryChange = onSearchQueryChange,
+                modifier = Modifier.weight(1f),
+            )
+            TaskStatusFilterDropdown(
+                value = statusFilter,
+                onSelect = onStatusFilterChange,
+                modifier = Modifier.width(140.dp),
+            )
+        }
 
         TaskGrid(
             tasks = filteredTasks,
             allTasksEmpty = tasks.isEmpty(),
-            noSearchResults = tasks.isNotEmpty() && filteredTasks.isEmpty() && searchQuery.isNotBlank(),
+            noFilterResults = tasks.isNotEmpty() && filteredTasks.isEmpty() && hasActiveFilters,
             columns = 2,
             onNavigateToAdd = onNavigateToAdd,
             onTaskClick = onTaskClick,
+            onCompleteTask = onCompleteTask,
+            onCancelTask = onCancelTask,
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
@@ -358,6 +474,8 @@ private fun TaskListDesktopLayout(
     filteredTasks: List<Task>,
     searchQuery: String,
     onSearchQueryChange: (String) -> Unit,
+    statusFilter: String,
+    onStatusFilterChange: (String) -> Unit,
     dateLabel: String,
     onBack: () -> Unit,
     onNavigateToAdd: () -> Unit,
@@ -365,7 +483,10 @@ private fun TaskListDesktopLayout(
     onNavigateToHome: () -> Unit,
     onNavigateToAccountSettings: () -> Unit,
     onTaskClick: (Int) -> Unit,
+    onCompleteTask: (Task) -> Unit,
+    onCancelTask: (Task) -> Unit,
 ) {
+    val hasActiveFilters = searchQuery.isNotBlank() || statusFilter != "Todos"
     val user = UserSession.currentUser
     val name = user?.name.orEmpty()
 
@@ -472,22 +593,35 @@ private fun TaskListDesktopLayout(
                 )
             }
 
-            TaskSearchBar(
-                query = searchQuery,
-                onQueryChange = onSearchQueryChange,
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 36.dp)
                     .padding(bottom = 8.dp),
-            )
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.Bottom,
+            ) {
+                TaskSearchBar(
+                    query = searchQuery,
+                    onQueryChange = onSearchQueryChange,
+                    modifier = Modifier.weight(1f),
+                )
+                TaskStatusFilterDropdown(
+                    value = statusFilter,
+                    onSelect = onStatusFilterChange,
+                    modifier = Modifier.width(180.dp),
+                )
+            }
 
             TaskGrid(
                 tasks = filteredTasks,
                 allTasksEmpty = tasks.isEmpty(),
-                noSearchResults = tasks.isNotEmpty() && filteredTasks.isEmpty() && searchQuery.isNotBlank(),
+                noFilterResults = tasks.isNotEmpty() && filteredTasks.isEmpty() && hasActiveFilters,
                 columns = 3,
                 onNavigateToAdd = onNavigateToAdd,
                 onTaskClick = onTaskClick,
+                onCompleteTask = onCompleteTask,
+                onCancelTask = onCancelTask,
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
@@ -509,10 +643,12 @@ private fun TaskListDesktopLayout(
 private fun TaskGrid(
     tasks: List<Task>,
     allTasksEmpty: Boolean,
-    noSearchResults: Boolean,
+    noFilterResults: Boolean,
     columns: Int,
     onNavigateToAdd: () -> Unit,
     onTaskClick: (Int) -> Unit,
+    onCompleteTask: (Task) -> Unit,
+    onCancelTask: (Task) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     if (allTasksEmpty) {
@@ -529,7 +665,7 @@ private fun TaskGrid(
                     onClick = onNavigateToAdd,
                     modifier = Modifier
                         .width(cellWidth)
-                        .heightIn(min = 87.dp),
+                        .height(taskCellHeight),
                 )
                 Spacer(Modifier.height(16.dp))
                 Text(
@@ -542,7 +678,7 @@ private fun TaskGrid(
         return
     }
 
-    if (noSearchResults) {
+    if (noFilterResults) {
         BoxWithConstraints(modifier = modifier.verticalScroll(rememberScrollState())) {
             val gridSpacing = 16.dp
             val cellWidth =
@@ -555,7 +691,7 @@ private fun TaskGrid(
                     onClick = onNavigateToAdd,
                     modifier = Modifier
                         .width(cellWidth)
-                        .heightIn(min = 87.dp),
+                        .height(taskCellHeight),
                 )
                 Spacer(Modifier.height(16.dp))
                 Text(
@@ -579,13 +715,15 @@ private fun TaskGrid(
                 onClick = onNavigateToAdd,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(min = 87.dp),
+                    .height(taskCellHeight),
             )
         }
         itemsIndexed(tasks, key = { _, t -> t.id }) { _, task ->
             TaskCard(
                 task = task,
                 onClick = { onTaskClick(task.id) },
+                onComplete = { onCompleteTask(task) },
+                onCancel = { onCancelTask(task) },
             )
         }
     }
@@ -612,43 +750,149 @@ private fun AddTaskCell(
     }
 }
 
+private fun taskStatusShowsActions(status: String) =
+    status == "Pendente" || status == "Em andamento"
+
+private fun taskStatusDisplayLabel(status: String) = when (status) {
+    "Concluida" -> "Concluída"
+    else -> status
+}
+
+@Composable
+private fun TaskActionChip(
+    modifier: Modifier = Modifier,
+    icon: DrawableResource,
+    iconTint: Color,
+    contentDescription: String,
+    label: String? = null,
+    onClick: (() -> Unit)? = null,
+) {
+    Box(
+        modifier = modifier
+            .height(taskActionHeight)
+            .clip(RoundedCornerShape(6.dp))
+            .background(Color.White)
+            .then(
+                if (onClick != null) Modifier.clickable(onClick = onClick)
+                else Modifier,
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (label != null) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Image(
+                    painter = painterResource(icon),
+                    contentDescription = contentDescription,
+                    modifier = Modifier.size(12.dp),
+                    colorFilter = ColorFilter.tint(iconTint),
+                )
+                Text(
+                    text = label,
+                    color = iconTint,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Medium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        } else {
+            Image(
+                painter = painterResource(icon),
+                contentDescription = contentDescription,
+                modifier = Modifier.size(14.dp),
+                colorFilter = ColorFilter.tint(iconTint),
+            )
+        }
+    }
+}
+
 @Composable
 private fun TaskCard(
     task: Task,
     onClick: () -> Unit,
+    onComplete: () -> Unit,
+    onCancel: () -> Unit,
 ) {
+    val showsActions = taskStatusShowsActions(task.status)
+    val showsStatusInBody = showsActions && task.status.isNotBlank()
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 87.dp)
+            .height(taskCellHeight)
             .clip(RoundedCornerShape(9.dp))
             .background(laranjaHeader)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 8.dp, vertical = 12.dp),
+            .padding(horizontal = 8.dp, vertical = taskCardPadding),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
+        verticalArrangement = Arrangement.SpaceBetween,
     ) {
-        Text(
-            text = task.title,
-            color = Color.White,
-            fontSize = 13.sp,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center,
-            maxLines = 3,
-            overflow = TextOverflow.Ellipsis,
-            lineHeight = 14.sp,
-        )
-        if (task.status.isNotBlank()) {
-            Spacer(Modifier.height(6.dp))
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+                .clickable(onClick = onClick),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
             Text(
-                text = task.status,
+                text = task.title,
                 color = Color.White,
-                fontSize = 10.sp,
-                fontWeight = FontWeight.Normal,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
-                maxLines = 2,
+                maxLines = 3,
                 overflow = TextOverflow.Ellipsis,
-                lineHeight = 13.sp,
+                lineHeight = 14.sp,
+            )
+            if (showsStatusInBody) {
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    text = task.status,
+                    color = Color.White,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Normal,
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    lineHeight = 13.sp,
+                )
+            }
+        }
+        if (showsActions) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                TaskActionChip(
+                    modifier = Modifier.weight(1f),
+                    icon = Res.drawable.task_icon_check,
+                    iconTint = verdeConclusao,
+                    contentDescription = "Concluir tarefa",
+                    onClick = onComplete,
+                )
+                TaskActionChip(
+                    modifier = Modifier.weight(1f),
+                    icon = Res.drawable.menu_close,
+                    iconTint = vermelhoCancelamento,
+                    contentDescription = "Cancelar tarefa",
+                    onClick = onCancel,
+                )
+            }
+        } else {
+            val (icon, tint) = when (task.status) {
+                "Concluida" -> Res.drawable.task_icon_check to verdeConclusao
+                "Cancelada" -> Res.drawable.menu_close to vermelhoCancelamento
+                else -> Res.drawable.task_icon_check to Color(0xFF888888)
+            }
+            TaskActionChip(
+                modifier = Modifier.fillMaxWidth(),
+                icon = icon,
+                iconTint = tint,
+                contentDescription = task.status,
+                label = taskStatusDisplayLabel(task.status),
             )
         }
     }

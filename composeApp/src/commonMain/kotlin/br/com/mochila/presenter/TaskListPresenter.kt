@@ -24,8 +24,34 @@ class TaskListPresenter(private val view: TaskListView) {
         view.navigateToTaskDetail(taskId)
     }
 
-    fun filterTasks(tasks: List<Task>, searchQuery: String): List<Task> {
-        if (searchQuery.isBlank()) return tasks
-        return tasks.filter { it.title.contains(searchQuery, ignoreCase = true) }
+    fun filterTasks(
+        tasks: List<Task>,
+        searchQuery: String,
+        statusFilter: String,
+    ): List<Task> {
+        var result = tasks
+        if (searchQuery.isNotBlank()) {
+            result = result.filter { it.title.contains(searchQuery, ignoreCase = true) }
+        }
+        if (statusFilter != "Todos") {
+            result = result.filter { it.status == statusFilter }
+        }
+        return result
+    }
+
+    fun completeTask(userId: Int, task: Task) {
+        if (task.status == "Concluida") return
+        val updated = task.copy(status = "Concluida")
+        if (TaskRepository.update(userId, updated)) {
+            loadTasks(userId)
+        }
+    }
+
+    fun cancelTask(userId: Int, task: Task) {
+        if (task.status == "Cancelada") return
+        val updated = task.copy(status = "Cancelada")
+        if (TaskRepository.update(userId, updated)) {
+            loadTasks(userId)
+        }
     }
 }
