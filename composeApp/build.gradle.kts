@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.composeHotReload)
+    jacoco
 }
 
 kotlin {
@@ -44,6 +45,11 @@ kotlin {
 
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+        }
+
+        jvmTest.dependencies {
+            implementation("io.mockk:mockk:1.13.12")
+            implementation(kotlin("test-junit"))
         }
 
         jvmMain.dependencies {
@@ -97,6 +103,40 @@ compose.desktop {
             packageVersion = "1.0.0"
         }
     }
+}
+
+tasks.register<JacocoReport>("jacocoJvmReport") {
+    dependsOn(tasks.named("jvmTest"))
+
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+        html.outputLocation.set(layout.buildDirectory.dir("reports/jacoco/html"))
+    }
+
+    val commonSrc = kotlin.sourceSets["commonMain"].kotlin.sourceDirectories
+    val jvmSrc    = kotlin.sourceSets["jvmMain"].kotlin.sourceDirectories
+    sourceDirectories.setFrom(commonSrc + jvmSrc)
+
+    classDirectories.setFrom(
+        fileTree("${layout.buildDirectory.get()}/classes/kotlin/jvm/main") {
+            exclude(
+                "**/*Screen*",
+                "**/ui/**",
+                "**/theme/**",
+                "**/component/**",
+                "**/App*",
+                "**/MainKt*",
+                "**/MainActivity*",
+                "**/generated/**",
+                "**/mochila_app/**",
+            )
+        }
+    )
+
+    executionData.setFrom(
+        fileTree(layout.buildDirectory.get()) { include("jacoco/jvmTest.exec") }
+    )
 }
 
 // ✅ Inclui os arquivos de recursos no build final (SQL, JSON, etc.)
