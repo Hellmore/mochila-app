@@ -94,6 +94,7 @@ class RecoveryPresenterTest {
     @Test fun `resetPassword com sucesso retorna null`() {
         every { UserRepository.findByEmail(any()) } returns User(id = 1, name = "Ana", email = "a@b.com")
         every { UserRepository.update(any(), any(), any(), any()) } returns true
+        every { UserRepository.verifyEmail(any()) } returns true
         val result = NewPasswordPresenter().resetPassword("a@b.com", "Nova@123", "Nova@123")
         assertNull(result)
     }

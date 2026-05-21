@@ -7,5 +7,6 @@ data class Task(
     val description: String = "",
     val status: String = "Pendente",
     val blockers: String? = null,
-    val dueDate: String? = null
+    val dueDate: String? = null,
+    val subjectId: Int? = null,
 )
