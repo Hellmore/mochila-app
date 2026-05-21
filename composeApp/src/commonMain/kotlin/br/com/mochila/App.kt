@@ -22,6 +22,7 @@ fun App() {
     var selectedFaltaId  by remember { mutableStateOf<Int?>(null) }
     var accountPasswordFeedback by remember { mutableStateOf<Pair<String, Boolean>?>(null) }
     var pendingEmail     by remember { mutableStateOf("") }
+    var taskSubjectId    by remember { mutableStateOf<Int?>(null) }
 
     val currentScreen = screenStack.last()
 
@@ -96,7 +97,9 @@ fun App() {
                     "email_code" -> EmailCodeScreen(
                         email = pendingEmail,
                         onBackToRecovery = { goBack() },
-                        onNavigateToNewPassword = { navigateTo("new_password") }
+                        onNavigateToNewPassword = {
+                            screenStack = screenStack.dropLast(1) + "new_password"
+                        }
                     )
 
                     "new_password" -> NewPasswordScreen(
@@ -168,7 +171,10 @@ fun App() {
                                         selectedSubjectId = subject.id
                                         navigateTo("subject_edit")
                                     },
-                                    onNavigateToTaskRegister = { navigateTo("task_register") },
+                                    onNavigateToTaskRegister = {
+                                    taskSubjectId = selectedSubjectId
+                                    navigateTo("task_register")
+                                },
                                     onNavigateToHome = { navigateTo("home") },
                                     onBack = { goBack() },
                                     onNavigateToTasksList = { navigateTo("tasks_list") },
@@ -204,11 +210,12 @@ fun App() {
                             TaskRegisterScreen(
                                 userId = userId,
                                 onNavigateToHome = { navigateTo("home") },
-                                onBack = { goBack() },
+                                onBack = { taskSubjectId = null; goBack() },
                                 onLogout = { logout() },
-                                onNavigateToTasksList = { navigateTo("tasks_list") },
+                                onNavigateToTasksList = { taskSubjectId = null; navigateTo("tasks_list") },
                                 onOpenMenu = { openMenu() },
                                 onNavigateToAccountSettings = { navigateTo("account_settings") },
+                                preselectedSubjectId = taskSubjectId,
                             )
                         } ?: logout()
                     }
@@ -223,7 +230,7 @@ fun App() {
                                 },
                                 onBack = { goBack() },
                                 onOpenMenu = { openMenu() },
-                                onNavigateToAdd = { navigateTo("task_register") },
+                                onNavigateToAdd = { taskSubjectId = null; navigateTo("task_register") },
                                 onNavigateToAccountSettings = { navigateTo("account_settings") },
                                 onNavigateToHome = { navigateTo("home") },
                                 onLogout = { logout() },

@@ -12,14 +12,13 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -96,32 +95,30 @@ private fun TaskSearchBar(
     onQueryChange: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    OutlinedTextField(
+    BasicTextField(
         value = query,
         onValueChange = onQueryChange,
-        modifier = modifier.fillMaxWidth(),
-        placeholder = {
-            Text(
-                text = "Buscar tarefa",
-                color = Color.Gray,
-                fontSize = 12.sp,
-            )
-        },
+        modifier = modifier
+            .fillMaxWidth()
+            .height(44.dp)
+            .clip(RoundedCornerShape(7.dp))
+            .background(Color.White)
+            .border(1.dp, rosa.copy(alpha = 0.6f), RoundedCornerShape(7.dp)),
         singleLine = true,
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedContainerColor = Color.White,
-            unfocusedContainerColor = Color.White,
-            focusedBorderColor = rosa,
-            unfocusedBorderColor = rosa.copy(alpha = 0.6f),
-            focusedTextColor = Color(0xFF333333),
-            unfocusedTextColor = Color(0xFF333333),
-            cursorColor = rosa,
-        ),
-        textStyle = LocalTextStyle.current.copy(
-            fontSize = 13.sp,
-            color = Color(0xFF333333),
-        ),
-        shape = RoundedCornerShape(7.dp),
+        textStyle = LocalTextStyle.current.copy(fontSize = 13.sp, color = Color(0xFF333333)),
+        decorationBox = { innerTextField ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 12.dp),
+                contentAlignment = Alignment.CenterStart,
+            ) {
+                if (query.isEmpty()) {
+                    Text("Buscar tarefa", color = Color.Gray, fontSize = 12.sp)
+                }
+                innerTextField()
+            }
+        }
     )
 }
 

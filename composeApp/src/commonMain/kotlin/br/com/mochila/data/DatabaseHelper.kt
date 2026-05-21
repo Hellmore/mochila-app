@@ -112,6 +112,16 @@ object DatabaseHelper {
                 stmt.execute("UPDATE disciplina SET cor_rgb = 3710463 WHERE cor_rgb IS NULL")
             }
 
+            val colsTarefa = conn.createStatement().executeQuery("PRAGMA table_info(tarefa)")
+            var hasTarefaIdDisciplina = false
+            while (colsTarefa.next()) {
+                if (colsTarefa.getString("name") == "id_disciplina") { hasTarefaIdDisciplina = true; break }
+            }
+            colsTarefa.close()
+            if (!hasTarefaIdDisciplina) {
+                stmt.execute("ALTER TABLE tarefa ADD COLUMN id_disciplina INTEGER REFERENCES disciplina(id_disciplina) ON DELETE SET NULL")
+            }
+
             val colsEvento = conn.createStatement().executeQuery("PRAGMA table_info(evento)")
             var hasIdDisciplina = false
             var hasEventCorRgb = false

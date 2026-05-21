@@ -23,13 +23,17 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import br.com.mochila.data.SubjectRepository
 import br.com.mochila.data.UserSession
+import br.com.mochila.model.Subject
 import br.com.mochila.model.Task
 import br.com.mochila.presenter.TaskRegisterPresenter
 import br.com.mochila.presenter.TaskRegisterView
 import br.com.mochila.ui.screens.components.BackButton
 import br.com.mochila.ui.screens.components.CalendarPicker
 import br.com.mochila.ui.screens.components.ProfileAvatar
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -178,12 +182,15 @@ fun TaskRegisterScreen(
     onNavigateToAccountSettings: () -> Unit = {},
     isEditing: Boolean = false,
     taskId: Int? = null,
+    preselectedSubjectId: Int? = null,
 ) {
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var status by remember { mutableStateOf("Pendente") }
     var blockers by remember { mutableStateOf("") }
     var dueDate by remember { mutableStateOf("") }
+    var selectedSubjectId by remember { mutableStateOf(preselectedSubjectId) }
+    var subjects by remember { mutableStateOf<List<Subject>>(emptyList()) }
 
     var loadedTaskId by remember { mutableStateOf(0) }
 
@@ -201,6 +208,7 @@ fun TaskRegisterScreen(
                 status = task.status
                 blockers = task.blockers ?: ""
                 dueDate = task.dueDate ?: ""
+                selectedSubjectId = task.subjectId
             }
 
             override fun showValidationError(msg: String) {
@@ -232,6 +240,10 @@ fun TaskRegisterScreen(
                 onNavigateToTasksList()
             }
         }.let { TaskRegisterPresenter(it) }
+    }
+
+    LaunchedEffect(userId) {
+        subjects = withContext(Dispatchers.IO) { SubjectRepository.listByUser(userId) }
     }
 
     LaunchedEffect(taskId, isEditing) {
@@ -269,6 +281,7 @@ fun TaskRegisterScreen(
         status = status,
         blockers = blockers.ifBlank { null },
         dueDate = dueDate.ifBlank { null },
+        subjectId = selectedSubjectId,
     )
 
     @Composable
@@ -435,6 +448,15 @@ fun TaskRegisterScreen(
 
                 Spacer(Modifier.height(14.dp))
 
+                FormLabel("Disciplina:")
+                SubjectDropdown(
+                    subjects = subjects,
+                    selectedSubjectId = selectedSubjectId,
+                    onSubjectSelected = { selectedSubjectId = it },
+                )
+
+                Spacer(Modifier.height(14.dp))
+
                 FormLabel("Status:")
                 StatusField()
 
@@ -559,6 +581,62 @@ fun TaskRegisterScreen(
                 TaskRegisterBottomBar(
                     onOpenMenu = onOpenMenu,
                     onNavigateToHome = onNavigateToHome,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SubjectDropdown(
+    subjects: List<Subject>,
+    selectedSubjectId: Int?,
+    onSubjectSelected: (Int?) -> Unit,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val selectedName = subjects.find { it.id == selectedSubjectId }?.name ?: "Nenhuma"
+    Box(modifier = Modifier.fillMaxWidth()) {
+        FieldRoxo(
+            valor = selectedName,
+            onChange = {},
+            readOnly = true,
+            trailing = {
+                IconButton(onClick = { expanded = true }) {
+                    Image(
+                        painter = painterResource(Res.drawable.drop),
+                        contentDescription = "Selecionar disciplina",
+                        modifier = Modifier.size(18.dp),
+                        colorFilter = ColorFilter.tint(rosa),
+                    )
+                }
+            },
+        )
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+        ) {
+            DropdownMenuItem(
+                text = {
+                    Text(
+                        text = "Nenhuma",
+                        fontSize = 12.sp,
+                        color = if (selectedSubjectId == null) rosa else Color(0xFF333333),
+                        fontWeight = if (selectedSubjectId == null) FontWeight.Bold else FontWeight.Normal,
+                    )
+                },
+                onClick = { onSubjectSelected(null); expanded = false },
+            )
+            subjects.forEach { subject ->
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            text = subject.name,
+                            fontSize = 12.sp,
+                            color = if (selectedSubjectId == subject.id) rosa else Color(0xFF333333),
+                            fontWeight = if (selectedSubjectId == subject.id) FontWeight.Bold else FontWeight.Normal,
+                        )
+                    },
+                    onClick = { onSubjectSelected(subject.id); expanded = false },
                 )
             }
         }

@@ -78,6 +78,8 @@ class NewPasswordPresenter {
         if (!UserRepository.update(user.id, user.name, user.email, newPassword))
             return "Erro ao atualizar a senha. Tente novamente."
 
+        UserRepository.verifyEmail(email.trim())
+
         return null
     }
 

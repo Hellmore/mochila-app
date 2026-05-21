@@ -53,6 +53,7 @@ abstract class RepositoryTestBase {
                 status TEXT NOT NULL DEFAULT 'Pendente',
                 blockers TEXT,
                 data_limite DATETIME,
+                id_disciplina INTEGER REFERENCES disciplina(id_disciplina) ON DELETE SET NULL,
                 criado_em DATETIME DEFAULT CURRENT_TIMESTAMP,
                 atualizado_em DATETIME DEFAULT CURRENT_TIMESTAMP
             );
