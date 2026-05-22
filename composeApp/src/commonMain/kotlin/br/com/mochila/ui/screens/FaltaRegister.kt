@@ -72,8 +72,9 @@ fun FaltaRegisterScreen(
     onNavigateToAccountSettings: () -> Unit = {},
     isEditing: Boolean = false,
     faltaId: Int? = null,
+    preselectedSubjectId: Int? = null,
 ) {
-    var selectedSubjectId by remember { mutableStateOf(0) }
+    var selectedSubjectId by remember { mutableStateOf(preselectedSubjectId ?: 0) }
     var selectedSubjectName by remember { mutableStateOf("Selecione uma matéria") }
     var faltaDate by remember { mutableStateOf("") }
     var selectedStatus by remember { mutableStateOf("Registrada") }
@@ -106,6 +107,17 @@ fun FaltaRegisterScreen(
     LaunchedEffect(userId) { subjects = SubjectRepository.listByUser(userId) }
     LaunchedEffect(faltaId, isEditing) {
         if (isEditing && faltaId != null) presenter.loadFalta(faltaId) else loadedFaltaId = 0
+    }
+    // Pré-seleciona matéria quando vem do detalhe da disciplina
+    LaunchedEffect(subjects) {
+        if (preselectedSubjectId != null && !isEditing && subjects.isNotEmpty()
+            && selectedSubjectName == "Selecione uma matéria"
+        ) {
+            subjects.firstOrNull { it.id == preselectedSubjectId }?.let {
+                selectedSubjectId = it.id
+                selectedSubjectName = it.name
+            }
+        }
     }
 
     val user = UserSession.currentUser

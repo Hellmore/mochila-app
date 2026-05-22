@@ -23,6 +23,7 @@ fun App() {
     var accountPasswordFeedback by remember { mutableStateOf<Pair<String, Boolean>?>(null) }
     var pendingEmail     by remember { mutableStateOf("") }
     var taskSubjectId    by remember { mutableStateOf<Int?>(null) }
+    var faltaSubjectId   by remember { mutableStateOf<Int?>(null) }
 
     val currentScreen = screenStack.last()
 
@@ -174,6 +175,10 @@ fun App() {
                                     onNavigateToTaskRegister = {
                                     taskSubjectId = selectedSubjectId
                                     navigateTo("task_register")
+                                },
+                                onNavigateToFaltaRegister = {
+                                    faltaSubjectId = selectedSubjectId
+                                    navigateTo("falta_register")
                                 },
                                     onNavigateToHome = { navigateTo("home") },
                                     onBack = { goBack() },
@@ -357,11 +362,12 @@ fun App() {
                             FaltaRegisterScreen(
                                 userId = userId,
                                 onNavigateToHome = { navigateTo("home") },
-                                onBack = { goBack() },
+                                onBack = { faltaSubjectId = null; goBack() },
                                 onLogout = { logout() },
                                 onOpenMenu = { openMenu() },
-                                onNavigateToFaltasList = { goBack() },
+                                onNavigateToFaltasList = { faltaSubjectId = null; goBack() },
                                 onNavigateToAccountSettings = { navigateTo("account_settings") },
+                                preselectedSubjectId = faltaSubjectId,
                             )
                         } ?: logout()
                     }
