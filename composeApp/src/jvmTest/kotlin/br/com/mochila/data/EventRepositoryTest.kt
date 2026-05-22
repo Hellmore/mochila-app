@@ -25,8 +25,8 @@ class EventRepositoryTest : RepositoryTestBase() {
         status = "Agendado",
     )
 
-    @Test fun `insert retorna true`() {
-        assertTrue(EventRepository.insert(userId, sampleEvent()))
+    @Test fun `insert retorna id gerado`() {
+        assertNotNull(EventRepository.insert(userId, sampleEvent()))
     }
 
     @Test fun `listByUser retorna eventos inseridos`() {

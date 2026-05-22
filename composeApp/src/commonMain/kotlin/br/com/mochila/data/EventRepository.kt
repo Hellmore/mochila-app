@@ -5,6 +5,7 @@ import br.com.mochila.model.Event
 import kotlinx.datetime.LocalDateTime
 import java.sql.PreparedStatement
 import java.sql.ResultSet
+import java.sql.Statement
 
 object EventRepository {
 
@@ -43,15 +44,15 @@ object EventRepository {
         null
     }
 
-    fun insert(userId: Int, event: Event): Boolean {
-        val conn = DatabaseHelper.connect() ?: return false
+    fun insert(userId: Int, event: Event): Int? {
+        val conn = DatabaseHelper.connect() ?: return null
         return try {
             val sql = """
                 INSERT INTO evento
                 (id_usuario, titulo, descricao, data_evento, status, id_disciplina, cor_rgb, lembrete_minutos, lembrete_exibido)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)
             """.trimIndent()
-            val stmt: PreparedStatement = conn.prepareStatement(sql)
+            val stmt: PreparedStatement = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)
             stmt.setInt(1, userId)
             stmt.setString(2, event.title)
             stmt.setString(3, event.description)
@@ -60,12 +61,19 @@ object EventRepository {
             if (event.subjectId != null) stmt.setInt(6, event.subjectId) else stmt.setNull(6, java.sql.Types.INTEGER)
             stmt.setInt(7, event.colorRgb)
             if (event.reminderMinutes != null) stmt.setInt(8, event.reminderMinutes) else stmt.setNull(8, java.sql.Types.INTEGER)
-            stmt.executeUpdate()
+            val rows = stmt.executeUpdate()
+            val newId = if (rows > 0) {
+                stmt.generatedKeys.use { keys ->
+                    if (keys.next()) keys.getInt(1) else null
+                }
+            } else {
+                null
+            }
             stmt.close()
-            true
+            newId
         } catch (e: Exception) {
             println("⚠️ Erro ao inserir evento: ${e.message}")
-            false
+            null
         } finally {
             conn.close()
         }

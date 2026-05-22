@@ -32,9 +32,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import br.com.mochila.data.SubjectRepository
+import br.com.mochila.data.TaskCategoryCache
 import br.com.mochila.data.TaskPriorityCache
 import br.com.mochila.data.UserSession
+import br.com.mochila.model.Subject
 import br.com.mochila.model.Task
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import br.com.mochila.presenter.TaskListPresenter
 import br.com.mochila.presenter.TaskListView
 import br.com.mochila.ui.screens.components.BackButton
@@ -53,9 +58,11 @@ private val laranjaHeader = Color(0xFFFFBA5E)
 private val rosa = Color(0xFFFF6694)
 private val verdeConclusao = Color(0xFF6B9A78)
 private val vermelhoCancelamento = Color(0xFFC47A7A)
-private val taskCellHeight = 110.dp
+private val taskCellHeight = 128.dp
 private val taskCardPadding = 10.dp
 private val taskActionHeight = 28.dp
+private val taskStatusToCategorySpacing = 8.dp
+private val taskCategoryToActionsSpacing = 8.dp
 
 private val taskStatusFilterOptions = listOf(
     "Todos",
@@ -85,6 +92,18 @@ private fun sortTasksByPriorityAndDueDate(tasks: List<Task>): List<Task> =
         compareByDescending<Task> { TaskPriorityCache.get(it.id).weight }
             .thenBy { dueDateSortKey(it.dueDate) },
     )
+
+private fun rgbToColor(rgb: Int): Color {
+    val r = ((rgb shr 16) and 0xFF) / 255f
+    val g = ((rgb shr 8) and 0xFF) / 255f
+    val b = (rgb and 0xFF) / 255f
+    return Color(r, g, b)
+}
+
+private fun taskCardColor(task: Task, subjectColorById: Map<Int, Int>): Color {
+    val rgb = task.subjectId?.let { subjectColorById[it] } ?: return laranjaHeader
+    return rgbToColor(rgb)
+}
 
 private fun formatDatePt(date: LocalDate): String {
     val dd = date.dayOfMonth.toString().padStart(2, '0')
@@ -269,8 +288,13 @@ fun TaskListScreen(
     onLogout: () -> Unit,
 ) {
     var tasks by remember { mutableStateOf<List<Task>>(emptyList()) }
+    var subjects by remember { mutableStateOf<List<Subject>>(emptyList()) }
     var searchQuery by remember { mutableStateOf("") }
     var statusFilter by remember { mutableStateOf("Todos") }
+
+    val subjectColorById = remember(subjects) {
+        subjects.associate { it.id to it.colorRgb }
+    }
 
     val presenter = remember {
         object : TaskListView {
@@ -289,8 +313,9 @@ fun TaskListScreen(
     }
 
     val priorityRevision = TaskPriorityCache.revision
+    val categoryRevision = TaskCategoryCache.revision
 
-    val filteredTasks = remember(tasks, searchQuery, statusFilter, priorityRevision) {
+    val filteredTasks = remember(tasks, searchQuery, statusFilter, priorityRevision, categoryRevision) {
         sortTasksByPriorityAndDueDate(
             presenter.filterTasks(tasks, searchQuery, statusFilter),
         )
@@ -298,6 +323,7 @@ fun TaskListScreen(
 
     LaunchedEffect(userId) {
         presenter.loadTasks(userId)
+        subjects = withContext(Dispatchers.IO) { SubjectRepository.listByUser(userId) }
     }
 
     val today = remember {
@@ -316,6 +342,7 @@ fun TaskListScreen(
             TaskListDesktopLayout(
                 tasks = tasks,
                 filteredTasks = filteredTasks,
+                subjectColorById = subjectColorById,
                 searchQuery = searchQuery,
                 onSearchQueryChange = { searchQuery = it },
                 statusFilter = statusFilter,
@@ -341,6 +368,7 @@ fun TaskListScreen(
             TaskListMobileLayout(
                 tasks = tasks,
                 filteredTasks = filteredTasks,
+                subjectColorById = subjectColorById,
                 searchQuery = searchQuery,
                 onSearchQueryChange = { searchQuery = it },
                 statusFilter = statusFilter,
@@ -363,6 +391,7 @@ fun TaskListScreen(
 private fun TaskListMobileLayout(
     tasks: List<Task>,
     filteredTasks: List<Task>,
+    subjectColorById: Map<Int, Int>,
     searchQuery: String,
     onSearchQueryChange: (String) -> Unit,
     statusFilter: String,
@@ -464,6 +493,7 @@ private fun TaskListMobileLayout(
 
         TaskGrid(
             tasks = filteredTasks,
+            subjectColorById = subjectColorById,
             allTasksEmpty = tasks.isEmpty(),
             noFilterResults = tasks.isNotEmpty() && filteredTasks.isEmpty() && hasActiveFilters,
             columns = 2,
@@ -490,6 +520,7 @@ private fun TaskListMobileLayout(
 private fun TaskListDesktopLayout(
     tasks: List<Task>,
     filteredTasks: List<Task>,
+    subjectColorById: Map<Int, Int>,
     searchQuery: String,
     onSearchQueryChange: (String) -> Unit,
     statusFilter: String,
@@ -633,6 +664,7 @@ private fun TaskListDesktopLayout(
 
             TaskGrid(
                 tasks = filteredTasks,
+                subjectColorById = subjectColorById,
                 allTasksEmpty = tasks.isEmpty(),
                 noFilterResults = tasks.isNotEmpty() && filteredTasks.isEmpty() && hasActiveFilters,
                 columns = 3,
@@ -660,6 +692,7 @@ private fun TaskListDesktopLayout(
 @Composable
 private fun TaskGrid(
     tasks: List<Task>,
+    subjectColorById: Map<Int, Int>,
     allTasksEmpty: Boolean,
     noFilterResults: Boolean,
     columns: Int,
@@ -739,6 +772,7 @@ private fun TaskGrid(
         itemsIndexed(tasks, key = { _, t -> t.id }) { _, task ->
             TaskCard(
                 task = task,
+                cardColor = taskCardColor(task, subjectColorById),
                 onClick = { onTaskClick(task.id) },
                 onComplete = { onCompleteTask(task) },
                 onCancel = { onCancelTask(task) },
@@ -833,16 +867,48 @@ private fun TaskActionChip(
 }
 
 @Composable
+private fun TaskCategoryTag(
+    label: String,
+    cardColor: Color,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(taskActionHeight)
+            .clip(RoundedCornerShape(6.dp))
+            .background(Color.White.copy(alpha = 0.92f)),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = label,
+            color = cardColor,
+            fontSize = 9.sp,
+            fontWeight = FontWeight.Medium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 8.dp),
+        )
+    }
+}
+
+@Composable
 private fun TaskCard(
     task: Task,
+    cardColor: Color,
     onClick: () -> Unit,
     onComplete: () -> Unit,
     onCancel: () -> Unit,
 ) {
     val showsActions = taskStatusShowsActions(task.status)
     val priorityRevision = TaskPriorityCache.revision
+    val categoryRevision = TaskCategoryCache.revision
     val statusPriorityLine = remember(task.id, task.status, priorityRevision) {
         taskStatusAndPriorityLine(task)
+    }
+    val categoryLabel = remember(task.id, categoryRevision) {
+        TaskCategoryCache.get(task.id).label
     }
 
     Column(
@@ -850,18 +916,18 @@ private fun TaskCard(
             .fillMaxWidth()
             .height(taskCellHeight)
             .clip(RoundedCornerShape(9.dp))
-            .background(laranjaHeader)
+            .background(cardColor)
             .padding(horizontal = 8.dp, vertical = taskCardPadding),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.SpaceBetween,
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
-                .clickable(onClick = onClick),
+                .clickable(onClick = onClick)
+                .padding(bottom = taskStatusToCategorySpacing),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
+            verticalArrangement = Arrangement.Top,
         ) {
             Text(
                 text = task.title,
@@ -885,6 +951,8 @@ private fun TaskCard(
                 lineHeight = 12.sp,
             )
         }
+        TaskCategoryTag(label = categoryLabel, cardColor = cardColor)
+        Spacer(Modifier.height(taskCategoryToActionsSpacing))
         if (showsActions) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
