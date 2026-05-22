@@ -150,6 +150,44 @@ object DatabaseHelper {
                 stmt.execute("ALTER TABLE evento ADD COLUMN lembrete_exibido INTEGER DEFAULT 0")
             }
 
+            stmt.execute(
+                """CREATE TABLE IF NOT EXISTS administrador (
+                    id_adm INTEGER PRIMARY KEY AUTOINCREMENT,
+                    id_usuario INTEGER NOT NULL UNIQUE,
+                    criado_em DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    atualizado_em DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (id_usuario) REFERENCES usuario (id_usuario)
+                        ON DELETE CASCADE ON UPDATE CASCADE
+                )"""
+            )
+
+            stmt.execute(
+                """CREATE TABLE IF NOT EXISTS log_acao (
+                    id_acao INTEGER PRIMARY KEY AUTOINCREMENT,
+                    id_usuario INTEGER NOT NULL,
+                    acao TEXT NOT NULL,
+                    descricao TEXT,
+                    ip_origem TEXT,
+                    tabela_afetada TEXT NOT NULL,
+                    id_registro_afetado INTEGER,
+                    criado_em DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (id_usuario) REFERENCES usuario (id_usuario)
+                        ON DELETE CASCADE ON UPDATE CASCADE
+                )"""
+            )
+
+            stmt.execute(
+                """CREATE TABLE IF NOT EXISTS log_erro (
+                    id_erro INTEGER PRIMARY KEY AUTOINCREMENT,
+                    id_usuario INTEGER,
+                    modulo TEXT NOT NULL,
+                    mensagem TEXT NOT NULL,
+                    criado_em DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (id_usuario) REFERENCES usuario (id_usuario)
+                        ON DELETE CASCADE ON UPDATE CASCADE
+                )"""
+            )
+
             stmt.close()
         } catch (e: Exception) {
             e.printStackTrace()
@@ -203,11 +241,14 @@ object DatabaseHelper {
      * @param params lista de parâmetros (opcional)
      * @return true se o comando for executado com sucesso
      */
-    fun executeUpdate(sql: String, params: List<Any> = emptyList()): Boolean {
+    fun executeUpdate(sql: String, params: List<Any?> = emptyList()): Boolean {
         val conn = connect() ?: return false
         return try {
             val stmt = conn.prepareStatement(sql)
-            params.forEachIndexed { index, param -> stmt.setObject(index + 1, param) }
+            params.forEachIndexed { index, param ->
+                if (param == null) stmt.setNull(index + 1, java.sql.Types.NULL)
+                else stmt.setObject(index + 1, param)
+            }
             stmt.executeUpdate()
             stmt.close()
             true

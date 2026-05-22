@@ -1,6 +1,7 @@
 package br.com.mochila.presenter
 
 import br.com.mochila.data.FaltaRepository
+import br.com.mochila.data.LogRepository
 import br.com.mochila.data.SubjectRepository
 import br.com.mochila.model.Falta
 import br.com.mochila.util.AbsenceLimit
@@ -39,9 +40,11 @@ class FaltaRegisterPresenter(private val view: FaltaRegisterView) {
         val success = if (isEditing) FaltaRepository.update(userId, toSave)
         else FaltaRepository.insert(userId, toSave)
         if (success) {
+            LogRepository.insertAcao(userId, if (isEditing) "EDITAR_FALTA" else "CRIAR_FALTA", "falta", if (isEditing) falta.id else null)
             view.showSaveSuccess(isEditing)
             maybeWarnAbsenceLimit(userId, toSave.subjectId)
         } else {
+            LogRepository.insertErro("FaltaRegisterPresenter", "Erro ao ${if (isEditing) "editar" else "criar"} falta", userId)
             view.showSaveError()
         }
     }
@@ -65,9 +68,11 @@ class FaltaRegisterPresenter(private val view: FaltaRegisterView) {
     fun deleteFalta(userId: Int, faltaId: Int) {
         val success = FaltaRepository.delete(userId, faltaId)
         if (success) {
+            LogRepository.insertAcao(userId, "EXCLUIR_FALTA", "falta", faltaId)
             view.showDeleteSuccess()
             view.navigateToFaltasList()
         } else {
+            LogRepository.insertErro("FaltaRegisterPresenter", "Erro ao excluir falta id=$faltaId", userId)
             view.showDeleteError()
         }
     }

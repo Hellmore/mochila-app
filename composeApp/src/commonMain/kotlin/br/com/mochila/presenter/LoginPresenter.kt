@@ -1,5 +1,6 @@
 package br.com.mochila.presenter
 
+import br.com.mochila.data.LogRepository
 import br.com.mochila.data.UserRepository
 
 interface LoginView {
@@ -21,12 +22,16 @@ class LoginPresenter(private val view: LoginView) {
         when {
             !emailExists && userId == null -> view.showError("E-mail e senha incorretos.")
             !emailExists -> view.showError("E-mail incorreto.")
-            emailExists && userId == null -> view.showError("Senha incorreta.")
+            emailExists && userId == null -> {
+                LogRepository.insertErro("LoginPresenter", "Senha incorreta para e-mail: $email")
+                view.showError("Senha incorreta.")
+            }
             else -> {
                 if (!UserRepository.isEmailVerified(email)) {
                     view.showError("E-mail não verificado. Verifique sua caixa de entrada e confirme o código de cadastro.")
                 } else {
-                    view.navigateToHome(userId!!)
+                    LogRepository.insertAcao(userId!!, "LOGIN", "usuario", userId)
+                    view.navigateToHome(userId)
                 }
             }
         }

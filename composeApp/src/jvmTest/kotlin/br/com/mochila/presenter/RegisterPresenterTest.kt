@@ -1,6 +1,9 @@
 package br.com.mochila.presenter
 
+import br.com.mochila.data.AdminRepository
+import br.com.mochila.data.LogRepository
 import br.com.mochila.data.UserRepository
+import br.com.mochila.model.User
 import io.mockk.*
 import org.junit.After
 import org.junit.Before
@@ -11,8 +14,19 @@ class RegisterPresenterTest {
     private val view = mockk<RegisterView>(relaxed = true)
     private val presenter = RegisterPresenter(view)
 
-    @Before fun setUp()    { mockkObject(UserRepository) }
-    @After  fun tearDown() { unmockkAll() }
+    @Before fun setUp() {
+        mockkObject(UserRepository)
+        mockkObject(AdminRepository)
+        mockkObject(LogRepository)
+        every { LogRepository.insertAcao(any(), any(), any(), any()) } just Runs
+        every { LogRepository.insertAcao(any(), any(), any(), any(), any()) } just Runs
+        every { LogRepository.insertErro(any(), any()) } just Runs
+        every { LogRepository.insertErro(any(), any(), any()) } just Runs
+    }
+
+    @After fun tearDown() { unmockkAll() }
+
+    private val registeredUser = User(id = 1, name = "NomeValido", email = "a@b.com")
 
     @Test fun `email sem arroba exibe erro de validacao`() {
         presenter.register("NomeValido", "emailinvalido", "Senha@123")
@@ -41,6 +55,7 @@ class RegisterPresenterTest {
 
     @Test fun `cadastro bem sucedido chama showRegisterSuccess e navega`() {
         every { UserRepository.insert(any()) } returns true
+        every { UserRepository.findByEmail(any()) } returns registeredUser
         presenter.register("NomeValido", "a@b.com", "Senha@123")
         verify { view.showRegisterSuccess() }
         verify { view.navigateToEmailVerify("a@b.com") }
@@ -50,5 +65,34 @@ class RegisterPresenterTest {
         every { UserRepository.insert(any()) } returns false
         presenter.register("NomeValido", "a@b.com", "Senha@123")
         verify { view.showRegisterError(any()) }
+    }
+
+    @Test fun `registro com adminCode valido promove usuario a admin`() {
+        every { UserRepository.insert(any()) } returns true
+        every { UserRepository.findByEmail(any()) } returns registeredUser
+        every { AdminRepository.promoteToAdmin(1) } returns true
+        presenter.register("NomeValido", "a@b.com", "Senha@123", adminCode = AdminRepository.ADMIN_SECRET_CODE)
+        verify { AdminRepository.promoteToAdmin(1) }
+        verify { view.showRegisterSuccess() }
+    }
+
+    @Test fun `registro com adminCode invalido nao chama promoteToAdmin`() {
+        every { UserRepository.insert(any()) } returns true
+        every { UserRepository.findByEmail(any()) } returns registeredUser
+        presenter.register("NomeValido", "a@b.com", "Senha@123", adminCode = "codigo-errado")
+        verify(exactly = 0) { AdminRepository.promoteToAdmin(any()) }
+    }
+
+    @Test fun `registro sem adminCode nao chama promoteToAdmin`() {
+        every { UserRepository.insert(any()) } returns true
+        every { UserRepository.findByEmail(any()) } returns registeredUser
+        presenter.register("NomeValido", "a@b.com", "Senha@123")
+        verify(exactly = 0) { AdminRepository.promoteToAdmin(any()) }
+    }
+
+    @Test fun `falha no insert loga erro`() {
+        every { UserRepository.insert(any()) } returns false
+        presenter.register("NomeValido", "a@b.com", "Senha@123")
+        verify { LogRepository.insertErro(any(), any()) }
     }
 }

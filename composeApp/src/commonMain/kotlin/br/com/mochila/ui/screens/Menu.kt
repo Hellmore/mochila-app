@@ -56,7 +56,9 @@ fun MenuScreen(
     onNavigateToPlanoFaltas: () -> Unit = {},
     onNavigateToEventos: () -> Unit = {},
     onNavigateToPlus: () -> Unit = {},
+    onNavigateToAdmin: () -> Unit = {},
 ) {
+    val isAdmin = br.com.mochila.data.UserSession.currentUser?.isAdmin == true
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val sidebarWidth = (maxWidth * 0.8174f).coerceAtMost(394.dp)
         AnimatedVisibility(
@@ -139,6 +141,17 @@ fun MenuScreen(
                                 onNavigateToPlus()
                             }
                         )
+                        if (isAdmin) {
+                            Spacer(Modifier.height(8.dp))
+                            MenuSideItem(
+                                text = "Painel Admin",
+                                icon = Res.drawable.admin,
+                                onClick = {
+                                    onCloseMenu()
+                                    onNavigateToAdmin()
+                                }
+                            )
+                        }
                         Spacer(Modifier.height(16.dp))
                         MenuSideItem(
                             text = "Sair da conta",

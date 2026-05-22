@@ -44,14 +44,19 @@ fun AccountSettingsScreen(
     onPasswordFlowMessageConsumed: () -> Unit = {},
 ) {
     val fundoTela = Color(0xFFF8F8F8)
-    val rosa = Color(0xFFFF6694)
+    val rosa    = Color(0xFFFF6694)
+    val laranja = Color(0xFFFFBA5E)
 
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var photoPath by remember { mutableStateOf<String?>(null) }
     var message by remember { mutableStateOf<String?>(null) }
     var success by remember { mutableStateOf(false) }
-    var showDeleteDialog by remember { mutableStateOf(false) }
+    var showDeleteDialog  by remember { mutableStateOf(false) }
+    var showRedeemDialog  by remember { mutableStateOf(false) }
+    var redeemCode        by remember { mutableStateOf("") }
+    var redeemMessage     by remember { mutableStateOf<String?>(null) }
+    var redeemSuccess     by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
 
     val presenter = remember {
@@ -66,6 +71,18 @@ fun AccountSettingsScreen(
             override fun showSaveError() { message = "Erro ao atualizar o perfil."; success = false }
             override fun showDeleteSuccess() {}
             override fun showDeleteError() { message = "Erro ao excluir conta."; success = false }
+            override fun showAdminCodeSuccess() {
+                coroutineScope.launch {
+                    val updated = withContext(Dispatchers.IO) { UserRepository.findById(userId) }
+                    if (updated != null) UserSession.set(updated)
+                }
+                redeemMessage = null
+                redeemCode = ""
+                showRedeemDialog = false
+                message = "Você agora é administrador! Acesse o menu lateral para ver o Painel Admin."
+                success = true
+            }
+            override fun showAdminCodeError(msg: String) { redeemMessage = msg; redeemSuccess = false }
             override fun navigateBack() { onBack() }
             override fun navigateToLogin() { onLogout() }
         }.let { view -> AccountSettingsPresenter(view) }
@@ -240,6 +257,17 @@ fun AccountSettingsScreen(
                         colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.White, contentColor = rosa)
                     ) { Text("Alterar Senha", fontWeight = FontWeight.Medium, fontSize = 16.sp) }
 
+                    if (UserSession.currentUser?.isAdmin != true) {
+                        Spacer(Modifier.height(8.dp))
+                        Button(
+                            onClick = { showRedeemDialog = true },
+                            modifier = Modifier.fillMaxWidth().height(48.dp),
+                            shape = RoundedCornerShape(8.dp),
+                            border = BorderStroke(1.dp, laranja),
+                            colors = ButtonDefaults.buttonColors(containerColor = laranja, contentColor = Color.White)
+                        ) { Text("Resgatar código de acesso", fontWeight = FontWeight.Medium, fontSize = 16.sp) }
+                    }
+
                     Spacer(Modifier.height(20.dp))
 
                     message?.let { msg ->
@@ -394,6 +422,17 @@ fun AccountSettingsScreen(
                     colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.White, contentColor = rosa)
                 ) { Text("Alterar Senha", fontWeight = FontWeight.Medium, fontSize = 16.sp) }
 
+                if (UserSession.currentUser?.isAdmin != true) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Button(
+                        onClick = { showRedeemDialog = true },
+                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        border = BorderStroke(1.dp, laranja),
+                        colors = ButtonDefaults.buttonColors(containerColor = laranja, contentColor = rosa)
+                    ) { Text("Resgatar código de acesso", fontWeight = FontWeight.Medium, fontSize = 16.sp) }
+                }
+
                 Spacer(modifier = Modifier.height(20.dp))
 
                 message?.let { msg ->
@@ -460,6 +499,47 @@ fun AccountSettingsScreen(
                 },
                 shape = RoundedCornerShape(12.dp),
                 containerColor = Color.White
+            )
+        }
+
+        if (showRedeemDialog) {
+            AlertDialog(
+                onDismissRequest = { showRedeemDialog = false; redeemCode = ""; redeemMessage = null },
+                shape = RoundedCornerShape(12.dp),
+                containerColor = Color.White,
+                title = { Text("Resgatar código de acesso", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = rosa) },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Text("Digite o código para elevar sua conta a administrador.", color = Color.Gray, fontSize = 13.sp)
+                        OutlinedTextField(
+                            value = redeemCode,
+                            onValueChange = { redeemCode = it; redeemMessage = null },
+                            placeholder = { Text("Código de acesso", fontSize = 14.sp, color = Color.Gray) },
+                            singleLine = true,
+                            visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                            shape = RoundedCornerShape(8.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = laranja,
+                                unfocusedBorderColor = laranja,
+                                cursorColor = laranja,
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        redeemMessage?.let { msg ->
+                            Text(msg, color = if (redeemSuccess) Color(0xFF1B5E20) else Color(0xFFB71C1C), fontSize = 13.sp)
+                        }
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = { presenter.redeemAdminCode(userId, redeemCode) }) {
+                        Text("Resgatar", color = rosa, fontWeight = FontWeight.Bold)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showRedeemDialog = false; redeemCode = ""; redeemMessage = null }) {
+                        Text("Cancelar", color = Color.Gray)
+                    }
+                },
             )
         }
     }

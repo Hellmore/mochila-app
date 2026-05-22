@@ -1,5 +1,6 @@
 package br.com.mochila.presenter
 
+import br.com.mochila.data.LogRepository
 import br.com.mochila.data.SubjectRepository
 import br.com.mochila.data.SubjectWeeklyFrequencyCache
 import br.com.mochila.model.Subject
@@ -55,9 +56,11 @@ class SubjectRegisterPresenter(private val view: SubjectRegisterView) {
             val success = SubjectRepository.update(userId, subject)
             if (success) {
                 SubjectWeeklyFrequencyCache.set(subject.id, weeklyClassCount)
+                LogRepository.insertAcao(userId, "EDITAR_DISCIPLINA", "disciplina", subject.id)
                 view.showSaveSuccess(true)
                 view.navigateToHome()
             } else {
+                LogRepository.insertErro("SubjectRegisterPresenter", "Erro ao editar disciplina", userId)
                 view.showSaveError()
             }
             return
@@ -66,9 +69,11 @@ class SubjectRegisterPresenter(private val view: SubjectRegisterView) {
         val newId = SubjectRepository.insert(userId, subject)
         if (newId != null) {
             SubjectWeeklyFrequencyCache.set(newId, weeklyClassCount)
+            LogRepository.insertAcao(userId, "CRIAR_DISCIPLINA", "disciplina", newId)
             view.showSaveSuccess(false)
             view.navigateToHome()
         } else {
+            LogRepository.insertErro("SubjectRegisterPresenter", "Erro ao criar disciplina", userId)
             view.showSaveError()
         }
     }
@@ -77,9 +82,11 @@ class SubjectRegisterPresenter(private val view: SubjectRegisterView) {
         val success = SubjectRepository.delete(userId, subjectId)
         if (success) {
             SubjectWeeklyFrequencyCache.remove(subjectId)
+            LogRepository.insertAcao(userId, "EXCLUIR_DISCIPLINA", "disciplina", subjectId)
             view.showSaveSuccess(isEditing = true)
             view.navigateToHome()
         } else {
+            LogRepository.insertErro("SubjectRegisterPresenter", "Erro ao excluir disciplina id=$subjectId", userId)
             view.showSaveError()
         }
     }

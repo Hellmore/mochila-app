@@ -1,5 +1,6 @@
 package br.com.mochila.presenter
 
+import br.com.mochila.data.LogRepository
 import br.com.mochila.data.UserRepository
 
 interface SignedRecoveryView {
@@ -39,6 +40,12 @@ class SignedRecoveryPresenter(private val view: SignedRecoveryView) {
             email = user.email,
             newPassword = newPassword
         )
-        if (success) view.showChangeSuccess() else view.showChangeError()
+        if (success) {
+            LogRepository.insertAcao(userId, "ALTERAR_SENHA", "usuario", userId)
+            view.showChangeSuccess()
+        } else {
+            LogRepository.insertErro("SignedRecoveryPresenter", "Erro ao alterar senha", userId)
+            view.showChangeError()
+        }
     }
 }

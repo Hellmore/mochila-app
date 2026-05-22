@@ -1,5 +1,7 @@
 package br.com.mochila.presenter
 
+import br.com.mochila.data.AdminRepository
+import br.com.mochila.data.LogRepository
 import br.com.mochila.data.UserRepository
 import br.com.mochila.model.User
 import io.mockk.*
@@ -12,8 +14,17 @@ class AccountSettingsPresenterTest {
     private val view = mockk<AccountSettingsView>(relaxed = true)
     private val presenter = AccountSettingsPresenter(view)
 
-    @Before fun setUp()    { mockkObject(UserRepository) }
-    @After  fun tearDown() { unmockkAll() }
+    @Before fun setUp() {
+        mockkObject(UserRepository)
+        mockkObject(AdminRepository)
+        mockkObject(LogRepository)
+        every { LogRepository.insertAcao(any(), any(), any(), any()) } just Runs
+        every { LogRepository.insertAcao(any(), any(), any(), any(), any()) } just Runs
+        every { LogRepository.insertErro(any(), any()) } just Runs
+        every { LogRepository.insertErro(any(), any(), any()) } just Runs
+    }
+
+    @After fun tearDown() { unmockkAll() }
 
     private val user = User(id = 1, name = "Ana", email = "ana@x.com")
 
@@ -62,5 +73,39 @@ class AccountSettingsPresenterTest {
         every { UserRepository.delete(any()) } returns false
         presenter.deleteAccount(1)
         verify { view.showDeleteError() }
+    }
+
+    @Test fun `redeemAdminCode com codigo em branco exibe erro`() {
+        presenter.redeemAdminCode(1, "   ")
+        verify { view.showAdminCodeError(any()) }
+        verify(exactly = 0) { AdminRepository.promoteToAdmin(any()) }
+    }
+
+    @Test fun `redeemAdminCode quando usuario ja eh admin exibe erro`() {
+        every { AdminRepository.isAdmin(1) } returns true
+        presenter.redeemAdminCode(1, AdminRepository.ADMIN_SECRET_CODE)
+        verify { view.showAdminCodeError(any()) }
+        verify(exactly = 0) { AdminRepository.promoteToAdmin(any()) }
+    }
+
+    @Test fun `redeemAdminCode com codigo errado exibe erro`() {
+        every { AdminRepository.isAdmin(1) } returns false
+        presenter.redeemAdminCode(1, "codigo-errado")
+        verify { view.showAdminCodeError(any()) }
+        verify(exactly = 0) { AdminRepository.promoteToAdmin(any()) }
+    }
+
+    @Test fun `redeemAdminCode com codigo correto chama showAdminCodeSuccess`() {
+        every { AdminRepository.isAdmin(1) } returns false
+        every { AdminRepository.promoteToAdmin(1) } returns true
+        presenter.redeemAdminCode(1, AdminRepository.ADMIN_SECRET_CODE)
+        verify { view.showAdminCodeSuccess() }
+    }
+
+    @Test fun `redeemAdminCode falha ao promover chama showAdminCodeError`() {
+        every { AdminRepository.isAdmin(1) } returns false
+        every { AdminRepository.promoteToAdmin(1) } returns false
+        presenter.redeemAdminCode(1, AdminRepository.ADMIN_SECRET_CODE)
+        verify { view.showAdminCodeError(any()) }
     }
 }

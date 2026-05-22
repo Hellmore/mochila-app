@@ -1,6 +1,7 @@
 package br.com.mochila.data
 
 import br.com.mochila.model.User
+import br.com.mochila.model.UserSummary
 import br.com.mochila.util.PasswordHash
 import java.sql.PreparedStatement
 import java.sql.ResultSet
@@ -12,7 +13,8 @@ object UserRepository {
         name = getString("nome"),
         email = getString("email"),
         password = getString("senha"),
-        photoPath = runCatching { getString("foto_perfil") }.getOrNull()
+        photoPath = runCatching { getString("foto_perfil") }.getOrNull(),
+        isAdmin = runCatching { getInt("is_admin") == 1 }.getOrDefault(false),
     )
 
     fun insert(user: User): Boolean {
@@ -64,7 +66,13 @@ object UserRepository {
     fun findById(userId: Int): User? {
         val conn = DatabaseHelper.connect() ?: return null
         return try {
-            val sql = "SELECT id_usuario, nome, email, senha, foto_perfil FROM usuario WHERE id_usuario = ?"
+            val sql = """
+                SELECT u.id_usuario, u.nome, u.email, u.senha, u.foto_perfil,
+                       CASE WHEN a.id_adm IS NOT NULL THEN 1 ELSE 0 END as is_admin
+                FROM usuario u
+                LEFT JOIN administrador a ON a.id_usuario = u.id_usuario
+                WHERE u.id_usuario = ?
+            """.trimIndent()
             val stmt = conn.prepareStatement(sql)
             stmt.setInt(1, userId)
             val rs = stmt.executeQuery()
@@ -200,10 +208,82 @@ object UserRepository {
         }
     }
 
+    fun listAll(): List<UserSummary> {
+        val conn = DatabaseHelper.connect() ?: return emptyList()
+        return try {
+            val sql = """
+                SELECT u.id_usuario, u.nome, u.email, u.email_verificado, u.criado_em,
+                       CASE WHEN a.id_adm IS NOT NULL THEN 1 ELSE 0 END as is_admin
+                FROM usuario u
+                LEFT JOIN administrador a ON a.id_usuario = u.id_usuario
+                ORDER BY u.criado_em DESC
+            """.trimIndent()
+            val stmt = conn.prepareStatement(sql)
+            val rs = stmt.executeQuery()
+            val users = mutableListOf<UserSummary>()
+            while (rs.next()) {
+                users.add(UserSummary(
+                    id = rs.getInt("id_usuario"),
+                    name = rs.getString("nome") ?: "",
+                    email = rs.getString("email") ?: "",
+                    isAdmin = rs.getInt("is_admin") == 1,
+                    emailVerified = rs.getInt("email_verificado") == 1,
+                    createdAt = rs.getString("criado_em") ?: "",
+                ))
+            }
+            rs.close()
+            stmt.close()
+            users
+        } catch (e: Exception) {
+            println("⚠️ Erro ao listar usuários: ${e.message}")
+            emptyList()
+        } finally {
+            conn.close()
+        }
+    }
+
+    fun findSummaryById(userId: Int): UserSummary? {
+        val conn = DatabaseHelper.connect() ?: return null
+        return try {
+            val sql = """
+                SELECT u.id_usuario, u.nome, u.email, u.email_verificado, u.criado_em,
+                       CASE WHEN a.id_adm IS NOT NULL THEN 1 ELSE 0 END as is_admin
+                FROM usuario u
+                LEFT JOIN administrador a ON a.id_usuario = u.id_usuario
+                WHERE u.id_usuario = ?
+            """.trimIndent()
+            val stmt = conn.prepareStatement(sql)
+            stmt.setInt(1, userId)
+            val rs = stmt.executeQuery()
+            val user = if (rs.next()) UserSummary(
+                id            = rs.getInt("id_usuario"),
+                name          = rs.getString("nome") ?: "",
+                email         = rs.getString("email") ?: "",
+                isAdmin       = rs.getInt("is_admin") == 1,
+                emailVerified = rs.getInt("email_verificado") == 1,
+                createdAt     = rs.getString("criado_em") ?: "",
+            ) else null
+            rs.close()
+            stmt.close()
+            user
+        } catch (e: Exception) {
+            println("⚠️ Erro ao buscar resumo do usuário: ${e.message}")
+            null
+        } finally {
+            conn.close()
+        }
+    }
+
     fun findByEmail(email: String): User? {
         val conn = DatabaseHelper.connect() ?: return null
         return try {
-            val sql = "SELECT id_usuario, nome, email, senha, foto_perfil FROM usuario WHERE email = ?"
+            val sql = """
+                SELECT u.id_usuario, u.nome, u.email, u.senha, u.foto_perfil,
+                       CASE WHEN a.id_adm IS NOT NULL THEN 1 ELSE 0 END as is_admin
+                FROM usuario u
+                LEFT JOIN administrador a ON a.id_usuario = u.id_usuario
+                WHERE u.email = ?
+            """.trimIndent()
             val stmt = conn.prepareStatement(sql)
             stmt.setString(1, email)
             val rs = stmt.executeQuery()
