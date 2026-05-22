@@ -82,6 +82,7 @@ fun FaltaRegisterScreen(
     var subjects by remember { mutableStateOf<List<Subject>>(emptyList()) }
     var message by remember { mutableStateOf<String?>(null) }
     var success by remember { mutableStateOf(false) }
+    var absenceLimitWarning by remember { mutableStateOf<String?>(null) }
 
     val presenter = remember {
         object : FaltaRegisterView {
@@ -100,6 +101,7 @@ fun FaltaRegisterScreen(
             override fun showSaveError() { message = "Erro ao salvar falta."; success = false }
             override fun showDeleteSuccess() { message = "Falta excluída com sucesso!"; success = true }
             override fun showDeleteError() { message = "Erro ao excluir falta."; success = false }
+            override fun showAbsenceLimitWarning(msg: String) { absenceLimitWarning = msg }
             override fun navigateToFaltasList() { onNavigateToFaltasList() }
         }.let { FaltaRegisterPresenter(it) }
     }
@@ -406,6 +408,29 @@ fun FaltaRegisterScreen(
                 Spacer(Modifier.height(24.dp))
             }
         }
+    }
+
+    absenceLimitWarning?.let { warningText ->
+        AlertDialog(
+            onDismissRequest = {
+                absenceLimitWarning = null
+                onNavigateToFaltasList()
+            },
+            title = {
+                Text("Limite de faltas", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+            },
+            text = { Text(warningText, fontSize = 14.sp) },
+            confirmButton = {
+                TextButton(onClick = {
+                    absenceLimitWarning = null
+                    onNavigateToFaltasList()
+                }) {
+                    Text("Entendi", color = faltaRegRosa, fontWeight = FontWeight.Bold)
+                }
+            },
+            shape = RoundedCornerShape(12.dp),
+            containerColor = Color.White,
+        )
     }
 
     BoxWithConstraints(modifier = Modifier.fillMaxSize().background(faltaRegFundoTela)) {

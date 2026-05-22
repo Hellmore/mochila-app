@@ -27,8 +27,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import br.com.mochila.data.FaltaRepository
 import br.com.mochila.data.UserSession
 import br.com.mochila.model.Subject
+import br.com.mochila.ui.screens.components.AbsenceLimitWarningIcon
+import br.com.mochila.util.AbsenceLimit
 import br.com.mochila.model.Task
 import br.com.mochila.presenter.HomePresenter
 import br.com.mochila.presenter.HomeView
@@ -171,6 +174,7 @@ fun SubjectListScreen(
     onLogout: () -> Unit,
 ) {
     var subjects by remember { mutableStateOf<List<Subject>>(emptyList()) }
+    var absencesBySubject by remember { mutableStateOf<Map<Int, Int>>(emptyMap()) }
     var searchQuery by remember { mutableStateOf("") }
 
     val filteredSubjects = remember(subjects, searchQuery) {
@@ -200,6 +204,7 @@ fun SubjectListScreen(
 
     LaunchedEffect(userId) {
         presenter.loadSubjects(userId)
+        absencesBySubject = FaltaRepository.countByUser(userId)
     }
 
     val today = remember {
@@ -217,6 +222,7 @@ fun SubjectListScreen(
         if (isWide) {
             SubjectListDesktopLayout(
                 subjects = subjects,
+                absencesBySubject = absencesBySubject,
                 filteredSubjects = filteredSubjects,
                 searchQuery = searchQuery,
                 onSearchQueryChange = { searchQuery = it },
@@ -238,6 +244,7 @@ fun SubjectListScreen(
             )
             SubjectListMobileLayout(
                 subjects = subjects,
+                absencesBySubject = absencesBySubject,
                 filteredSubjects = filteredSubjects,
                 searchQuery = searchQuery,
                 onSearchQueryChange = { searchQuery = it },
@@ -256,6 +263,7 @@ fun SubjectListScreen(
 @Composable
 private fun SubjectListMobileLayout(
     subjects: List<Subject>,
+    absencesBySubject: Map<Int, Int>,
     filteredSubjects: List<Subject>,
     searchQuery: String,
     onSearchQueryChange: (String) -> Unit,
@@ -342,6 +350,7 @@ private fun SubjectListMobileLayout(
 
         SubjectGrid(
             subjects = filteredSubjects,
+            absencesBySubject = absencesBySubject,
             allSubjectsEmpty = subjects.isEmpty(),
             noSearchResults = subjects.isNotEmpty() && filteredSubjects.isEmpty() && searchQuery.isNotBlank(),
             columns = 2,
@@ -365,6 +374,7 @@ private fun SubjectListMobileLayout(
 @Composable
 private fun SubjectListDesktopLayout(
     subjects: List<Subject>,
+    absencesBySubject: Map<Int, Int>,
     filteredSubjects: List<Subject>,
     searchQuery: String,
     onSearchQueryChange: (String) -> Unit,
@@ -493,6 +503,7 @@ private fun SubjectListDesktopLayout(
 
             SubjectGrid(
                 subjects = filteredSubjects,
+                absencesBySubject = absencesBySubject,
                 allSubjectsEmpty = subjects.isEmpty(),
                 noSearchResults = subjects.isNotEmpty() && filteredSubjects.isEmpty() && searchQuery.isNotBlank(),
                 columns = 3,
@@ -518,6 +529,7 @@ private fun SubjectListDesktopLayout(
 @Composable
 private fun SubjectGrid(
     subjects: List<Subject>,
+    absencesBySubject: Map<Int, Int>,
     allSubjectsEmpty: Boolean,
     noSearchResults: Boolean,
     columns: Int,
@@ -593,9 +605,12 @@ private fun SubjectGrid(
             )
         }
         itemsIndexed(subjects, key = { _, s -> s.id }) { _, subject ->
+            val faltaCount = absencesBySubject[subject.id] ?: 0
+            val showWarning = AbsenceLimit.isAtOrOverLimit(faltaCount, subject)
             SubjectCard(
                 subject = subject,
                 backgroundColor = subjectCardBackground(subject.colorRgb),
+                showAbsenceWarning = showWarning,
                 onClick = { onSubjectClick(subject.id) },
             )
         }
@@ -627,40 +642,54 @@ private fun AddSubjectCell(
 private fun SubjectCard(
     subject: Subject,
     backgroundColor: Color,
+    showAbsenceWarning: Boolean,
     onClick: () -> Unit,
 ) {
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(min = 87.dp)
             .clip(RoundedCornerShape(9.dp))
             .background(backgroundColor)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 8.dp, vertical = 12.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
+            .clickable(onClick = onClick),
     ) {
-        Text(
-            text = subject.name,
-            color = Color.White,
-            fontSize = 13.sp,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center,
-            maxLines = 3,
-            overflow = TextOverflow.Ellipsis,
-            lineHeight = 14.sp,
-        )
-        if (subject.teacher.isNotBlank()) {
-            Spacer(Modifier.height(6.dp))
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
             Text(
-                text = subject.teacher,
+                text = subject.name,
                 color = Color.White,
-                fontSize = 10.sp,
-                fontWeight = FontWeight.Normal,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
-                maxLines = 2,
+                maxLines = 3,
                 overflow = TextOverflow.Ellipsis,
-                lineHeight = 13.sp,
+                lineHeight = 14.sp,
+            )
+            if (subject.teacher.isNotBlank()) {
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    text = subject.teacher,
+                    color = Color.White,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Normal,
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    lineHeight = 13.sp,
+                )
+            }
+        }
+        if (showAbsenceWarning) {
+            AbsenceLimitWarningIcon(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(6.dp),
+                size = 16.dp,
             )
         }
     }

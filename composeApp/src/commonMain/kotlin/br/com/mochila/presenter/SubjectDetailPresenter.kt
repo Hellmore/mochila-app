@@ -1,6 +1,7 @@
 package br.com.mochila.presenter
 
 import br.com.mochila.data.SubjectRepository
+import br.com.mochila.data.SubjectWeeklyFrequencyCache
 import br.com.mochila.model.Subject
 
 // Contrato do SubjectDetail
@@ -34,6 +35,7 @@ class SubjectDetailPresenter(private val view: SubjectDetailView) {
             subjectId = subject.id
         )
         if (success) {
+            SubjectWeeklyFrequencyCache.remove(subject.id)
             println("✅ Disciplina deletada com sucesso!")
             view.showDeleteSuccess()
             view.navigateToHome()
