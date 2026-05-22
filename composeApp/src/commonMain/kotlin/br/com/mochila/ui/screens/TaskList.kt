@@ -32,6 +32,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import br.com.mochila.data.TaskPriorityCache
 import br.com.mochila.data.UserSession
 import br.com.mochila.model.Task
 import br.com.mochila.presenter.TaskListPresenter
@@ -68,6 +69,22 @@ private val monthNamesPt = listOf(
     "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
     "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
 )
+
+private fun dueDateSortKey(dueDate: String?): Long {
+    if (dueDate.isNullOrBlank()) return Long.MAX_VALUE
+    val parts = dueDate.split("/")
+    if (parts.size != 3) return Long.MAX_VALUE
+    val day = parts[0].toIntOrNull() ?: return Long.MAX_VALUE
+    val month = parts[1].toIntOrNull() ?: return Long.MAX_VALUE
+    val year = parts[2].toIntOrNull() ?: return Long.MAX_VALUE
+    return year * 10000L + month * 100L + day
+}
+
+private fun sortTasksByPriorityAndDueDate(tasks: List<Task>): List<Task> =
+    tasks.sortedWith(
+        compareByDescending<Task> { TaskPriorityCache.get(it.id).weight }
+            .thenBy { dueDateSortKey(it.dueDate) },
+    )
 
 private fun formatDatePt(date: LocalDate): String {
     val dd = date.dayOfMonth.toString().padStart(2, '0')
@@ -271,8 +288,12 @@ fun TaskListScreen(
         }.let { TaskListPresenter(it) }
     }
 
-    val filteredTasks = remember(tasks, searchQuery, statusFilter) {
-        presenter.filterTasks(tasks, searchQuery, statusFilter)
+    val priorityRevision = TaskPriorityCache.revision
+
+    val filteredTasks = remember(tasks, searchQuery, statusFilter, priorityRevision) {
+        sortTasksByPriorityAndDueDate(
+            presenter.filterTasks(tasks, searchQuery, statusFilter),
+        )
     }
 
     LaunchedEffect(userId) {
@@ -755,6 +776,11 @@ private fun taskStatusDisplayLabel(status: String) = when (status) {
     else -> status
 }
 
+private fun taskStatusAndPriorityLine(task: Task): String {
+    val status = taskStatusDisplayLabel(task.status).ifBlank { "—" }
+    return "$status | ${TaskPriorityCache.get(task.id).label}"
+}
+
 @Composable
 private fun TaskActionChip(
     modifier: Modifier = Modifier,
@@ -814,7 +840,10 @@ private fun TaskCard(
     onCancel: () -> Unit,
 ) {
     val showsActions = taskStatusShowsActions(task.status)
-    val showsStatusInBody = showsActions && task.status.isNotBlank()
+    val priorityRevision = TaskPriorityCache.revision
+    val statusPriorityLine = remember(task.id, task.status, priorityRevision) {
+        taskStatusAndPriorityLine(task)
+    }
 
     Column(
         modifier = Modifier
@@ -840,23 +869,21 @@ private fun TaskCard(
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
-                maxLines = 3,
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
                 lineHeight = 14.sp,
             )
-            if (showsStatusInBody) {
-                Spacer(Modifier.height(6.dp))
-                Text(
-                    text = task.status,
-                    color = Color.White,
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Normal,
-                    textAlign = TextAlign.Center,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    lineHeight = 13.sp,
-                )
-            }
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = statusPriorityLine,
+                color = Color.White,
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Normal,
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                lineHeight = 12.sp,
+            )
         }
         if (showsActions) {
             Row(

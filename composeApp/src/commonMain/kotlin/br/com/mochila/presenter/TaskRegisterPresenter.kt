@@ -1,7 +1,9 @@
 package br.com.mochila.presenter
 
+import br.com.mochila.data.TaskPriorityCache
 import br.com.mochila.data.TaskRepository
 import br.com.mochila.model.Task
+import br.com.mochila.model.TaskPriority
 import br.com.mochila.util.DateValidator
 
 interface TaskRegisterView {
@@ -23,7 +25,7 @@ class TaskRegisterPresenter(private val view: TaskRegisterView) {
         }
     }
 
-    fun saveTask(userId: Int, task: Task, isEditing: Boolean) {
+    fun saveTask(userId: Int, task: Task, isEditing: Boolean, priority: TaskPriority) {
         if (task.title.isBlank() || task.description.isBlank()) {
             view.showValidationError("Título e descrição são obrigatórios.")
             return
@@ -34,13 +36,14 @@ class TaskRegisterPresenter(private val view: TaskRegisterView) {
             return
         }
 
-        val success = if (isEditing) {
-            TaskRepository.update(userId, task)
+        val savedTaskId = if (isEditing) {
+            if (TaskRepository.update(userId, task)) task.id else null
         } else {
             TaskRepository.insert(userId, task)
         }
 
-        if (success) {
+        if (savedTaskId != null) {
+            TaskPriorityCache.set(savedTaskId, priority)
             view.showSaveSuccess(isEditing)
             view.navigateToTasksList()
         } else {
@@ -51,6 +54,7 @@ class TaskRegisterPresenter(private val view: TaskRegisterView) {
     fun deleteTask(userId: Int, taskId: Int) {
         val success = TaskRepository.delete(userId, taskId)
         if (success) {
+            TaskPriorityCache.remove(taskId)
             view.showDeleteSuccess()
             view.navigateToTasksList()
         } else {

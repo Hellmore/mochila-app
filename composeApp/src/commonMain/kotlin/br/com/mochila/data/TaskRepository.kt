@@ -3,6 +3,7 @@ package br.com.mochila.data
 import br.com.mochila.model.Task
 import java.sql.PreparedStatement
 import java.sql.ResultSet
+import java.sql.Statement
 
 object TaskRepository {
 
@@ -17,15 +18,15 @@ object TaskRepository {
         subjectId = getInt("id_disciplina").takeIf { !wasNull() },
     )
 
-    fun insert(userId: Int, task: Task): Boolean {
-        val conn = DatabaseHelper.connect() ?: return false
+    fun insert(userId: Int, task: Task): Int? {
+        val conn = DatabaseHelper.connect() ?: return null
         return try {
             val sql = """
                 INSERT INTO tarefa
                 (id_usuario, titulo, descricao, status, blockers, data_limite, id_disciplina)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
             """
-            val stmt: PreparedStatement = conn.prepareStatement(sql)
+            val stmt: PreparedStatement = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)
             stmt.setInt(1, userId)
             stmt.setString(2, task.title)
             stmt.setString(3, task.description)
@@ -33,13 +34,22 @@ object TaskRepository {
             stmt.setString(5, task.blockers)
             stmt.setString(6, task.dueDate)
             if (task.subjectId != null) stmt.setInt(7, task.subjectId) else stmt.setNull(7, java.sql.Types.INTEGER)
-            stmt.executeUpdate()
+            val rows = stmt.executeUpdate()
+            val newId = if (rows > 0) {
+                stmt.generatedKeys.use { keys ->
+                    if (keys.next()) keys.getInt(1) else null
+                }
+            } else {
+                null
+            }
             stmt.close()
-            println("✅ Tarefa cadastrada: ${task.title} (User ID=$userId)")
-            true
+            if (newId != null) {
+                println("✅ Tarefa cadastrada: ${task.title} (ID=$newId, User ID=$userId)")
+            }
+            newId
         } catch (e: Exception) {
             println("⚠️ Erro ao inserir tarefa: ${e.message}")
-            false
+            null
         } finally {
             conn.close()
         }

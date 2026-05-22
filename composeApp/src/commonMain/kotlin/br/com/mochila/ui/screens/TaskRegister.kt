@@ -24,9 +24,11 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.com.mochila.data.SubjectRepository
+import br.com.mochila.data.TaskPriorityCache
 import br.com.mochila.data.UserSession
 import br.com.mochila.model.Subject
 import br.com.mochila.model.Task
+import br.com.mochila.model.TaskPriority
 import br.com.mochila.presenter.TaskRegisterPresenter
 import br.com.mochila.presenter.TaskRegisterView
 import br.com.mochila.ui.screens.components.BackButton
@@ -190,6 +192,7 @@ fun TaskRegisterScreen(
     var blockers by remember { mutableStateOf("") }
     var dueDate by remember { mutableStateOf("") }
     var selectedSubjectId by remember { mutableStateOf(preselectedSubjectId) }
+    var priority by remember { mutableStateOf(TaskPriority.MEDIA) }
     var subjects by remember { mutableStateOf<List<Subject>>(emptyList()) }
 
     var loadedTaskId by remember { mutableStateOf(0) }
@@ -209,6 +212,7 @@ fun TaskRegisterScreen(
                 blockers = task.blockers ?: ""
                 dueDate = task.dueDate ?: ""
                 selectedSubjectId = task.subjectId
+                priority = TaskPriorityCache.get(task.id)
             }
 
             override fun showValidationError(msg: String) {
@@ -460,6 +464,14 @@ fun TaskRegisterScreen(
                 FormLabel("Status:")
                 StatusField()
 
+                Spacer(Modifier.height(14.dp))
+
+                FormLabel("Prioridade:")
+                PriorityField(
+                    value = priority,
+                    onSelect = { priority = it },
+                )
+
                 Spacer(Modifier.height(20.dp))
 
                 message?.let { msg ->
@@ -482,7 +494,9 @@ fun TaskRegisterScreen(
                 }
 
                 Button(
-                    onClick = { presenter.saveTask(userId, buildTask(), isEditing) },
+                    onClick = {
+                        presenter.saveTask(userId, buildTask(), isEditing, priority)
+                    },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = rosa,
                         contentColor = Color.White,
@@ -581,6 +595,52 @@ fun TaskRegisterScreen(
                 TaskRegisterBottomBar(
                     onOpenMenu = onOpenMenu,
                     onNavigateToHome = onNavigateToHome,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun PriorityField(
+    value: TaskPriority,
+    onSelect: (TaskPriority) -> Unit,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    Box(modifier = Modifier.fillMaxWidth()) {
+        FieldRoxo(
+            valor = value.label,
+            onChange = {},
+            readOnly = true,
+            trailing = {
+                IconButton(onClick = { expanded = true }) {
+                    Image(
+                        painter = painterResource(Res.drawable.drop),
+                        contentDescription = "Selecionar prioridade",
+                        modifier = Modifier.size(18.dp),
+                        colorFilter = ColorFilter.tint(rosa),
+                    )
+                }
+            },
+        )
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+        ) {
+            TaskPriority.options.forEach { option ->
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            text = option.label,
+                            fontSize = 12.sp,
+                            color = if (value == option) rosa else Color(0xFF333333),
+                            fontWeight = if (value == option) FontWeight.Bold else FontWeight.Normal,
+                        )
+                    },
+                    onClick = {
+                        onSelect(option)
+                        expanded = false
+                    },
                 )
             }
         }
