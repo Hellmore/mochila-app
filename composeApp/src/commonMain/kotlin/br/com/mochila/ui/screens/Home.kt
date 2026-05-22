@@ -31,7 +31,9 @@ import br.com.mochila.data.TaskRepository
 import br.com.mochila.data.UserSession
 import br.com.mochila.model.Subject
 import br.com.mochila.model.Task
+import br.com.mochila.ui.screens.components.AbsenceLimitWarningIcon
 import br.com.mochila.ui.screens.components.ProfileAvatar
+import br.com.mochila.util.AbsenceLimit
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
@@ -426,8 +428,10 @@ private fun HomeDashboardContent(
                 } else {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         subjects.forEach { subject ->
+                            val faltaCount = absencesBySubject[subject.id] ?: 0
                             SubjectRowItem(
                                 subject = subject,
+                                showAbsenceWarning = AbsenceLimit.isAtOrOverLimit(faltaCount, subject),
                                 onClick = { onNavigateToSubject(subject.id) },
                             )
                         }
@@ -632,11 +636,10 @@ private fun FaltasRow(
     ) {
         itemsIndexed(subjects) { index, subject ->
             val faltaCount = absences[subject.id] ?: 0
-            val maxFaltas = (subject.classHours * (100 - subject.minFrequency) / 100)
-                .coerceAtLeast(1)
+            val maxFaltas = AbsenceLimit.maxAllowedAbsences(subject)
             val pct = (faltaCount.toFloat() / maxFaltas.toFloat() * 100)
                 .toInt().coerceIn(0, 100)
-            val isWarning = faltaCount >= maxFaltas
+            val isWarning = AbsenceLimit.isAtOrOverLimit(faltaCount, subject)
             val cardColor = absenceCardColors[index % absenceCardColors.size]
 
             Column(
@@ -685,20 +688,7 @@ private fun FaltasRow(
                     )
                     if (isWarning) {
                         Spacer(Modifier.width(4.dp))
-                        Box(
-                            modifier = Modifier
-                                .size(13.dp)
-                                .clip(CircleShape)
-                                .border(2.dp, Color(0xFFD61E1E), CircleShape),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Text(
-                                text = "!",
-                                color = Color(0xFFD61E1E),
-                                fontSize = 8.sp,
-                                fontWeight = FontWeight.Bold,
-                            )
-                        }
+                        AbsenceLimitWarningIcon()
                     }
                 }
             }
@@ -709,6 +699,7 @@ private fun FaltasRow(
 @Composable
 private fun SubjectRowItem(
     subject: Subject,
+    showAbsenceWarning: Boolean,
     onClick: () -> Unit,
 ) {
     val r = ((subject.colorRgb shr 16) and 0xFF) / 255f
@@ -735,13 +726,21 @@ private fun SubjectRowItem(
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f),
         )
-        if (subject.semester.isNotBlank()) {
-            Text(
-                text = subject.semester,
-                color = Color.White,
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Normal,
-            )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            if (showAbsenceWarning) {
+                AbsenceLimitWarningIcon(size = 14.dp)
+            }
+            if (subject.semester.isNotBlank()) {
+                Text(
+                    text = subject.semester,
+                    color = Color.White,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Normal,
+                )
+            }
         }
     }
 }

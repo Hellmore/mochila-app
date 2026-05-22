@@ -4,6 +4,7 @@ import br.com.mochila.model.DEFAULT_SUBJECT_COLOR_RGB
 import br.com.mochila.model.Subject
 import java.sql.PreparedStatement
 import java.sql.ResultSet
+import java.sql.Statement
 
 object SubjectRepository {
 
@@ -19,18 +20,15 @@ object SubjectRepository {
         colorRgb = getInt("cor_rgb").let { if (wasNull()) DEFAULT_SUBJECT_COLOR_RGB else it },
     )
 
-    fun insert(
-        userId: Int,
-        subject: Subject
-    ): Boolean {
-        val conn = DatabaseHelper.connect() ?: return false
+    fun insert(userId: Int, subject: Subject): Int? {
+        val conn = DatabaseHelper.connect() ?: return null
         return try {
             val sql = """
                 INSERT INTO disciplina 
                 (id_usuario, nome, professor, frequencia_minima, data_inicio, data_fim, hora_aula, semestre, cor_rgb)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """
-            val stmt: PreparedStatement = conn.prepareStatement(sql)
+            val stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)
             stmt.setInt(1, userId)
             stmt.setString(2, subject.name)
             stmt.setString(3, subject.teacher)
@@ -41,12 +39,17 @@ object SubjectRepository {
             stmt.setString(8, subject.semester)
             stmt.setInt(9, subject.colorRgb)
             stmt.executeUpdate()
+            val keys = stmt.generatedKeys
+            val newId = if (keys.next()) keys.getInt(1) else null
+            keys.close()
             stmt.close()
-            println("✅ Disciplina cadastrada: ${subject.name} para o usuário ID=$userId")
-            true
+            if (newId != null) {
+                println("✅ Disciplina cadastrada: ${subject.name} (ID=$newId) para o usuário ID=$userId")
+            }
+            newId
         } catch (e: Exception) {
             println("⚠️ Erro ao inserir disciplina: ${e.message}")
-            false
+            null
         } finally {
             conn.close()
         }

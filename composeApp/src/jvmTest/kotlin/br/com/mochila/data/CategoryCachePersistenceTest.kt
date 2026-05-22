@@ -20,12 +20,14 @@ class CategoryCachePersistenceTest {
         AppDataDir.setPathForTests(tempDir.absolutePath)
         EventCategoryCache.resetForTests()
         TaskCategoryCache.resetForTests()
+        SubjectWeeklyFrequencyCache.resetForTests()
     }
 
     @After
     fun tearDown() {
         EventCategoryCache.resetForTests()
         TaskCategoryCache.resetForTests()
+        SubjectWeeklyFrequencyCache.resetForTests()
         AppDataDir.clearTestPath()
         tempDir.deleteRecursively()
     }
@@ -44,6 +46,14 @@ class CategoryCachePersistenceTest {
         TaskCategoryCache.resetForTests()
 
         assertEquals(TaskCategory.FICHAMENTO, TaskCategoryCache.get(20))
+    }
+
+    @Test
+    fun `subject weekly frequency persiste entre reinicios do cache`() {
+        SubjectWeeklyFrequencyCache.set(3, 2)
+        SubjectWeeklyFrequencyCache.resetForTests()
+
+        assertEquals(2, SubjectWeeklyFrequencyCache.get(3))
     }
 
     @Test

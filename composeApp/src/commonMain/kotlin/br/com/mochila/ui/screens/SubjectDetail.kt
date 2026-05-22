@@ -16,7 +16,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import br.com.mochila.data.SubjectWeeklyFrequencyCache
 import br.com.mochila.model.Subject
+import br.com.mochila.util.AbsenceLimit
 import br.com.mochila.presenter.SubjectDetailPresenter
 import br.com.mochila.presenter.SubjectDetailView
 import br.com.mochila.ui.screens.components.BackButton
@@ -133,7 +135,15 @@ fun SubjectDetailScreen(
                 FieldDisplay(value = s.minFrequency.toString(), label = "Frequência Mínima (%)")
                 FieldDisplay(value = s.startDate, label = "Data de Início")
                 FieldDisplay(value = s.endDate, label = "Data de Término")
+                FieldDisplay(
+                    value = SubjectWeeklyFrequencyCache.get(s.id).toString(),
+                    label = "Frequência (aulas/semana)",
+                )
                 FieldDisplay(value = s.classHours.toString(), label = "Horas/Aula")
+                FieldDisplay(
+                    value = AbsenceLimit.weeklyHours(s).toString(),
+                    label = "Carga horária semanal (h)",
+                )
                 FieldDisplay(value = s.semester, label = "Semestre")
 
                 Spacer(modifier = Modifier.height(20.dp))

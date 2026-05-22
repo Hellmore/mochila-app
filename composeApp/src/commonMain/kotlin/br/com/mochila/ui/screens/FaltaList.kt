@@ -30,8 +30,10 @@ import br.com.mochila.model.Falta
 import br.com.mochila.model.Subject
 import br.com.mochila.presenter.FaltaListPresenter
 import br.com.mochila.presenter.FaltaListView
+import br.com.mochila.ui.screens.components.AbsenceLimitWarningIcon
 import br.com.mochila.ui.screens.components.BackButton
 import br.com.mochila.ui.screens.components.ProfileAvatar
+import br.com.mochila.util.AbsenceLimit
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -196,6 +198,7 @@ private fun FaltaFilterDropdown(
 @Composable
 private fun FaltaCard(
     falta: Falta,
+    showAbsenceWarning: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -228,6 +231,10 @@ private fun FaltaCard(
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f),
             )
+            if (showAbsenceWarning) {
+                AbsenceLimitWarningIcon(size = 14.dp)
+                Spacer(Modifier.width(6.dp))
+            }
             Image(
                 painter = painterResource(Res.drawable.menu_icon_today),
                 contentDescription = null,
@@ -287,6 +294,7 @@ fun FaltaListScreen(
 ) {
     var faltas by remember { mutableStateOf<List<Falta>>(emptyList()) }
     var subjects by remember { mutableStateOf<List<Subject>>(emptyList()) }
+    var absencesBySubject by remember { mutableStateOf<Map<Int, Int>>(emptyMap()) }
     var subjectFilter by remember { mutableStateOf("Todos") }
     var statusFilter by remember { mutableStateOf("Todos") }
 
@@ -314,9 +322,17 @@ fun FaltaListScreen(
         }.let { FaltaListPresenter(it) }
     }
 
+    val subjectsAtLimit = remember(subjects, absencesBySubject) {
+        subjects.filter { subject ->
+            val count = absencesBySubject[subject.id] ?: 0
+            AbsenceLimit.isAtOrOverLimit(count, subject)
+        }.map { it.id }.toSet()
+    }
+
     LaunchedEffect(userId) {
         presenter.loadFaltas(userId)
         subjects = SubjectRepository.listByUser(userId)
+        absencesBySubject = FaltaRepository.countByUser(userId)
     }
 
     val today = remember { Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date }
@@ -336,6 +352,7 @@ fun FaltaListScreen(
         if (isWide) {
             FaltaListDesktopLayout(
                 faltas = faltas,
+                subjectsAtLimit = subjectsAtLimit,
                 filteredFaltas = filteredFaltas,
                 subjectFilter = subjectFilter,
                 statusFilter = statusFilter,
@@ -353,6 +370,7 @@ fun FaltaListScreen(
         } else {
             FaltaListMobileLayout(
                 faltas = faltas,
+                subjectsAtLimit = subjectsAtLimit,
                 filteredFaltas = filteredFaltas,
                 subjectFilter = subjectFilter,
                 statusFilter = statusFilter,
@@ -374,6 +392,7 @@ fun FaltaListScreen(
 @Composable
 private fun FaltaListMobileLayout(
     faltas: List<Falta>,
+    subjectsAtLimit: Set<Int>,
     filteredFaltas: List<Falta>,
     subjectFilter: String,
     statusFilter: String,
@@ -478,6 +497,7 @@ private fun FaltaListMobileLayout(
 
         FaltaListContent(
             faltas = faltas,
+            subjectsAtLimit = subjectsAtLimit,
             filteredFaltas = filteredFaltas,
             onNavigateToAdd = onNavigateToAdd,
             onFaltaClick = onFaltaClick,
@@ -495,6 +515,7 @@ private fun FaltaListMobileLayout(
 @Composable
 private fun FaltaListDesktopLayout(
     faltas: List<Falta>,
+    subjectsAtLimit: Set<Int>,
     filteredFaltas: List<Falta>,
     subjectFilter: String,
     statusFilter: String,
@@ -629,6 +650,7 @@ private fun FaltaListDesktopLayout(
 
                     FaltaListContent(
                         faltas = faltas,
+                        subjectsAtLimit = subjectsAtLimit,
                         filteredFaltas = filteredFaltas,
                         onNavigateToAdd = onNavigateToAdd,
                         onFaltaClick = onFaltaClick,
@@ -649,6 +671,7 @@ private fun FaltaListDesktopLayout(
 @Composable
 private fun FaltaListContent(
     faltas: List<Falta>,
+    subjectsAtLimit: Set<Int>,
     filteredFaltas: List<Falta>,
     onNavigateToAdd: () -> Unit,
     onFaltaClick: (Int) -> Unit,
@@ -687,7 +710,11 @@ private fun FaltaListContent(
             }
             else -> {
                 filteredFaltas.forEach { falta ->
-                    FaltaCard(falta = falta, onClick = { onFaltaClick(falta.id) })
+                    FaltaCard(
+                        falta = falta,
+                        showAbsenceWarning = falta.subjectId in subjectsAtLimit,
+                        onClick = { onFaltaClick(falta.id) },
+                    )
                 }
             }
         }

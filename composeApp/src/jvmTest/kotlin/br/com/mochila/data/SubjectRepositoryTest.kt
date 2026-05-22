@@ -29,8 +29,10 @@ class SubjectRepositoryTest : RepositoryTestBase() {
         semester = semester,
     )
 
-    @Test fun `insert retorna true`() {
-        assertTrue(SubjectRepository.insert(userId, sampleSubject()))
+    @Test fun `insert retorna id gerado`() {
+        val id = SubjectRepository.insert(userId, sampleSubject())
+        assertNotNull(id)
+        assertTrue(id > 0)
     }
 
     @Test fun `listByUser retorna disciplinas inseridas`() {

@@ -1,7 +1,9 @@
 package br.com.mochila.presenter
 
 import br.com.mochila.data.FaltaRepository
+import br.com.mochila.data.SubjectRepository
 import br.com.mochila.model.Falta
+import br.com.mochila.util.AbsenceLimit
 import br.com.mochila.util.DateValidator
 
 interface FaltaRegisterView {
@@ -11,6 +13,7 @@ interface FaltaRegisterView {
     fun showSaveError()
     fun showDeleteSuccess()
     fun showDeleteError()
+    fun showAbsenceLimitWarning(message: String)
     fun navigateToFaltasList()
 }
 
@@ -37,9 +40,25 @@ class FaltaRegisterPresenter(private val view: FaltaRegisterView) {
         else FaltaRepository.insert(userId, toSave)
         if (success) {
             view.showSaveSuccess(isEditing)
-            view.navigateToFaltasList()
+            maybeWarnAbsenceLimit(userId, toSave.subjectId)
         } else {
             view.showSaveError()
+        }
+    }
+
+    private fun maybeWarnAbsenceLimit(userId: Int, subjectId: Int) {
+        val subject = SubjectRepository.findById(subjectId) ?: run {
+            view.navigateToFaltasList()
+            return
+        }
+        val count = FaltaRepository.countBySubject(userId, subjectId)
+        if (AbsenceLimit.isAtOrOverLimit(count, subject)) {
+            val max = AbsenceLimit.maxAllowedAbsences(subject)
+            view.showAbsenceLimitWarning(
+                AbsenceLimit.warningMessage(subject.name, count, max),
+            )
+        } else {
+            view.navigateToFaltasList()
         }
     }
 

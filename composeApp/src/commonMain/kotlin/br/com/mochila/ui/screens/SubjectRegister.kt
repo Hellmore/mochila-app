@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import br.com.mochila.data.SubjectRepository
+import br.com.mochila.data.SubjectWeeklyFrequencyCache
 import br.com.mochila.data.UserSession
 import br.com.mochila.model.DEFAULT_SUBJECT_COLOR_RGB
 import br.com.mochila.model.Subject
@@ -303,6 +304,7 @@ fun SubjectRegisterScreen(
     var minFrequency by remember { mutableStateOf("") }
     var startDate by remember { mutableStateOf("") }
     var endDate by remember { mutableStateOf("") }
+    var weeklyFrequency by remember { mutableStateOf("") }
     var classHours by remember { mutableStateOf("") }
     var semester by remember { mutableStateOf("") }
     var subjectColorRgb by remember { mutableStateOf(DEFAULT_SUBJECT_COLOR_RGB) }
@@ -361,6 +363,7 @@ fun SubjectRegisterScreen(
                 minFrequency = if (s.minFrequency > 0) "${s.minFrequency}%" else ""
                 startDate = s.startDate
                 endDate = s.endDate
+                weeklyFrequency = SubjectWeeklyFrequencyCache.get(s.id).toString()
                 classHours = if (s.classHours > 0) "${s.classHours}h" else ""
                 semester = s.semester
                 subjectColorRgb = s.colorRgb
@@ -609,6 +612,18 @@ fun SubjectRegisterScreen(
 
             Spacer(Modifier.height(14.dp))
 
+            FormLabel("Frequência (aulas por semana)")
+            FieldRoxo(
+                valor = weeklyFrequency,
+                onChange = { input ->
+                    val digits = input.filter { it.isDigit() }.take(2)
+                    weeklyFrequency = digits
+                },
+                minHeight = 42.dp,
+            )
+
+            Spacer(Modifier.height(14.dp))
+
             FormLabel("Horas por Aula")
             FieldRoxo(
                 valor = classHours,
@@ -656,7 +671,10 @@ fun SubjectRegisterScreen(
             }
 
             Button(
-                onClick = { presenter.saveSubject(userId, buildSubject(), isEditing) },
+                onClick = {
+                    val weekly = weeklyFrequency.filter { it.isDigit() }.toIntOrNull() ?: 0
+                    presenter.saveSubject(userId, buildSubject(), weekly, isEditing)
+                },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = rosa,
                     contentColor = Color.White,
