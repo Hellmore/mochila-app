@@ -1,10 +1,10 @@
 package br.com.mochila.presenter
 
+import br.com.mochila.data.LogRepository
 import br.com.mochila.data.SubjectRepository
 import br.com.mochila.data.SubjectWeeklyFrequencyCache
 import br.com.mochila.model.Subject
 
-// Contrato do SubjectDetail
 interface SubjectDetailView {
     fun showSubject(subject: Subject)
     fun showDeleteSuccess()
@@ -36,11 +36,11 @@ class SubjectDetailPresenter(private val view: SubjectDetailView) {
         )
         if (success) {
             SubjectWeeklyFrequencyCache.remove(subject.id)
-            println("✅ Disciplina deletada com sucesso!")
+            LogRepository.insertAcao(userId, "EXCLUIR_DISCIPLINA", "disciplina", subject.id)
             view.showDeleteSuccess()
             view.navigateToHome()
         } else {
-            println("⚠️ Erro ao deletar disciplina.")
+            LogRepository.insertErro("SubjectDetailPresenter", "Erro ao excluir disciplina id=${subject.id}", userId)
             view.showDeleteError()
         }
     }

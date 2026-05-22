@@ -1,5 +1,6 @@
 package br.com.mochila.presenter
 
+import br.com.mochila.data.LogRepository
 import br.com.mochila.data.TokenRepository
 import br.com.mochila.data.UserRepository
 import br.com.mochila.util.EmailService
@@ -79,6 +80,7 @@ class NewPasswordPresenter {
             return "Erro ao atualizar a senha. Tente novamente."
 
         UserRepository.verifyEmail(email.trim())
+        LogRepository.insertAcao(user.id, "RESET_SENHA", "usuario", user.id)
 
         return null
     }

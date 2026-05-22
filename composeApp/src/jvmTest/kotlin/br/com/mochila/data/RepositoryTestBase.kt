@@ -88,6 +88,27 @@ abstract class RepositoryTestBase {
                 usado INTEGER DEFAULT 0,
                 criado_em DATETIME DEFAULT CURRENT_TIMESTAMP
             );
+            CREATE TABLE IF NOT EXISTS administrador (
+                id_adm INTEGER PRIMARY KEY AUTOINCREMENT,
+                id_usuario INTEGER NOT NULL UNIQUE,
+                criado_em DATETIME DEFAULT CURRENT_TIMESTAMP
+            );
+            CREATE TABLE IF NOT EXISTS log_acao (
+                id_acao INTEGER PRIMARY KEY AUTOINCREMENT,
+                id_usuario INTEGER,
+                acao TEXT NOT NULL,
+                descricao TEXT,
+                tabela_afetada TEXT NOT NULL,
+                id_registro_afetado INTEGER,
+                criado_em DATETIME DEFAULT CURRENT_TIMESTAMP
+            );
+            CREATE TABLE IF NOT EXISTS log_erro (
+                id_erro INTEGER PRIMARY KEY AUTOINCREMENT,
+                id_usuario INTEGER,
+                modulo TEXT NOT NULL,
+                mensagem TEXT NOT NULL,
+                criado_em DATETIME DEFAULT CURRENT_TIMESTAMP
+            );
         """.trimIndent()
     }
 
@@ -106,6 +127,9 @@ abstract class RepositoryTestBase {
     open fun tearDownBase() {
         if (::holderConn.isInitialized && !holderConn.isClosed) {
             val stmt = holderConn.createStatement()
+            stmt.execute("DELETE FROM log_erro")
+            stmt.execute("DELETE FROM log_acao")
+            stmt.execute("DELETE FROM administrador")
             stmt.execute("DELETE FROM token_recuperacao")
             stmt.execute("DELETE FROM falta")
             stmt.execute("DELETE FROM evento")

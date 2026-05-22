@@ -44,6 +44,7 @@ fun RegisterScreen(
     var email by remember { mutableStateOf("") }
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var adminCode by remember { mutableStateOf("") }
     var message by remember { mutableStateOf<String?>(null) }
     var success by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(false) }
@@ -219,6 +220,29 @@ fun RegisterScreen(
                             )
                         }
 
+                        Spacer(Modifier.height(16.dp))
+
+                        Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text("Código de acesso", color = rosa, fontSize = 14.sp, fontWeight = FontWeight.Medium, lineHeight = 20.sp)
+                            OutlinedTextField(
+                                value = adminCode,
+                                onValueChange = { adminCode = it },
+                                modifier = Modifier.fillMaxWidth(),
+                                placeholder = { Text("Opcional", color = rosa.copy(alpha = 0.8f), fontSize = 14.sp, lineHeight = 20.sp) },
+                                singleLine = true,
+                                enabled = !isLoading,
+                                visualTransformation = PasswordVisualTransformation(),
+                                textStyle = LocalTextStyle.current.copy(fontSize = 14.sp, lineHeight = 20.sp, color = rosa),
+                                shape = RoundedCornerShape(6.dp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    unfocusedContainerColor = Color.White, focusedContainerColor = Color.White,
+                                    unfocusedBorderColor = rosa, focusedBorderColor = rosa,
+                                    cursorColor = rosa,
+                                    unfocusedPlaceholderColor = rosa.copy(alpha = 0.8f), focusedPlaceholderColor = rosa.copy(alpha = 0.8f)
+                                )
+                            )
+                        }
+
                         Spacer(Modifier.height(24.dp))
 
                         message?.let { msg ->
@@ -235,7 +259,7 @@ fun RegisterScreen(
                         }
 
                         Button(
-                            onClick = { presenter.register(username, email, password) },
+                            onClick = { presenter.register(username, email, password, adminCode) },
                             enabled = !isLoading,
                             colors = ButtonDefaults.buttonColors(containerColor = rosa),
                             shape = RoundedCornerShape(8.dp),
@@ -369,6 +393,29 @@ fun RegisterScreen(
                     )
                 }
 
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text("Código de acesso", color = rosa, fontSize = 14.sp, fontWeight = FontWeight.Medium, lineHeight = 20.sp)
+                    OutlinedTextField(
+                        value = adminCode,
+                        onValueChange = { adminCode = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text("Opcional", color = rosa.copy(alpha = 0.8f), fontSize = 14.sp, lineHeight = 20.sp) },
+                        singleLine = true,
+                        enabled = !isLoading,
+                        visualTransformation = PasswordVisualTransformation(),
+                        textStyle = LocalTextStyle.current.copy(fontSize = 14.sp, lineHeight = 20.sp, color = rosa),
+                        shape = RoundedCornerShape(6.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            unfocusedContainerColor = Color.White, focusedContainerColor = Color.White,
+                            unfocusedBorderColor = rosa, focusedBorderColor = rosa,
+                            cursorColor = rosa,
+                            unfocusedPlaceholderColor = rosa.copy(alpha = 0.8f), focusedPlaceholderColor = rosa.copy(alpha = 0.8f)
+                        )
+                    )
+                }
+
                 Spacer(modifier = Modifier.height(24.dp))
 
                 message?.let { msg ->
@@ -385,7 +432,7 @@ fun RegisterScreen(
                 }
 
                 Button(
-                    onClick = { presenter.register(username, email, password) },
+                    onClick = { presenter.register(username, email, password, adminCode) },
                     enabled = !isLoading,
                     colors = ButtonDefaults.buttonColors(containerColor = rosa),
                     shape = RoundedCornerShape(8.dp),

@@ -19,7 +19,8 @@ fun App() {
     var selectedSubjectId by remember { mutableStateOf<Int?>(null) }
     var selectedTaskId   by remember { mutableStateOf<Int?>(null) }
     var selectedEventId  by remember { mutableStateOf<Int?>(null) }
-    var selectedFaltaId  by remember { mutableStateOf<Int?>(null) }
+    var selectedFaltaId       by remember { mutableStateOf<Int?>(null) }
+    var selectedAdminUserId   by remember { mutableStateOf<Int?>(null) }
     var accountPasswordFeedback by remember { mutableStateOf<Pair<String, Boolean>?>(null) }
     var pendingEmail     by remember { mutableStateOf("") }
     var taskSubjectId    by remember { mutableStateOf<Int?>(null) }
@@ -390,6 +391,47 @@ fun App() {
                         } ?: logout()
                     }
 
+                    "admin_panel" -> {
+                        if (UserSession.currentUser?.isAdmin != true) { navigateTo("home") }
+                        else AdminPanelScreen(
+                            onNavigateToUsers = { navigateTo("admin_users") },
+                            onNavigateToLogs = { navigateTo("admin_logs") },
+                            onBack = { goBack() },
+                        )
+                    }
+
+                    "admin_users" -> {
+                        if (UserSession.currentUser?.isAdmin != true) { navigateTo("home") }
+                        else currentUserId?.let { uid ->
+                            AdminUsersScreen(
+                                currentUserId = uid,
+                                onBack = { goBack() },
+                                onNavigateToUserDetail = { targetId ->
+                                    selectedAdminUserId = targetId
+                                    navigateTo("admin_user_detail")
+                                },
+                            )
+                        } ?: logout()
+                    }
+
+                    "admin_user_detail" -> {
+                        if (UserSession.currentUser?.isAdmin != true) { navigateTo("home") }
+                        else currentUserId?.let { uid ->
+                            selectedAdminUserId?.let { targetId ->
+                                AdminUserDetailScreen(
+                                    currentAdminId = uid,
+                                    targetUserId = targetId,
+                                    onBack = { goBack() },
+                                )
+                            } ?: goBack()
+                        } ?: logout()
+                    }
+
+                    "admin_logs" -> {
+                        if (UserSession.currentUser?.isAdmin != true) { navigateTo("home") }
+                        else AdminLogsScreen(onBack = { goBack() })
+                    }
+
                     "event_edit" -> {
                         currentUserId?.let { userId ->
                             selectedEventId?.let { eid ->
@@ -422,6 +464,7 @@ fun App() {
                         onNavigateToEventos = { closeMenu(); navigateTo("events_list") },
                         onNavigateToPlanoFaltas = { closeMenu(); navigateTo("faltas_list") },
                         onNavigateToAccountSettings = { closeMenu(); navigateTo("account_settings") },
+                        onNavigateToAdmin = { closeMenu(); navigateTo("admin_panel") },
                         onLogout = { logout() }
                     )
                 }
