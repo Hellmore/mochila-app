@@ -22,8 +22,10 @@ class TaskRepositoryTest : RepositoryTestBase() {
     private fun sampleTask(title: String = "Estudar") =
         Task(title = title, description = "Descrição", status = "Pendente")
 
-    @Test fun `insert retorna true`() {
-        assertTrue(TaskRepository.insert(userId, sampleTask()))
+    @Test fun `insert retorna id gerado`() {
+        val id = TaskRepository.insert(userId, sampleTask())
+        assertNotNull(id)
+        assertTrue(id!! > 0)
     }
 
     @Test fun `listByUser retorna tarefas do usuario`() {

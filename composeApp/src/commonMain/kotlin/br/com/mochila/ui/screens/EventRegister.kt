@@ -28,11 +28,13 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import br.com.mochila.data.EventCategoryCache
 import br.com.mochila.data.EventRepository
 import br.com.mochila.data.SubjectRepository
 import br.com.mochila.data.UserSession
 import br.com.mochila.model.DEFAULT_EVENT_COLOR_RGB
 import br.com.mochila.model.Event
+import br.com.mochila.model.EventCategory
 import br.com.mochila.model.Subject
 import br.com.mochila.presenter.EventRegisterPresenter
 import br.com.mochila.presenter.EventRegisterView
@@ -276,6 +278,7 @@ fun EventRegisterScreen(
     var eventColorRgb by remember { mutableStateOf(DEFAULT_EVENT_COLOR_RGB) }
     var reminderMinutes by remember { mutableStateOf<Int?>(null) }
     var reminderShown by remember { mutableStateOf(false) }
+    var category by remember { mutableStateOf(EventCategory.default) }
     var loadedEventId by remember { mutableStateOf(0) }
     var subjects by remember { mutableStateOf<List<Subject>>(emptyList()) }
     var showColorPicker by remember { mutableStateOf(false) }
@@ -298,6 +301,7 @@ fun EventRegisterScreen(
                 eventColorRgb = event.colorRgb
                 reminderMinutes = event.reminderMinutes
                 reminderShown = event.reminderShown
+                category = EventCategoryCache.get(event.id)
             }
 
             override fun showValidationError(msg: String) {
@@ -551,6 +555,14 @@ fun EventRegisterScreen(
 
                 Spacer(Modifier.height(14.dp))
 
+                FormLabel("Categoria:")
+                EventCategoryField(
+                    value = category,
+                    onSelect = { category = it },
+                )
+
+                Spacer(Modifier.height(14.dp))
+
                 FormLabel("Data:")
                 CalendarPicker(
                     selectedDate = eventDate,
@@ -594,7 +606,7 @@ fun EventRegisterScreen(
                 }
 
                 Button(
-                    onClick = { presenter.saveEvent(userId, buildEvent(), isEditing) },
+                    onClick = { presenter.saveEvent(userId, buildEvent(), isEditing, category) },
                     colors = ButtonDefaults.buttonColors(containerColor = rosa, contentColor = Color.White),
                     shape = RoundedCornerShape(8.dp),
                     modifier = Modifier.align(Alignment.Start),
@@ -722,6 +734,57 @@ fun EventRegisterScreen(
             reminderShown = false
         },
     )
+}
+
+@Composable
+private fun EventCategoryField(
+    value: EventCategory,
+    onSelect: (EventCategory) -> Unit,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    Box(modifier = Modifier.fillMaxWidth()) {
+        FieldRoxo(
+            valor = value.label,
+            onChange = {},
+            readOnly = true,
+            trailing = {
+                IconButton(onClick = { expanded = true }) {
+                    Box(
+                        modifier = Modifier
+                            .size(28.dp)
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(laranjaHeader),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Image(
+                            painter = painterResource(Res.drawable.drop),
+                            contentDescription = "Selecionar categoria",
+                            modifier = Modifier.size(14.dp),
+                            colorFilter = ColorFilter.tint(Color.White),
+                        )
+                    }
+                }
+            },
+        )
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            EventCategory.options.forEach { option ->
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            text = option.label,
+                            fontSize = 12.sp,
+                            color = if (value == option) rosa else Color(0xFF333333),
+                            fontWeight = if (value == option) FontWeight.Bold else FontWeight.Normal,
+                        )
+                    },
+                    onClick = {
+                        onSelect(option)
+                        expanded = false
+                    },
+                )
+            }
+        }
+    }
 }
 
 @Composable

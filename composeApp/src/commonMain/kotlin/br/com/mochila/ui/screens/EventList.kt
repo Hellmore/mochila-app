@@ -23,10 +23,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import br.com.mochila.data.EventCategoryCache
 import br.com.mochila.data.EventRepository
 import br.com.mochila.data.SubjectRepository
 import br.com.mochila.data.UserSession
 import br.com.mochila.model.Event
+import br.com.mochila.model.EventCategory
 import br.com.mochila.model.Subject
 import br.com.mochila.presenter.EventListPresenter
 import br.com.mochila.presenter.EventListView
@@ -202,6 +204,33 @@ private fun FilterDropdown(
 }
 
 @Composable
+private fun EventInfoTag(
+    label: String,
+    theme: Color,
+    modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null,
+) {
+    Box(
+        modifier = modifier
+            .background(theme.copy(alpha = 0.22f), RoundedCornerShape(10.dp))
+            .then(
+                if (onClick != null) Modifier.clickable(onClick = onClick)
+                else Modifier,
+            )
+            .padding(horizontal = 8.dp, vertical = 2.dp),
+    ) {
+        Text(
+            text = label,
+            color = theme,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Medium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
+
+@Composable
 private fun EventCard(
     event: Event,
     onClick: () -> Unit,
@@ -210,6 +239,9 @@ private fun EventCard(
     val theme = rgbToColor(event.colorRgb)
     val headerLabel = event.subjectName?.takeIf { it.isNotBlank() } ?: "Sem matéria"
     val dateLabel = EventRepository.formatEventDateForDisplay(event.eventDate)
+    val categoryRevision = EventCategoryCache.revision
+    var categoryExpanded by remember { mutableStateOf(false) }
+    val category = remember(event.id, categoryRevision) { EventCategoryCache.get(event.id) }
 
     Column(
         modifier = modifier
@@ -267,17 +299,39 @@ private fun EventCard(
                 modifier = Modifier.weight(1f),
             )
             Spacer(Modifier.width(8.dp))
-            Box(
-                modifier = Modifier
-                    .background(theme.copy(alpha = 0.22f), RoundedCornerShape(10.dp))
-                    .padding(horizontal = 8.dp, vertical = 2.dp),
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(
-                    text = dateLabel,
-                    color = theme,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Medium,
-                )
+                EventInfoTag(label = dateLabel, theme = theme)
+                Box {
+                    EventInfoTag(
+                        label = category.label,
+                        theme = theme,
+                        onClick = { categoryExpanded = true },
+                    )
+                    DropdownMenu(
+                        expanded = categoryExpanded,
+                        onDismissRequest = { categoryExpanded = false },
+                    ) {
+                        EventCategory.options.forEach { option ->
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text = option.label,
+                                        fontSize = 12.sp,
+                                        color = if (option == category) theme else Color(0xFF333333),
+                                        fontWeight = if (option == category) FontWeight.Bold else FontWeight.Normal,
+                                    )
+                                },
+                                onClick = {
+                                    EventCategoryCache.set(event.id, option)
+                                    categoryExpanded = false
+                                },
+                            )
+                        }
+                    }
+                }
             }
         }
     }
@@ -310,7 +364,9 @@ fun EventListScreen(
         override fun navigateToEventEdit(eventId: Int) {}
     }) }
 
-    val filteredEvents = remember(events, subjectFilter, monthFilter) {
+    val categoryRevision = EventCategoryCache.revision
+
+    val filteredEvents = remember(events, subjectFilter, monthFilter, categoryRevision) {
         filterPresenter.filterEvents(events, subjectFilter, monthFilter, monthNamesPt)
     }
 

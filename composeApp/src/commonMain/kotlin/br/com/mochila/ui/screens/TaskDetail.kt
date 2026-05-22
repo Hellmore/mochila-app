@@ -2,9 +2,12 @@ package br.com.mochila.ui.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -12,11 +15,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import br.com.mochila.data.TaskPriorityCache
 import br.com.mochila.model.Task
+import br.com.mochila.model.TaskPriority
 import br.com.mochila.presenter.TaskDetailPresenter
 import br.com.mochila.presenter.TaskDetailView
 import br.com.mochila.ui.screens.components.BackButton
@@ -133,6 +139,13 @@ fun TaskDetailScreen(
                 FieldDisplay(value = t.blockers ?: "Nenhum", label = "Blockers")
                 FieldDisplay(value = t.dueDate ?: "Não definida", label = "Data limite")
 
+                Spacer(modifier = Modifier.height(8.dp))
+
+                TaskPrioritySelector(
+                    taskId = t.id,
+                    accentColor = rosa,
+                )
+
                 Spacer(modifier = Modifier.height(20.dp))
 
                 Button(
@@ -241,5 +254,73 @@ fun TaskDetailScreen(
             onNavigateToAccountSettings = { showMenu = false; onNavigateToAccountSettings() },
             onLogout = { showMenu = false; onLogout() }
         )
+    }
+}
+
+@Composable
+private fun TaskPrioritySelector(
+    taskId: Int,
+    accentColor: Color,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val priorityRevision = TaskPriorityCache.revision
+    val priority = remember(taskId, priorityRevision) { TaskPriorityCache.get(taskId) }
+
+    Column(
+        modifier = Modifier
+            .widthIn(max = 600.dp)
+            .fillMaxWidth(0.9f),
+    ) {
+        Text(
+            text = "Prioridade",
+            color = accentColor,
+            fontSize = 14.sp,
+            modifier = Modifier.padding(bottom = 4.dp),
+        )
+        Box {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color.White)
+                    .border(1.dp, accentColor, RoundedCornerShape(12.dp))
+                    .clickable { expanded = true }
+                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text(
+                    text = priority.label,
+                    color = Color.Black.copy(alpha = 0.85f),
+                    fontSize = 14.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f),
+                )
+                Image(
+                    painter = painterResource(Res.drawable.drop),
+                    contentDescription = "Selecionar prioridade",
+                    modifier = Modifier.size(18.dp),
+                    colorFilter = ColorFilter.tint(accentColor),
+                )
+            }
+            DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                TaskPriority.options.forEach { option ->
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                text = option.label,
+                                color = if (option == priority) accentColor else Color(0xFF333333),
+                                fontWeight = if (option == priority) FontWeight.Bold else FontWeight.Normal,
+                            )
+                        },
+                        onClick = {
+                            TaskPriorityCache.set(taskId, option)
+                            expanded = false
+                        },
+                    )
+                }
+            }
+        }
     }
 }
