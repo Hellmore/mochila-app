@@ -31,6 +31,7 @@ fun SubjectDetailScreen(
     onNavigateToEdit: (Subject) -> Unit,
     onNavigateToHome: () -> Unit,
     onNavigateToTaskRegister: () -> Unit,
+    onNavigateToFaltaRegister: () -> Unit,
     onNavigateToTasksList: () -> Unit,
     onNavigateToAccountSettings: () -> Unit,
     onBack: () -> Unit,
@@ -217,6 +218,14 @@ fun SubjectDetailScreen(
                             Image(
                                 painter = painterResource(Res.drawable.add),
                                 contentDescription = "Registrar tarefa",
+                                modifier = Modifier.size(16.dp),
+                                colorFilter = ColorFilter.tint(Color.White)
+                            )
+                        }
+                        IconButton(onClick = onNavigateToFaltaRegister) {
+                            Image(
+                                painter = painterResource(Res.drawable.menu_icon_today),
+                                contentDescription = "Registrar falta",
                                 modifier = Modifier.size(16.dp),
                                 colorFilter = ColorFilter.tint(Color.White)
                             )
