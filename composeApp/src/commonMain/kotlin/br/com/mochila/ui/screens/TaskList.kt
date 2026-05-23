@@ -134,7 +134,7 @@ private fun TaskSearchBar(
         onValueChange = onQueryChange,
         modifier = modifier
             .fillMaxWidth()
-            .height(44.dp)
+            .height(34.dp)
             .clip(RoundedCornerShape(7.dp))
             .background(Color.White)
             .border(1.dp, rosa.copy(alpha = 0.6f), RoundedCornerShape(7.dp)),

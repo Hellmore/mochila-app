@@ -24,10 +24,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import br.com.mochila.data.EventRepository
 import br.com.mochila.data.FaltaRepository
 import br.com.mochila.data.SubjectRepository
 import br.com.mochila.data.TaskRepository
 import br.com.mochila.data.UserSession
+import br.com.mochila.model.Event
 import br.com.mochila.model.Subject
 import br.com.mochila.model.Task
 import br.com.mochila.ui.screens.components.AbsenceLimitWarningIcon
@@ -77,6 +79,8 @@ fun HomeScreen(
     onNavigateToSubjectsList: () -> Unit,
     onNavigateToSubject: (Int) -> Unit,
     onNavigateToTasksList: () -> Unit,
+    onNavigateToFaltasList: () -> Unit,
+    onNavigateToEventsList: () -> Unit,
     onNavigateToAccountSettings: () -> Unit,
     onLogout: () -> Unit,
 ) {
@@ -89,12 +93,20 @@ fun HomeScreen(
     var subjects by remember { mutableStateOf<List<Subject>>(emptyList()) }
     var tasks by remember { mutableStateOf<List<Task>>(emptyList()) }
     var absencesBySubject by remember { mutableStateOf<Map<Int, Int>>(emptyMap()) }
+    var upcomingEvents by remember { mutableStateOf<List<Event>>(emptyList()) }
 
     LaunchedEffect(userId) {
         subjects = SubjectRepository.listByUser(userId)
         tasks = TaskRepository.listByUser(userId)
             .filter { it.status == "Pendente" || it.status == "Em andamento" }
         absencesBySubject = FaltaRepository.countByUser(userId)
+        upcomingEvents = EventRepository.listByUser(userId)
+            .filter { event ->
+                event.status == "Agendado" &&
+                    EventRepository.parseEventDateTime(event.eventDate)
+                        ?.date?.let { d -> d >= today } == true
+            }
+            .take(3)
     }
 
     val weekDays = remember(today) {
@@ -117,11 +129,14 @@ fun HomeScreen(
                 subjects = subjects,
                 tasks = tasks,
                 absencesBySubject = absencesBySubject,
+                upcomingEvents = upcomingEvents,
                 onOpenMenu = onOpenMenu,
                 onNavigateToAdd = onNavigateToAdd,
                 onNavigateToSubjectsList = onNavigateToSubjectsList,
                 onNavigateToSubject = onNavigateToSubject,
                 onNavigateToTasksList = onNavigateToTasksList,
+                onNavigateToFaltasList = onNavigateToFaltasList,
+                onNavigateToEventsList = onNavigateToEventsList,
                 onNavigateToAccountSettings = onNavigateToAccountSettings,
             )
         } else {
@@ -141,11 +156,14 @@ fun HomeScreen(
                 subjects = subjects,
                 tasks = tasks,
                 absencesBySubject = absencesBySubject,
+                upcomingEvents = upcomingEvents,
                 onOpenMenu = onOpenMenu,
                 onNavigateToAdd = onNavigateToAdd,
                 onNavigateToSubjectsList = onNavigateToSubjectsList,
                 onNavigateToSubject = onNavigateToSubject,
                 onNavigateToTasksList = onNavigateToTasksList,
+                onNavigateToFaltasList = onNavigateToFaltasList,
+                onNavigateToEventsList = onNavigateToEventsList,
                 onNavigateToAccountSettings = onNavigateToAccountSettings,
             )
         }
@@ -162,11 +180,14 @@ private fun HomeMobileLayout(
     subjects: List<Subject>,
     tasks: List<Task>,
     absencesBySubject: Map<Int, Int>,
+    upcomingEvents: List<Event>,
     onOpenMenu: () -> Unit,
     onNavigateToAdd: () -> Unit,
     onNavigateToSubjectsList: () -> Unit,
     onNavigateToSubject: (Int) -> Unit,
     onNavigateToTasksList: () -> Unit,
+    onNavigateToFaltasList: () -> Unit,
+    onNavigateToEventsList: () -> Unit,
     onNavigateToAccountSettings: () -> Unit,
 ) {
     Column(Modifier.fillMaxSize()) {
@@ -183,9 +204,12 @@ private fun HomeMobileLayout(
             subjects = subjects,
             tasks = tasks,
             absencesBySubject = absencesBySubject,
+            upcomingEvents = upcomingEvents,
             onNavigateToSubjectsList = onNavigateToSubjectsList,
             onNavigateToSubject = onNavigateToSubject,
             onNavigateToTasksList = onNavigateToTasksList,
+            onNavigateToFaltasList = onNavigateToFaltasList,
+            onNavigateToEventsList = onNavigateToEventsList,
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
@@ -209,11 +233,14 @@ private fun HomeDesktopLayout(
     subjects: List<Subject>,
     tasks: List<Task>,
     absencesBySubject: Map<Int, Int>,
+    upcomingEvents: List<Event>,
     onOpenMenu: () -> Unit,
     onNavigateToAdd: () -> Unit,
     onNavigateToSubjectsList: () -> Unit,
     onNavigateToSubject: (Int) -> Unit,
     onNavigateToTasksList: () -> Unit,
+    onNavigateToFaltasList: () -> Unit,
+    onNavigateToEventsList: () -> Unit,
     onNavigateToAccountSettings: () -> Unit,
 ) {
     val user = UserSession.currentUser
@@ -325,9 +352,12 @@ private fun HomeDesktopLayout(
                 subjects = subjects,
                 tasks = tasks,
                 absencesBySubject = absencesBySubject,
+                upcomingEvents = upcomingEvents,
                 onNavigateToSubjectsList = onNavigateToSubjectsList,
                 onNavigateToSubject = onNavigateToSubject,
                 onNavigateToTasksList = onNavigateToTasksList,
+                onNavigateToFaltasList = onNavigateToFaltasList,
+                onNavigateToEventsList = onNavigateToEventsList,
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
@@ -352,9 +382,12 @@ private fun HomeDashboardContent(
     subjects: List<Subject>,
     tasks: List<Task>,
     absencesBySubject: Map<Int, Int>,
+    upcomingEvents: List<Event>,
     onNavigateToSubjectsList: () -> Unit,
     onNavigateToSubject: (Int) -> Unit,
     onNavigateToTasksList: () -> Unit,
+    onNavigateToFaltasList: () -> Unit,
+    onNavigateToEventsList: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
@@ -382,15 +415,50 @@ private fun HomeDashboardContent(
 
         item {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(
-                    text = "Controle de Faltas",
-                    color = orange,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Bold,
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = "Controle de Faltas",
+                        color = orange,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Text(
+                        text = "ver mais",
+                        color = orange,
+                        fontSize = 11.sp,
+                        modifier = Modifier.clickable { onNavigateToFaltasList() },
+                    )
+                }
                 FaltasRow(
                     subjects = subjects,
                     absences = absencesBySubject,
+                    onCardClick = { onNavigateToFaltasList() },
+                )
+            }
+        }
+
+        item {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(text = "Próximos Eventos", color = orange, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                    Text(
+                        text = "ver mais",
+                        color = orange,
+                        fontSize = 11.sp,
+                        modifier = Modifier.clickable { onNavigateToEventsList() },
+                    )
+                }
+                EventsRow(
+                    events = upcomingEvents,
+                    onCardClick = onNavigateToEventsList,
                 )
             }
         }
@@ -624,6 +692,7 @@ private fun AtividadesCard(
 private fun FaltasRow(
     subjects: List<Subject>,
     absences: Map<Int, Int>,
+    onCardClick: () -> Unit,
 ) {
     if (subjects.isEmpty()) {
         Text("Sem matérias cadastradas", color = Color.Gray, fontSize = 12.sp)
@@ -646,6 +715,7 @@ private fun FaltasRow(
                     .height(87.dp)
                     .clip(RoundedCornerShape(9.dp))
                     .background(cardColor)
+                    .clickable(onClick = onCardClick)
                     .padding(horizontal = 8.dp, vertical = 6.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.SpaceBetween,
@@ -688,6 +758,76 @@ private fun FaltasRow(
                         Spacer(Modifier.width(4.dp))
                         AbsenceLimitWarningIcon()
                     }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun EventsRow(
+    events: List<Event>,
+    onCardClick: () -> Unit,
+) {
+    if (events.isEmpty()) {
+        Text("Sem eventos próximos", color = Color.Gray, fontSize = 12.sp)
+        return
+    }
+    LazyRow(horizontalArrangement = Arrangement.spacedBy(13.dp)) {
+        itemsIndexed(events) { _, event ->
+            val r = ((event.colorRgb shr 16) and 0xFF) / 255f
+            val g = ((event.colorRgb shr 8) and 0xFF) / 255f
+            val b = (event.colorRgb and 0xFF) / 255f
+            val cardColor = Color(r, g, b)
+            val dt = EventRepository.parseEventDateTime(event.eventDate)
+            val dateLabel = dt?.let {
+                val dd = it.dayOfMonth.toString().padStart(2, '0')
+                "$dd ${monthNamesPt[it.monthNumber - 1]}"
+            }.orEmpty()
+
+            Column(
+                modifier = Modifier
+                    .width(117.dp)
+                    .height(87.dp)
+                    .clip(RoundedCornerShape(9.dp))
+                    .background(cardColor)
+                    .clickable(onClick = onCardClick)
+                    .padding(horizontal = 8.dp, vertical = 6.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
+            ) {
+                Text(
+                    text = event.title,
+                    color = Color.White,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    lineHeight = 14.sp,
+                    letterSpacing = 0.6.sp,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                if (dateLabel.isNotEmpty()) {
+                    Text(
+                        text = dateLabel,
+                        color = Color.White,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Medium,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+                if (event.subjectName != null) {
+                    Text(
+                        text = event.subjectName,
+                        color = Color.White.copy(alpha = 0.85f),
+                        fontSize = 8.sp,
+                        textAlign = TextAlign.Center,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
                 }
             }
         }

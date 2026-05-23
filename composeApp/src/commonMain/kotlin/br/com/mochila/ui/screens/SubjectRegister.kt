@@ -63,6 +63,25 @@ private val subjectColorPickerPalette: List<Color> = listOf(
     Color(0xFFFDD835), Color(0xFFAD1457), Color(0xFFFFAB91), Color(0xFF689F38), Color(0xFF6A1B9A), Color(0xFF0288D1),
 )
 
+private fun minutesToDisplay(totalMinutes: Int): String {
+    if (totalMinutes <= 0) return ""
+    val h = totalMinutes / 60
+    val m = totalMinutes % 60
+    return if (m == 0) "${h}h" else "$h:${m.toString().padStart(2, '0')}h"
+}
+
+private fun displayToMinutes(display: String): Int {
+    val clean = display.replace("h", "").trim()
+    return if (clean.contains(":")) {
+        val parts = clean.split(":")
+        val h = parts.getOrNull(0)?.toIntOrNull() ?: 0
+        val m = parts.getOrNull(1)?.toIntOrNull() ?: 0
+        h * 60 + m
+    } else {
+        (clean.toIntOrNull() ?: 0) * 60
+    }
+}
+
 private fun formatDatePt(date: LocalDate): String {
     val dd = date.dayOfMonth.toString().padStart(2, '0')
     val mon = monthNamesPt[date.monthNumber - 1]
@@ -313,6 +332,7 @@ fun SubjectRegisterScreen(
 
     var message by remember { mutableStateOf<String?>(null) }
     var success by remember { mutableStateOf(false) }
+    var showDeleteConfirmation by remember { mutableStateOf(false) }
 
     var semesterOptions by remember { mutableStateOf<List<String>>(emptyList()) }
 
@@ -363,7 +383,7 @@ fun SubjectRegisterScreen(
                 startDate = s.startDate
                 endDate = s.endDate
                 weeklyFrequency = s.weeklyClasses.toString()
-                classHours = if (s.classHours > 0) "${s.classHours}h" else ""
+                classHours = minutesToDisplay(s.classHours)
                 semester = s.semester
                 subjectColorRgb = s.colorRgb
             }
@@ -396,7 +416,7 @@ fun SubjectRegisterScreen(
 
     fun buildSubject(): Subject {
         val minFrequencyInt = minFrequency.filter { it.isDigit() }.toIntOrNull() ?: 0
-        val classHoursInt = classHours.filter { it.isDigit() }.toIntOrNull() ?: 0
+        val classHoursInt = displayToMinutes(classHours)
         val weeklyClassesInt = weeklyFrequency.filter { it.isDigit() }.toIntOrNull() ?: 0
         return Subject(
             id = loadedSubjectId,
@@ -685,7 +705,7 @@ fun SubjectRegisterScreen(
                     pressedElevation = 2.dp,
                 ),
                 contentPadding = PaddingValues(horizontal = 24.dp, vertical = 10.dp),
-                modifier = Modifier.align(Alignment.Start),
+                modifier = Modifier.align(Alignment.CenterHorizontally).fillMaxWidth(0.75f),
             ) {
                 Text(
                     text = "Salvar",
@@ -697,11 +717,11 @@ fun SubjectRegisterScreen(
             if (isEditing && loadedSubjectId > 0) {
                 Spacer(Modifier.height(12.dp))
                 OutlinedButton(
-                    onClick = { presenter.deleteSubject(userId, loadedSubjectId) },
+                    onClick = { showDeleteConfirmation = true },
                     border = BorderStroke(1.dp, Color(0xFFD32F2F)),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFD32F2F)),
                     shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.align(Alignment.Start),
+                    modifier = Modifier.align(Alignment.CenterHorizontally).fillMaxWidth(0.75f),
                 ) {
                     Text("Excluir", fontWeight = FontWeight.Bold)
                 }
@@ -710,6 +730,35 @@ fun SubjectRegisterScreen(
             Spacer(Modifier.height(24.dp))
             }
         }
+    }
+
+    if (showDeleteConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirmation = false },
+            title = {
+                Text("Excluir matéria", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+            },
+            text = {
+                Text("Tem certeza que deseja excluir esta matéria? Todas as tarefas, faltas e eventos vinculados também serão removidos.", fontSize = 14.sp)
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteConfirmation = false
+                        presenter.deleteSubject(userId, loadedSubjectId)
+                    },
+                ) {
+                    Text("Excluir", color = Color(0xFFD32F2F), fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirmation = false }) {
+                    Text("Cancelar", color = rosa)
+                }
+            },
+            shape = RoundedCornerShape(12.dp),
+            containerColor = Color.White,
+        )
     }
 
     BoxWithConstraints(
