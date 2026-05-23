@@ -1,5 +1,8 @@
 package br.com.mochila.data
 
+import br.com.mochila.model.EventCategory
+import br.com.mochila.model.TaskCategory
+import java.io.File
 import java.sql.*
 
 object DatabaseHelper {
@@ -150,6 +153,55 @@ object DatabaseHelper {
                 stmt.execute("ALTER TABLE evento ADD COLUMN lembrete_exibido INTEGER DEFAULT 0")
             }
 
+            val colsEventoCat = conn.createStatement().executeQuery("PRAGMA table_info(evento)")
+            var hasCategoriaEvento = false
+            while (colsEventoCat.next()) {
+                if (colsEventoCat.getString("name") == "categoria_evento") {
+                    hasCategoriaEvento = true
+                    break
+                }
+            }
+            colsEventoCat.close()
+            if (!hasCategoriaEvento) {
+                stmt.execute(
+                    "ALTER TABLE evento ADD COLUMN categoria_evento TEXT NOT NULL DEFAULT 'PROVA'"
+                )
+            }
+
+            val colsTarefaMeta = conn.createStatement().executeQuery("PRAGMA table_info(tarefa)")
+            var hasCategoriaTarefa = false
+            var hasPrioridade = false
+            while (colsTarefaMeta.next()) {
+                when (colsTarefaMeta.getString("name")) {
+                    "categoria_tarefa" -> hasCategoriaTarefa = true
+                    "prioridade" -> hasPrioridade = true
+                }
+            }
+            colsTarefaMeta.close()
+            if (!hasCategoriaTarefa) {
+                stmt.execute(
+                    "ALTER TABLE tarefa ADD COLUMN categoria_tarefa TEXT NOT NULL DEFAULT 'TAREFA_DE_CASA'"
+                )
+            }
+            if (!hasPrioridade) {
+                stmt.execute("ALTER TABLE tarefa ADD COLUMN prioridade TEXT NOT NULL DEFAULT 'MEDIA'")
+            }
+
+            val colsDiscAula = conn.createStatement().executeQuery("PRAGMA table_info(disciplina)")
+            var hasAulaSemana = false
+            while (colsDiscAula.next()) {
+                if (colsDiscAula.getString("name") == "aula_semana") {
+                    hasAulaSemana = true
+                    break
+                }
+            }
+            colsDiscAula.close()
+            if (!hasAulaSemana) {
+                stmt.execute("ALTER TABLE disciplina ADD COLUMN aula_semana INTEGER NOT NULL DEFAULT 1")
+            }
+
+            migrateLegacyCacheFiles(conn)
+
             stmt.execute(
                 """CREATE TABLE IF NOT EXISTS administrador (
                     id_adm INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -192,6 +244,95 @@ object DatabaseHelper {
         } catch (e: Exception) {
             e.printStackTrace()
         }
+    }
+
+    private fun migrateLegacyCacheFiles(conn: Connection) {
+        try {
+            migrateEnumCacheFile(
+                conn = conn,
+                fileName = "event_categories.txt",
+                table = "evento",
+                idColumn = "id_evento",
+                valueColumn = "categoria_evento",
+            ) { raw ->
+                EventCategory.fromNameOrNull(raw)?.name
+            }
+            migrateEnumCacheFile(
+                conn = conn,
+                fileName = "task_categories.txt",
+                table = "tarefa",
+                idColumn = "id_tarefa",
+                valueColumn = "categoria_tarefa",
+            ) { raw ->
+                TaskCategory.fromNameOrNull(raw)?.name
+            }
+            migrateIntCacheFile(
+                conn = conn,
+                fileName = "subject_weekly_frequency.txt",
+                table = "disciplina",
+                idColumn = "id_disciplina",
+                valueColumn = "aula_semana",
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun migrateEnumCacheFile(
+        conn: Connection,
+        fileName: String,
+        table: String,
+        idColumn: String,
+        valueColumn: String,
+        toDbValue: (String) -> String?,
+    ) {
+        val file = File(AppDataDir.resolve(), fileName)
+        if (!file.exists()) return
+        val content = runCatching { file.readText() }.getOrNull() ?: return
+        val update = conn.prepareStatement(
+            "UPDATE $table SET $valueColumn = ? WHERE $idColumn = ?"
+        )
+        content.lineSequence().forEach { line ->
+            val trimmed = line.trim()
+            if (trimmed.isEmpty()) return@forEach
+            val sep = trimmed.indexOf('=')
+            if (sep <= 0) return@forEach
+            val id = trimmed.substring(0, sep).toIntOrNull() ?: return@forEach
+            val dbValue = toDbValue(trimmed.substring(sep + 1).trim()) ?: return@forEach
+            update.setString(1, dbValue)
+            update.setInt(2, id)
+            update.executeUpdate()
+        }
+        update.close()
+        file.delete()
+    }
+
+    private fun migrateIntCacheFile(
+        conn: Connection,
+        fileName: String,
+        table: String,
+        idColumn: String,
+        valueColumn: String,
+    ) {
+        val file = File(AppDataDir.resolve(), fileName)
+        if (!file.exists()) return
+        val content = runCatching { file.readText() }.getOrNull() ?: return
+        val update = conn.prepareStatement(
+            "UPDATE $table SET $valueColumn = ? WHERE $idColumn = ?"
+        )
+        content.lineSequence().forEach { line ->
+            val trimmed = line.trim()
+            if (trimmed.isEmpty()) return@forEach
+            val sep = trimmed.indexOf('=')
+            if (sep <= 0) return@forEach
+            val id = trimmed.substring(0, sep).toIntOrNull() ?: return@forEach
+            val count = trimmed.substring(sep + 1).trim().toIntOrNull()?.takeIf { it > 0 } ?: return@forEach
+            update.setInt(1, count)
+            update.setInt(2, id)
+            update.executeUpdate()
+        }
+        update.close()
+        file.delete()
     }
 
     // ============================================================

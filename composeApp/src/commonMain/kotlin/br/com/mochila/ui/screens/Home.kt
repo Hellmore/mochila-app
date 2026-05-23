@@ -26,7 +26,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.com.mochila.data.FaltaRepository
 import br.com.mochila.data.SubjectRepository
-import br.com.mochila.data.TaskPriorityCache
 import br.com.mochila.data.TaskRepository
 import br.com.mochila.data.UserSession
 import br.com.mochila.model.Subject
@@ -564,14 +563,13 @@ private fun AtividadesCard(
                 Text("Sem atividades pendentes", color = orange, fontSize = 11.sp)
             }
         } else {
-            val priorityRevision = TaskPriorityCache.revision
             tasks.forEachIndexed { index, task ->
-                val statusPriorityLine = remember(task.id, task.status, priorityRevision) {
+                val statusPriorityLine = remember(task.id, task.status, task.priority) {
                     val status = when (task.status) {
                         "Concluida" -> "Concluída"
                         else -> task.status.ifBlank { "—" }
                     }
-                    "$status | ${TaskPriorityCache.get(task.id).label}"
+                    "$status | ${task.priority.label}"
                 }
                 Row(
                     modifier = Modifier

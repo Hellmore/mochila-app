@@ -75,6 +75,12 @@ class SubjectRepositoryTest : RepositoryTestBase() {
         assertFalse(SubjectRepository.delete(userId, 99999))
     }
 
+    @Test fun `insert e findById persistem aula_semana`() {
+        val id = SubjectRepository.insert(userId, sampleSubject().copy(weeklyClasses = 3))!!
+        val found = SubjectRepository.findById(id)
+        assertEquals(3, found?.weeklyClasses)
+    }
+
     @Test fun `listDistinctSemesters retorna semestres unicos ordenados`() {
         SubjectRepository.insert(userId, sampleSubject(semester = "2025.2"))
         SubjectRepository.insert(userId, sampleSubject(semester = "2025.1"))

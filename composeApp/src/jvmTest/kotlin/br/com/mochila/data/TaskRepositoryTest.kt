@@ -1,6 +1,8 @@
 package br.com.mochila.data
 
 import br.com.mochila.model.Task
+import br.com.mochila.model.TaskCategory
+import br.com.mochila.model.TaskPriority
 import br.com.mochila.model.User
 import org.junit.Test
 import kotlin.test.assertEquals
@@ -65,6 +67,19 @@ class TaskRepositoryTest : RepositoryTestBase() {
         val task = TaskRepository.listByUser(userId).first()
         assertTrue(TaskRepository.delete(userId, task.id))
         assertNull(TaskRepository.findById(task.id))
+    }
+
+    @Test fun `insert persiste categoria e prioridade`() {
+        val id = TaskRepository.insert(
+            userId,
+            sampleTask().copy(
+                category = TaskCategory.FICHAMENTO,
+                priority = TaskPriority.ALTA,
+            ),
+        )!!
+        val task = TaskRepository.findById(id)
+        assertEquals(TaskCategory.FICHAMENTO, task?.category)
+        assertEquals(TaskPriority.ALTA, task?.priority)
     }
 
     @Test fun `delete retorna false para id inexistente`() {

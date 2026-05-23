@@ -20,7 +20,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import br.com.mochila.data.TaskPriorityCache
+import br.com.mochila.data.TaskRepository
 import br.com.mochila.model.Task
 import br.com.mochila.model.TaskPriority
 import br.com.mochila.presenter.TaskDetailPresenter
@@ -142,8 +142,10 @@ fun TaskDetailScreen(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 TaskPrioritySelector(
-                    taskId = t.id,
+                    userId = userId,
+                    task = t,
                     accentColor = rosa,
+                    onPriorityChanged = { updated -> task = updated },
                 )
 
                 Spacer(modifier = Modifier.height(20.dp))
@@ -259,12 +261,13 @@ fun TaskDetailScreen(
 
 @Composable
 private fun TaskPrioritySelector(
-    taskId: Int,
+    userId: Int,
+    task: Task,
     accentColor: Color,
+    onPriorityChanged: (Task) -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
-    val priorityRevision = TaskPriorityCache.revision
-    val priority = remember(taskId, priorityRevision) { TaskPriorityCache.get(taskId) }
+    val priority = task.priority
 
     Column(
         modifier = Modifier
@@ -315,7 +318,10 @@ private fun TaskPrioritySelector(
                             )
                         },
                         onClick = {
-                            TaskPriorityCache.set(taskId, option)
+                            val updated = task.copy(priority = option)
+                            if (TaskRepository.update(userId, updated)) {
+                                onPriorityChanged(updated)
+                            }
                             expanded = false
                         },
                     )

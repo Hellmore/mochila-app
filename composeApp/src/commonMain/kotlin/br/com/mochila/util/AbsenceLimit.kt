@@ -1,6 +1,5 @@
 package br.com.mochila.util
 
-import br.com.mochila.data.SubjectWeeklyFrequencyCache
 import br.com.mochila.model.Subject
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.daysUntil
@@ -10,7 +9,7 @@ import kotlinx.datetime.daysUntil
  * e frequência mínima de presença.
  *
  * - Período ([Subject.startDate] … [Subject.endDate]): semanas no intervalo (inclusivo).
- * - Aulas semanais: [SubjectWeeklyFrequencyCache] (campo "Frequência" no cadastro).
+ * - Aulas semanais: [Subject.weeklyClasses] (campo "Frequência" no cadastro).
  * - [Subject.classHours]: horas de uma única aula.
  * - [Subject.minFrequency]: % mínimo de presença sobre a carga total de aulas.
  *
@@ -40,7 +39,7 @@ object AbsenceLimit {
     }
 
     fun weeklyClassCountFor(subject: Subject): Int =
-        if (subject.id > 0) SubjectWeeklyFrequencyCache.get(subject.id) else 1
+        subject.weeklyClasses.coerceAtLeast(1)
 
     fun weeklyHours(weeklyClassCount: Int, hoursPerClass: Int): Int =
         weeklyClassCount.coerceAtLeast(1) * hoursPerClass.coerceAtLeast(0)

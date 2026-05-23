@@ -2,6 +2,7 @@ package br.com.mochila.data
 
 import br.com.mochila.model.DEFAULT_EVENT_COLOR_RGB
 import br.com.mochila.model.Event
+import br.com.mochila.model.EventCategory
 import kotlinx.datetime.LocalDateTime
 import java.sql.PreparedStatement
 import java.sql.ResultSet
@@ -26,6 +27,9 @@ object EventRepository {
         val reminderShownRaw = findColumn("lembrete_exibido").let { col ->
             if (col > 0) getInt(col) == 1 else false
         }
+        val categoryRaw = findColumn("categoria_evento").let { col ->
+            if (col > 0) getString(col)?.let { EventCategory.fromNameOrNull(it) } else null
+        }
         Event(
             id = getInt("id_evento"),
             userId = getInt("id_usuario"),
@@ -33,6 +37,7 @@ object EventRepository {
             description = getString("descricao"),
             eventDate = getString("data_evento"),
             status = getString("status"),
+            category = categoryRaw ?: EventCategory.default,
             subjectId = subjectIdRaw,
             subjectName = subjectNameRaw,
             colorRgb = colorRaw,
@@ -49,8 +54,9 @@ object EventRepository {
         return try {
             val sql = """
                 INSERT INTO evento
-                (id_usuario, titulo, descricao, data_evento, status, id_disciplina, cor_rgb, lembrete_minutos, lembrete_exibido)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)
+                (id_usuario, titulo, descricao, data_evento, status, categoria_evento,
+                 id_disciplina, cor_rgb, lembrete_minutos, lembrete_exibido)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
             """.trimIndent()
             val stmt: PreparedStatement = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)
             stmt.setInt(1, userId)
@@ -58,9 +64,10 @@ object EventRepository {
             stmt.setString(3, event.description)
             stmt.setString(4, event.eventDate)
             stmt.setString(5, event.status)
-            if (event.subjectId != null) stmt.setInt(6, event.subjectId) else stmt.setNull(6, java.sql.Types.INTEGER)
-            stmt.setInt(7, event.colorRgb)
-            if (event.reminderMinutes != null) stmt.setInt(8, event.reminderMinutes) else stmt.setNull(8, java.sql.Types.INTEGER)
+            stmt.setString(6, event.category.name)
+            if (event.subjectId != null) stmt.setInt(7, event.subjectId) else stmt.setNull(7, java.sql.Types.INTEGER)
+            stmt.setInt(8, event.colorRgb)
+            if (event.reminderMinutes != null) stmt.setInt(9, event.reminderMinutes) else stmt.setNull(9, java.sql.Types.INTEGER)
             val rows = stmt.executeUpdate()
             val newId = if (rows > 0) {
                 stmt.generatedKeys.use { keys ->
@@ -110,7 +117,7 @@ object EventRepository {
         return try {
             val sql = """
                 UPDATE evento
-                SET titulo = ?, descricao = ?, data_evento = ?, status = ?,
+                SET titulo = ?, descricao = ?, data_evento = ?, status = ?, categoria_evento = ?,
                     id_disciplina = ?, cor_rgb = ?, lembrete_minutos = ?,
                     lembrete_exibido = ?, atualizado_em = CURRENT_TIMESTAMP
                 WHERE id_evento = ? AND id_usuario = ?
@@ -120,12 +127,13 @@ object EventRepository {
             stmt.setString(2, event.description)
             stmt.setString(3, event.eventDate)
             stmt.setString(4, event.status)
-            if (event.subjectId != null) stmt.setInt(5, event.subjectId) else stmt.setNull(5, java.sql.Types.INTEGER)
-            stmt.setInt(6, event.colorRgb)
-            if (event.reminderMinutes != null) stmt.setInt(7, event.reminderMinutes) else stmt.setNull(7, java.sql.Types.INTEGER)
-            stmt.setInt(8, if (event.reminderShown) 1 else 0)
-            stmt.setInt(9, event.id)
-            stmt.setInt(10, userId)
+            stmt.setString(5, event.category.name)
+            if (event.subjectId != null) stmt.setInt(6, event.subjectId) else stmt.setNull(6, java.sql.Types.INTEGER)
+            stmt.setInt(7, event.colorRgb)
+            if (event.reminderMinutes != null) stmt.setInt(8, event.reminderMinutes) else stmt.setNull(8, java.sql.Types.INTEGER)
+            stmt.setInt(9, if (event.reminderShown) 1 else 0)
+            stmt.setInt(10, event.id)
+            stmt.setInt(11, userId)
             val rows = stmt.executeUpdate()
             stmt.close()
             rows > 0

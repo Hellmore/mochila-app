@@ -1,8 +1,8 @@
 package br.com.mochila.data
 
 /**
- * Diretório base para dados locais fora do SQLite (ex.: categorias em arquivo).
- * No Android, chame [init] em [androidMain] antes de usar caches persistidos.
+ * Diretório base para dados locais fora do SQLite (ex.: migração de caches legados).
+ * No Android, chame [init] em [androidMain] antes de conectar ao banco.
  */
 object AppDataDir {
     private var appPath: String? = null

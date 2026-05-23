@@ -16,6 +16,12 @@ object SubjectRepository {
         startDate = getString("data_inicio"),
         endDate = getString("data_fim"),
         classHours = getInt("hora_aula"),
+        weeklyClasses = try {
+            val value = getInt("aula_semana")
+            if (wasNull()) 1 else value.coerceAtLeast(1)
+        } catch (_: Exception) {
+            1
+        },
         semester = getString("semestre"),
         colorRgb = getInt("cor_rgb").let { if (wasNull()) DEFAULT_SUBJECT_COLOR_RGB else it },
     )
@@ -25,8 +31,9 @@ object SubjectRepository {
         return try {
             val sql = """
                 INSERT INTO disciplina 
-                (id_usuario, nome, professor, frequencia_minima, data_inicio, data_fim, hora_aula, semestre, cor_rgb)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                (id_usuario, nome, professor, frequencia_minima, data_inicio, data_fim,
+                 hora_aula, aula_semana, semestre, cor_rgb)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """
             val stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)
             stmt.setInt(1, userId)
@@ -36,8 +43,9 @@ object SubjectRepository {
             stmt.setString(5, subject.startDate)
             stmt.setString(6, subject.endDate)
             stmt.setInt(7, subject.classHours)
-            stmt.setString(8, subject.semester)
-            stmt.setInt(9, subject.colorRgb)
+            stmt.setInt(8, subject.weeklyClasses.coerceAtLeast(1))
+            stmt.setString(9, subject.semester)
+            stmt.setInt(10, subject.colorRgb)
             stmt.executeUpdate()
             val keys = stmt.generatedKeys
             val newId = if (keys.next()) keys.getInt(1) else null
@@ -86,7 +94,8 @@ object SubjectRepository {
         return try {
             val sql = """
                 UPDATE disciplina
-                SET nome = ?, professor = ?, frequencia_minima = ?, data_inicio = ?, data_fim = ?, hora_aula = ?, semestre = ?, cor_rgb = ?, atualizado_em = CURRENT_TIMESTAMP
+                SET nome = ?, professor = ?, frequencia_minima = ?, data_inicio = ?, data_fim = ?,
+                    hora_aula = ?, aula_semana = ?, semestre = ?, cor_rgb = ?, atualizado_em = CURRENT_TIMESTAMP
                 WHERE id_disciplina = ? AND id_usuario = ?
             """
             val stmt = conn.prepareStatement(sql)
@@ -96,10 +105,11 @@ object SubjectRepository {
             stmt.setString(4, subject.startDate)
             stmt.setString(5, subject.endDate)
             stmt.setInt(6, subject.classHours)
-            stmt.setString(7, subject.semester)
-            stmt.setInt(8, subject.colorRgb)
-            stmt.setInt(9, subject.id)
-            stmt.setInt(10, userId)
+            stmt.setInt(7, subject.weeklyClasses.coerceAtLeast(1))
+            stmt.setString(8, subject.semester)
+            stmt.setInt(9, subject.colorRgb)
+            stmt.setInt(10, subject.id)
+            stmt.setInt(11, userId)
             val rows = stmt.executeUpdate()
             stmt.close()
             rows > 0

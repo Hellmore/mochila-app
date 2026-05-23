@@ -28,7 +28,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
-import br.com.mochila.data.EventCategoryCache
 import br.com.mochila.data.EventRepository
 import br.com.mochila.data.SubjectRepository
 import br.com.mochila.data.UserSession
@@ -301,7 +300,7 @@ fun EventRegisterScreen(
                 eventColorRgb = event.colorRgb
                 reminderMinutes = event.reminderMinutes
                 reminderShown = event.reminderShown
-                category = EventCategoryCache.get(event.id)
+                category = event.category
             }
 
             override fun showValidationError(msg: String) {

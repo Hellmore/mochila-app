@@ -1,8 +1,5 @@
 package br.com.mochila.presenter
 
-import br.com.mochila.data.LogRepository
-import br.com.mochila.data.TaskCategoryCache
-import br.com.mochila.data.TaskPriorityCache
 import br.com.mochila.data.TaskRepository
 import br.com.mochila.model.Task
 
@@ -34,13 +31,11 @@ class TaskDetailPresenter(private val view: TaskDetailView) {
     fun onDeleteConfirmed(userId: Int, task: Task) {
         val success = TaskRepository.delete(userId = userId, taskId = task.id)
         if (success) {
-            TaskPriorityCache.remove(task.id)
-            TaskCategoryCache.remove(task.id)
-            LogRepository.insertAcao(userId, "EXCLUIR_TAREFA", "tarefa", task.id)
+            println("✅ Tarefa deletada com sucesso!")
             view.showDeleteSuccess()
             view.navigateToTasksList()
         } else {
-            LogRepository.insertErro("TaskDetailPresenter", "Erro ao excluir tarefa id=${task.id}", userId)
+            println("⚠️ Erro ao deletar tarefa.")
             view.showDeleteError()
         }
     }

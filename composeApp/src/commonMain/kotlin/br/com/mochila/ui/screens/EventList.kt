@@ -23,7 +23,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import br.com.mochila.data.EventCategoryCache
 import br.com.mochila.data.EventRepository
 import br.com.mochila.data.SubjectRepository
 import br.com.mochila.data.UserSession
@@ -233,15 +232,16 @@ private fun EventInfoTag(
 @Composable
 private fun EventCard(
     event: Event,
+    userId: Int,
     onClick: () -> Unit,
+    onCategoryChanged: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val theme = rgbToColor(event.colorRgb)
     val headerLabel = event.subjectName?.takeIf { it.isNotBlank() } ?: "Sem matéria"
     val dateLabel = EventRepository.formatEventDateForDisplay(event.eventDate)
-    val categoryRevision = EventCategoryCache.revision
     var categoryExpanded by remember { mutableStateOf(false) }
-    val category = remember(event.id, categoryRevision) { EventCategoryCache.get(event.id) }
+    val category = event.category
 
     Column(
         modifier = modifier
@@ -325,7 +325,8 @@ private fun EventCard(
                                     )
                                 },
                                 onClick = {
-                                    EventCategoryCache.set(event.id, option)
+                                    EventRepository.update(userId, event.copy(category = option))
+                                    onCategoryChanged()
                                     categoryExpanded = false
                                 },
                             )
@@ -364,9 +365,7 @@ fun EventListScreen(
         override fun navigateToEventEdit(eventId: Int) {}
     }) }
 
-    val categoryRevision = EventCategoryCache.revision
-
-    val filteredEvents = remember(events, subjectFilter, monthFilter, categoryRevision) {
+    val filteredEvents = remember(events, subjectFilter, monthFilter) {
         filterPresenter.filterEvents(events, subjectFilter, monthFilter, monthNamesPt)
     }
 
@@ -376,6 +375,10 @@ fun EventListScreen(
             override fun showEmptyState() { events = emptyList() }
             override fun navigateToEventEdit(eventId: Int) { onNavigateToEventEdit(eventId) }
         }.let { EventListPresenter(it) }
+    }
+
+    val onEventsReload = {
+        presenter.loadEvents(userId)
     }
 
     LaunchedEffect(userId) {
@@ -412,6 +415,8 @@ fun EventListScreen(
                 onSubjectFilterChange = { subjectFilter = it },
                 onMonthFilterChange = { monthFilter = it },
                 dateLabel = dateLabel,
+                userId = userId,
+                onEventsReload = onEventsReload,
                 onBack = onBack,
                 onNavigateToAdd = onNavigateToAdd,
                 onOpenMenu = onOpenMenu,
@@ -430,6 +435,8 @@ fun EventListScreen(
                 onSubjectFilterChange = { subjectFilter = it },
                 onMonthFilterChange = { monthFilter = it },
                 dateLabel = dateLabel,
+                userId = userId,
+                onEventsReload = onEventsReload,
                 onBack = onBack,
                 onNavigateToAdd = onNavigateToAdd,
                 onOpenMenu = onOpenMenu,
@@ -452,6 +459,8 @@ private fun EventListMobileLayout(
     onSubjectFilterChange: (String) -> Unit,
     onMonthFilterChange: (String) -> Unit,
     dateLabel: String,
+    userId: Int,
+    onEventsReload: () -> Unit,
     onBack: () -> Unit,
     onNavigateToAdd: () -> Unit,
     onOpenMenu: () -> Unit,
@@ -552,6 +561,8 @@ private fun EventListMobileLayout(
         EventListContent(
             events = events,
             filteredEvents = filteredEvents,
+            userId = userId,
+            onEventsReload = onEventsReload,
             onNavigateToAdd = onNavigateToAdd,
             onEventClick = onEventClick,
             modifier = Modifier
@@ -579,6 +590,8 @@ private fun EventListDesktopLayout(
     onSubjectFilterChange: (String) -> Unit,
     onMonthFilterChange: (String) -> Unit,
     dateLabel: String,
+    userId: Int,
+    onEventsReload: () -> Unit,
     onBack: () -> Unit,
     onNavigateToAdd: () -> Unit,
     onOpenMenu: () -> Unit,
@@ -720,6 +733,8 @@ private fun EventListDesktopLayout(
                     EventListContent(
                         events = events,
                         filteredEvents = filteredEvents,
+                        userId = userId,
+                        onEventsReload = onEventsReload,
                         onNavigateToAdd = onNavigateToAdd,
                         onEventClick = onEventClick,
                         modifier = Modifier
@@ -742,6 +757,8 @@ private fun EventListDesktopLayout(
 private fun EventListContent(
     events: List<Event>,
     filteredEvents: List<Event>,
+    userId: Int,
+    onEventsReload: () -> Unit,
     onNavigateToAdd: () -> Unit,
     onEventClick: (Int) -> Unit,
     modifier: Modifier = Modifier,
@@ -779,7 +796,12 @@ private fun EventListContent(
             }
             else -> {
                 filteredEvents.forEach { event ->
-                    EventCard(event = event, onClick = { onEventClick(event.id) })
+                    EventCard(
+                        event = event,
+                        userId = userId,
+                        onClick = { onEventClick(event.id) },
+                        onCategoryChanged = onEventsReload,
+                    )
                 }
             }
         }
