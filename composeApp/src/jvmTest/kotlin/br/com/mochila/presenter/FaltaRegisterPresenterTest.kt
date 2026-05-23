@@ -2,7 +2,6 @@ package br.com.mochila.presenter
 
 import br.com.mochila.data.FaltaRepository
 import br.com.mochila.data.SubjectRepository
-import br.com.mochila.data.SubjectWeeklyFrequencyCache
 import br.com.mochila.model.Falta
 import br.com.mochila.model.Subject
 import io.mockk.*
@@ -18,9 +17,7 @@ class FaltaRegisterPresenterTest {
     @Before fun setUp() {
         mockkObject(FaltaRepository)
         mockkObject(SubjectRepository)
-        mockkObject(SubjectWeeklyFrequencyCache)
         every { SubjectRepository.findById(1) } returns subjectCalculo
-        every { SubjectWeeklyFrequencyCache.get(1) } returns 2
         every { FaltaRepository.countBySubject(any(), 1) } returns 0
     }
 
@@ -35,6 +32,7 @@ class FaltaRegisterPresenterTest {
         startDate = "01/03/2025",
         endDate = "30/06/2025",
         classHours = 4,
+        weeklyClasses = 2,
         minFrequency = 75,
     )
 

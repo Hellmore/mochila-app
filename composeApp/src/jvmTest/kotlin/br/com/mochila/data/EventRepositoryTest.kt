@@ -1,6 +1,7 @@
 package br.com.mochila.data
 
 import br.com.mochila.model.Event
+import br.com.mochila.model.EventCategory
 import br.com.mochila.model.User
 import org.junit.Test
 import kotlin.test.assertEquals
@@ -56,6 +57,15 @@ class EventRepositoryTest : RepositoryTestBase() {
         val event = EventRepository.listByUser(userId).first()
         assertTrue(EventRepository.delete(userId, event.id))
         assertNull(EventRepository.findById(event.id))
+    }
+
+    @Test fun `insert persiste categoria_evento`() {
+        val id = EventRepository.insert(
+            userId,
+            sampleEvent().copy(category = EventCategory.SEMINARIO),
+        )!!
+        val event = EventRepository.findById(id)
+        assertEquals(EventCategory.SEMINARIO, event?.category)
     }
 
     @Test fun `delete retorna false para id inexistente`() {

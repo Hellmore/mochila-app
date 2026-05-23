@@ -11,6 +11,7 @@ data class Subject(
     val startDate: String = "",
     val endDate: String = "",
     val classHours: Int = 0,
+    val weeklyClasses: Int = 1,
     val semester: String = "",
     val colorRgb: Int = DEFAULT_SUBJECT_COLOR_RGB,
 )

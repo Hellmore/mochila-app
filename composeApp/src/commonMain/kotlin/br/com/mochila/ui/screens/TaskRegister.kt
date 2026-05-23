@@ -24,8 +24,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.com.mochila.data.SubjectRepository
-import br.com.mochila.data.TaskCategoryCache
-import br.com.mochila.data.TaskPriorityCache
 import br.com.mochila.data.UserSession
 import br.com.mochila.model.Subject
 import br.com.mochila.model.Task
@@ -215,8 +213,8 @@ fun TaskRegisterScreen(
                 blockers = task.blockers ?: ""
                 dueDate = task.dueDate ?: ""
                 selectedSubjectId = task.subjectId
-                priority = TaskPriorityCache.get(task.id)
-                category = TaskCategoryCache.get(task.id)
+                priority = task.priority
+                category = task.category
             }
 
             override fun showValidationError(msg: String) {

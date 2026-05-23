@@ -1,6 +1,8 @@
 package br.com.mochila.data
 
 import br.com.mochila.model.Task
+import br.com.mochila.model.TaskCategory
+import br.com.mochila.model.TaskPriority
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.Statement
@@ -13,6 +15,14 @@ object TaskRepository {
         title = getString("titulo"),
         description = getString("descricao"),
         status = getString("status"),
+        category = runCatching { getString("categoria_tarefa") }
+            .getOrNull()
+            ?.let { TaskCategory.fromNameOrNull(it) }
+            ?: TaskCategory.default,
+        priority = runCatching { getString("prioridade") }
+            .getOrNull()
+            ?.let { TaskPriority.fromNameOrNull(it) }
+            ?: TaskPriority.default,
         blockers = getString("blockers"),
         dueDate = getString("data_limite"),
         subjectId = getInt("id_disciplina").takeIf { !wasNull() },
@@ -23,17 +33,20 @@ object TaskRepository {
         return try {
             val sql = """
                 INSERT INTO tarefa
-                (id_usuario, titulo, descricao, status, blockers, data_limite, id_disciplina)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                (id_usuario, titulo, descricao, status, categoria_tarefa, prioridade,
+                 blockers, data_limite, id_disciplina)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """
             val stmt: PreparedStatement = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)
             stmt.setInt(1, userId)
             stmt.setString(2, task.title)
             stmt.setString(3, task.description)
             stmt.setString(4, task.status)
-            stmt.setString(5, task.blockers)
-            stmt.setString(6, task.dueDate)
-            if (task.subjectId != null) stmt.setInt(7, task.subjectId) else stmt.setNull(7, java.sql.Types.INTEGER)
+            stmt.setString(5, task.category.name)
+            stmt.setString(6, task.priority.name)
+            stmt.setString(7, task.blockers)
+            stmt.setString(8, task.dueDate)
+            if (task.subjectId != null) stmt.setInt(9, task.subjectId) else stmt.setNull(9, java.sql.Types.INTEGER)
             val rows = stmt.executeUpdate()
             val newId = if (rows > 0) {
                 stmt.generatedKeys.use { keys ->
@@ -83,19 +96,21 @@ object TaskRepository {
         return try {
             val sql = """
                 UPDATE tarefa
-                SET titulo = ?, descricao = ?, status = ?, blockers = ?, data_limite = ?,
-                    id_disciplina = ?, atualizado_em = CURRENT_TIMESTAMP
+                SET titulo = ?, descricao = ?, status = ?, categoria_tarefa = ?, prioridade = ?,
+                    blockers = ?, data_limite = ?, id_disciplina = ?, atualizado_em = CURRENT_TIMESTAMP
                 WHERE id_tarefa = ? AND id_usuario = ?
             """
             val stmt = conn.prepareStatement(sql)
             stmt.setString(1, task.title)
             stmt.setString(2, task.description)
             stmt.setString(3, task.status)
-            stmt.setString(4, task.blockers)
-            stmt.setString(5, task.dueDate)
-            if (task.subjectId != null) stmt.setInt(6, task.subjectId) else stmt.setNull(6, java.sql.Types.INTEGER)
-            stmt.setInt(7, task.id)
-            stmt.setInt(8, userId)
+            stmt.setString(4, task.category.name)
+            stmt.setString(5, task.priority.name)
+            stmt.setString(6, task.blockers)
+            stmt.setString(7, task.dueDate)
+            if (task.subjectId != null) stmt.setInt(8, task.subjectId) else stmt.setNull(8, java.sql.Types.INTEGER)
+            stmt.setInt(9, task.id)
+            stmt.setInt(10, userId)
             val rows = stmt.executeUpdate()
             stmt.close()
             rows > 0

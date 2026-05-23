@@ -1,8 +1,6 @@
 package br.com.mochila.presenter
 
-import br.com.mochila.data.EventCategoryCache
 import br.com.mochila.data.EventRepository
-import br.com.mochila.data.LogRepository
 import br.com.mochila.model.Event
 import br.com.mochila.model.EventCategory
 import br.com.mochila.util.DateValidator
@@ -40,20 +38,18 @@ class EventRegisterPresenter(private val view: EventRegisterView) {
         }
         val toSave = event.copy(
             eventDate = EventRepository.formatEventDateForDb(displayDate),
+            category = category,
             reminderShown = if (isEditing) event.reminderShown else false,
         )
-        val savedEventId = if (isEditing) {
-            if (EventRepository.update(userId, toSave)) toSave.id else null
+        val saved = if (isEditing) {
+            EventRepository.update(userId, toSave)
         } else {
-            EventRepository.insert(userId, toSave)
+            EventRepository.insert(userId, toSave) != null
         }
-        if (savedEventId != null) {
-            EventCategoryCache.set(savedEventId, category)
-            LogRepository.insertAcao(userId, if (isEditing) "EDITAR_EVENTO" else "CRIAR_EVENTO", "evento", savedEventId)
+        if (saved) {
             view.showSaveSuccess(isEditing)
             view.navigateToEventsList()
         } else {
-            LogRepository.insertErro("EventRegisterPresenter", "Erro ao ${if (isEditing) "editar" else "criar"} evento", userId)
             view.showSaveError()
         }
     }
@@ -61,12 +57,9 @@ class EventRegisterPresenter(private val view: EventRegisterView) {
     fun deleteEvent(userId: Int, eventId: Int) {
         val success = EventRepository.delete(userId, eventId)
         if (success) {
-            EventCategoryCache.remove(eventId)
-            LogRepository.insertAcao(userId, "EXCLUIR_EVENTO", "evento", eventId)
             view.showDeleteSuccess()
             view.navigateToEventsList()
         } else {
-            LogRepository.insertErro("EventRegisterPresenter", "Erro ao excluir evento id=$eventId", userId)
             view.showDeleteError()
         }
     }

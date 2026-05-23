@@ -33,8 +33,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.com.mochila.data.SubjectRepository
-import br.com.mochila.data.TaskCategoryCache
-import br.com.mochila.data.TaskPriorityCache
 import br.com.mochila.data.UserSession
 import br.com.mochila.model.Subject
 import br.com.mochila.model.Task
@@ -89,7 +87,7 @@ private fun dueDateSortKey(dueDate: String?): Long {
 
 private fun sortTasksByPriorityAndDueDate(tasks: List<Task>): List<Task> =
     tasks.sortedWith(
-        compareByDescending<Task> { TaskPriorityCache.get(it.id).weight }
+        compareByDescending<Task> { it.priority.weight }
             .thenBy { dueDateSortKey(it.dueDate) },
     )
 
@@ -312,10 +310,7 @@ fun TaskListScreen(
         }.let { TaskListPresenter(it) }
     }
 
-    val priorityRevision = TaskPriorityCache.revision
-    val categoryRevision = TaskCategoryCache.revision
-
-    val filteredTasks = remember(tasks, searchQuery, statusFilter, priorityRevision, categoryRevision) {
+    val filteredTasks = remember(tasks, searchQuery, statusFilter) {
         sortTasksByPriorityAndDueDate(
             presenter.filterTasks(tasks, searchQuery, statusFilter),
         )
@@ -812,7 +807,7 @@ private fun taskStatusDisplayLabel(status: String) = when (status) {
 
 private fun taskStatusAndPriorityLine(task: Task): String {
     val status = taskStatusDisplayLabel(task.status).ifBlank { "—" }
-    return "$status | ${TaskPriorityCache.get(task.id).label}"
+    return "$status | ${task.priority.label}"
 }
 
 @Composable
@@ -902,14 +897,8 @@ private fun TaskCard(
     onCancel: () -> Unit,
 ) {
     val showsActions = taskStatusShowsActions(task.status)
-    val priorityRevision = TaskPriorityCache.revision
-    val categoryRevision = TaskCategoryCache.revision
-    val statusPriorityLine = remember(task.id, task.status, priorityRevision) {
-        taskStatusAndPriorityLine(task)
-    }
-    val categoryLabel = remember(task.id, categoryRevision) {
-        TaskCategoryCache.get(task.id).label
-    }
+    val statusPriorityLine = taskStatusAndPriorityLine(task)
+    val categoryLabel = task.category.label
 
     Column(
         modifier = Modifier

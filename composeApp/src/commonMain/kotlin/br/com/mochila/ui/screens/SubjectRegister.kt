@@ -30,7 +30,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import br.com.mochila.data.SubjectRepository
-import br.com.mochila.data.SubjectWeeklyFrequencyCache
 import br.com.mochila.data.UserSession
 import br.com.mochila.model.DEFAULT_SUBJECT_COLOR_RGB
 import br.com.mochila.model.Subject
@@ -363,7 +362,7 @@ fun SubjectRegisterScreen(
                 minFrequency = if (s.minFrequency > 0) "${s.minFrequency}%" else ""
                 startDate = s.startDate
                 endDate = s.endDate
-                weeklyFrequency = SubjectWeeklyFrequencyCache.get(s.id).toString()
+                weeklyFrequency = s.weeklyClasses.toString()
                 classHours = if (s.classHours > 0) "${s.classHours}h" else ""
                 semester = s.semester
                 subjectColorRgb = s.colorRgb
@@ -398,6 +397,7 @@ fun SubjectRegisterScreen(
     fun buildSubject(): Subject {
         val minFrequencyInt = minFrequency.filter { it.isDigit() }.toIntOrNull() ?: 0
         val classHoursInt = classHours.filter { it.isDigit() }.toIntOrNull() ?: 0
+        val weeklyClassesInt = weeklyFrequency.filter { it.isDigit() }.toIntOrNull() ?: 0
         return Subject(
             id = loadedSubjectId,
             name = name,
@@ -405,6 +405,7 @@ fun SubjectRegisterScreen(
             minFrequency = minFrequencyInt,
             startDate = startDate,
             endDate = endDate,
+            weeklyClasses = weeklyClassesInt,
             classHours = classHoursInt,
             semester = semester,
             colorRgb = subjectColorRgb,
@@ -672,8 +673,7 @@ fun SubjectRegisterScreen(
 
             Button(
                 onClick = {
-                    val weekly = weeklyFrequency.filter { it.isDigit() }.toIntOrNull() ?: 0
-                    presenter.saveSubject(userId, buildSubject(), weekly, isEditing)
+                    presenter.saveSubject(userId, buildSubject(), isEditing)
                 },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = rosa,

@@ -1,6 +1,5 @@
 package br.com.mochila.presenter
 
-import br.com.mochila.data.EventCategoryCache
 import br.com.mochila.data.EventRepository
 import br.com.mochila.model.Event
 import br.com.mochila.model.EventCategory
@@ -16,8 +15,6 @@ class EventRegisterPresenterTest {
 
     @Before fun setUp() {
         mockkObject(EventRepository)
-        mockkObject(EventCategoryCache)
-        every { EventCategoryCache.set(any(), any()) } returns Unit
     }
 
     @After fun tearDown() { unmockkAll() }
@@ -40,7 +37,9 @@ class EventRegisterPresenterTest {
         every { EventRepository.formatEventDateForDb("15/06/2025") } returns "2025-06-15 00:00:00"
         every { EventRepository.insert(any(), any()) } returns 7
         presenter.saveEvent(1, validEvent, false, EventCategory.SEMINARIO)
-        verify { EventCategoryCache.set(7, EventCategory.SEMINARIO) }
+        verify {
+            EventRepository.insert(1, match { it.category == EventCategory.SEMINARIO })
+        }
         verify { view.showSaveSuccess(false) }
         verify { view.navigateToEventsList() }
     }
@@ -49,7 +48,9 @@ class EventRegisterPresenterTest {
         every { EventRepository.formatEventDateForDb("15/06/2025") } returns "2025-06-15 00:00:00"
         every { EventRepository.update(any(), any()) } returns true
         presenter.saveEvent(1, validEvent.copy(id = 5), true, EventCategory.PROVA)
-        verify { EventCategoryCache.set(5, EventCategory.PROVA) }
+        verify {
+            EventRepository.update(1, match { it.id == 5 && it.category == EventCategory.PROVA })
+        }
         verify { view.showSaveSuccess(true) }
     }
 

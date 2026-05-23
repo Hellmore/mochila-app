@@ -1,7 +1,5 @@
 package br.com.mochila.presenter
 
-import br.com.mochila.data.TaskCategoryCache
-import br.com.mochila.data.TaskPriorityCache
 import br.com.mochila.data.TaskRepository
 import br.com.mochila.model.Task
 import br.com.mochila.model.TaskCategory
@@ -18,10 +16,6 @@ class TaskRegisterPresenterTest {
 
     @Before fun setUp() {
         mockkObject(TaskRepository)
-        mockkObject(TaskPriorityCache)
-        mockkObject(TaskCategoryCache)
-        every { TaskPriorityCache.set(any(), any()) } returns Unit
-        every { TaskCategoryCache.set(any(), any()) } returns Unit
     }
 
     @After fun tearDown() { unmockkAll() }
@@ -46,8 +40,12 @@ class TaskRegisterPresenterTest {
     @Test fun `salvar novo com sucesso chama showSaveSuccess e navega`() {
         every { TaskRepository.insert(any(), any()) } returns 42
         presenter.saveTask(1, validTask, false, TaskPriority.ALTA, TaskCategory.FICHAMENTO)
-        verify { TaskPriorityCache.set(42, TaskPriority.ALTA) }
-        verify { TaskCategoryCache.set(42, TaskCategory.FICHAMENTO) }
+        verify {
+            TaskRepository.insert(
+                1,
+                match { it.priority == TaskPriority.ALTA && it.category == TaskCategory.FICHAMENTO },
+            )
+        }
         verify { view.showSaveSuccess(false) }
         verify { view.navigateToTasksList() }
     }
@@ -55,8 +53,12 @@ class TaskRegisterPresenterTest {
     @Test fun `editar com sucesso chama showSaveSuccess com isEditing true`() {
         every { TaskRepository.update(any(), any()) } returns true
         presenter.saveTask(1, validTask, true, TaskPriority.BAIXA, TaskCategory.TAREFA_DE_CASA)
-        verify { TaskPriorityCache.set(1, TaskPriority.BAIXA) }
-        verify { TaskCategoryCache.set(1, TaskCategory.TAREFA_DE_CASA) }
+        verify {
+            TaskRepository.update(
+                1,
+                match { it.priority == TaskPriority.BAIXA && it.category == TaskCategory.TAREFA_DE_CASA },
+            )
+        }
         verify { view.showSaveSuccess(true) }
     }
 

@@ -1,8 +1,5 @@
 package br.com.mochila.presenter
 
-import br.com.mochila.data.LogRepository
-import br.com.mochila.data.TaskCategoryCache
-import br.com.mochila.data.TaskPriorityCache
 import br.com.mochila.data.TaskRepository
 import br.com.mochila.model.Task
 import br.com.mochila.model.TaskCategory
@@ -45,20 +42,17 @@ class TaskRegisterPresenter(private val view: TaskRegisterView) {
             return
         }
 
-        val savedTaskId = if (isEditing) {
-            if (TaskRepository.update(userId, task)) task.id else null
+        val toSave = task.copy(priority = priority, category = category)
+        val saved = if (isEditing) {
+            TaskRepository.update(userId, toSave)
         } else {
-            TaskRepository.insert(userId, task)
+            TaskRepository.insert(userId, toSave) != null
         }
 
-        if (savedTaskId != null) {
-            TaskPriorityCache.set(savedTaskId, priority)
-            TaskCategoryCache.set(savedTaskId, category)
-            LogRepository.insertAcao(userId, if (isEditing) "EDITAR_TAREFA" else "CRIAR_TAREFA", "tarefa", savedTaskId)
+        if (saved) {
             view.showSaveSuccess(isEditing)
             view.navigateToTasksList()
         } else {
-            LogRepository.insertErro("TaskRegisterPresenter", "Erro ao ${if (isEditing) "editar" else "criar"} tarefa", userId)
             view.showSaveError()
         }
     }
@@ -66,13 +60,9 @@ class TaskRegisterPresenter(private val view: TaskRegisterView) {
     fun deleteTask(userId: Int, taskId: Int) {
         val success = TaskRepository.delete(userId, taskId)
         if (success) {
-            TaskPriorityCache.remove(taskId)
-            TaskCategoryCache.remove(taskId)
-            LogRepository.insertAcao(userId, "EXCLUIR_TAREFA", "tarefa", taskId)
             view.showDeleteSuccess()
             view.navigateToTasksList()
         } else {
-            LogRepository.insertErro("TaskRegisterPresenter", "Erro ao excluir tarefa id=$taskId", userId)
             view.showDeleteError()
         }
     }

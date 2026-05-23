@@ -10,6 +10,7 @@ data class Event(
     val description: String? = null,
     val eventDate: String = "",
     val status: String = "Agendado",
+    val category: EventCategory = EventCategory.default,
     val subjectId: Int? = null,
     val subjectName: String? = null,
     val colorRgb: Int = DEFAULT_EVENT_COLOR_RGB,
