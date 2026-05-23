@@ -125,6 +125,8 @@ fun App() {
                                     navigateTo("subject_detail")
                                 },
                                 onNavigateToTasksList = { navigateTo("tasks_list") },
+                                onNavigateToFaltasList = { navigateTo("faltas_list") },
+                                onNavigateToEventsList = { navigateTo("events_list") },
                                 onNavigateToAccountSettings = { navigateTo("account_settings") },
                                 onLogout = { logout() }
                             )
@@ -453,6 +455,7 @@ fun App() {
 
                 currentUserId?.let { uid ->
                     EventReminderMonitor(userId = uid)
+                    TaskReminderMonitor(userId = uid)
                 }
 
                 if (isMenuVisible && currentUserId != null) {

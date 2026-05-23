@@ -200,8 +200,20 @@ object DatabaseHelper {
                 stmt.execute("ALTER TABLE disciplina ADD COLUMN aula_semana INTEGER NOT NULL DEFAULT 1")
             }
 
-            migrateLegacyCacheFiles(conn)
+            val colsDiscMin = conn.createStatement().executeQuery("PRAGMA table_info(disciplina)")
+            var hasHoraAulaEmMinutos = false
+            while (colsDiscMin.next()) {
+                if (colsDiscMin.getString("name") == "hora_aula_em_minutos") {
+                    hasHoraAulaEmMinutos = true; break
+                }
+            }
+            colsDiscMin.close()
+            if (!hasHoraAulaEmMinutos) {
+                stmt.execute("UPDATE disciplina SET hora_aula = hora_aula * 60 WHERE hora_aula > 0 AND hora_aula < 60")
+                stmt.execute("ALTER TABLE disciplina ADD COLUMN hora_aula_em_minutos INTEGER DEFAULT 1")
+            }
 
+            migrateLegacyCacheFiles(conn)
             stmt.execute(
                 """CREATE TABLE IF NOT EXISTS administrador (
                     id_adm INTEGER PRIMARY KEY AUTOINCREMENT,

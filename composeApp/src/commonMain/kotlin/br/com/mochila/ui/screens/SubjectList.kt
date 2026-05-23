@@ -217,6 +217,13 @@ fun SubjectListScreen(
             .fillMaxSize()
             .background(fundoTela),
     ) {
+        Image(
+            painter = painterResource(Res.drawable.background),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop,
+            alpha = 0.50f,
+        )
         val isWide = maxWidth >= 700.dp
 
         if (isWide) {
@@ -235,13 +242,6 @@ fun SubjectListScreen(
                 onSubjectClick = { id -> presenter.onSubjectClicked(id) },
             )
         } else {
-            Image(
-                painter = painterResource(Res.drawable.background),
-                contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop,
-                alpha = 0.50f,
-            )
             SubjectListMobileLayout(
                 subjects = subjects,
                 absencesBySubject = absencesBySubject,
@@ -346,6 +346,14 @@ private fun SubjectListMobileLayout(
                 .fillMaxWidth()
                 .padding(horizontal = 36.dp)
                 .padding(top = 12.dp, bottom = 8.dp),
+        )
+
+        Text(
+            text = "Matérias",
+            color = laranjaHeader,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.padding(horizontal = 36.dp, vertical = 4.dp),
         )
 
         SubjectGrid(
@@ -499,6 +507,14 @@ private fun SubjectListDesktopLayout(
                     .fillMaxWidth()
                     .padding(horizontal = 36.dp)
                     .padding(bottom = 8.dp),
+            )
+
+            Text(
+                text = "Matérias",
+                color = laranjaHeader,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.padding(horizontal = 36.dp, vertical = 4.dp),
             )
 
             SubjectGrid(

@@ -284,6 +284,7 @@ fun EventRegisterScreen(
     var showReminderPicker by remember { mutableStateOf(false) }
     var message by remember { mutableStateOf<String?>(null) }
     var success by remember { mutableStateOf(false) }
+    var showDeleteConfirmation by remember { mutableStateOf(false) }
 
     val selectedSwatchColor = rgbToColor(eventColorRgb)
     val reminderLabel = reminderOptions.firstOrNull { it.first == reminderMinutes }?.second ?: "nenhum"
@@ -608,7 +609,7 @@ fun EventRegisterScreen(
                     onClick = { presenter.saveEvent(userId, buildEvent(), isEditing, category) },
                     colors = ButtonDefaults.buttonColors(containerColor = rosa, contentColor = Color.White),
                     shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.align(Alignment.Start),
+                    modifier = Modifier.align(Alignment.CenterHorizontally).fillMaxWidth(0.75f),
                 ) {
                     Text("Salvar", fontWeight = FontWeight.Medium, fontSize = 16.sp)
                 }
@@ -616,9 +617,10 @@ fun EventRegisterScreen(
                 if (isEditing && loadedEventId > 0) {
                     Spacer(Modifier.height(12.dp))
                     OutlinedButton(
-                        onClick = { presenter.deleteEvent(userId, loadedEventId) },
+                        onClick = { showDeleteConfirmation = true },
                         border = BorderStroke(1.dp, Color(0xFFD32F2F)),
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFD32F2F)),
+                        modifier = Modifier.align(Alignment.CenterHorizontally).fillMaxWidth(0.75f),
                     ) {
                         Text("Excluir", fontWeight = FontWeight.Bold)
                     }
@@ -627,6 +629,35 @@ fun EventRegisterScreen(
                 Spacer(Modifier.height(24.dp))
             }
         }
+    }
+
+    if (showDeleteConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirmation = false },
+            title = {
+                Text("Excluir evento", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+            },
+            text = {
+                Text("Tem certeza que deseja excluir este evento? Esta ação não pode ser desfeita.", fontSize = 14.sp)
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteConfirmation = false
+                        presenter.deleteEvent(userId, loadedEventId)
+                    },
+                ) {
+                    Text("Excluir", color = Color(0xFFD32F2F), fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirmation = false }) {
+                    Text("Cancelar", color = rosa)
+                }
+            },
+            shape = RoundedCornerShape(12.dp),
+            containerColor = Color.White,
+        )
     }
 
     BoxWithConstraints(

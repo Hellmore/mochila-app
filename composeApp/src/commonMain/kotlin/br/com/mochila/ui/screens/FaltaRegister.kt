@@ -83,6 +83,7 @@ fun FaltaRegisterScreen(
     var message by remember { mutableStateOf<String?>(null) }
     var success by remember { mutableStateOf(false) }
     var absenceLimitWarning by remember { mutableStateOf<String?>(null) }
+    var showDeleteConfirmation by remember { mutableStateOf(false) }
 
     val presenter = remember {
         object : FaltaRegisterView {
@@ -389,7 +390,7 @@ fun FaltaRegisterScreen(
                     onClick = { presenter.saveFalta(userId, buildFalta(), faltaDate, selectedStatus, isEditing) },
                     colors = ButtonDefaults.buttonColors(containerColor = faltaRegRosa, contentColor = Color.White),
                     shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.align(Alignment.Start),
+                    modifier = Modifier.align(Alignment.CenterHorizontally).fillMaxWidth(0.75f),
                 ) {
                     Text("Salvar", fontWeight = FontWeight.Medium, fontSize = 16.sp)
                 }
@@ -397,9 +398,10 @@ fun FaltaRegisterScreen(
                 if (isEditing && loadedFaltaId > 0) {
                     Spacer(Modifier.height(12.dp))
                     OutlinedButton(
-                        onClick = { presenter.deleteFalta(userId, loadedFaltaId) },
+                        onClick = { showDeleteConfirmation = true },
                         border = BorderStroke(1.dp, Color(0xFFD32F2F)),
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFD32F2F)),
+                        modifier = Modifier.align(Alignment.CenterHorizontally).fillMaxWidth(0.75f),
                     ) {
                         Text("Excluir", fontWeight = FontWeight.Bold)
                     }
@@ -408,6 +410,35 @@ fun FaltaRegisterScreen(
                 Spacer(Modifier.height(24.dp))
             }
         }
+    }
+
+    if (showDeleteConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirmation = false },
+            title = {
+                Text("Excluir falta", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+            },
+            text = {
+                Text("Tem certeza que deseja excluir este registro de falta? Esta ação não pode ser desfeita.", fontSize = 14.sp)
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteConfirmation = false
+                        presenter.deleteFalta(userId, loadedFaltaId)
+                    },
+                ) {
+                    Text("Excluir", color = Color(0xFFD32F2F), fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirmation = false }) {
+                    Text("Cancelar", color = faltaRegRosa)
+                }
+            },
+            shape = RoundedCornerShape(12.dp),
+            containerColor = Color.White,
+        )
     }
 
     absenceLimitWarning?.let { warningText ->

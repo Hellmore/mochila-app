@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.com.mochila.data.SubjectRepository
+import br.com.mochila.data.TaskRepository
 import br.com.mochila.data.UserSession
 import br.com.mochila.model.Subject
 import br.com.mochila.model.Task
@@ -189,17 +190,19 @@ fun TaskRegisterScreen(
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var status by remember { mutableStateOf("Pendente") }
-    var blockers by remember { mutableStateOf("") }
+    var blockerTaskId by remember { mutableStateOf<Int?>(null) }
     var dueDate by remember { mutableStateOf("") }
     var selectedSubjectId by remember { mutableStateOf(preselectedSubjectId) }
     var priority by remember { mutableStateOf(TaskPriority.MEDIA) }
     var category by remember { mutableStateOf(TaskCategory.default) }
     var subjects by remember { mutableStateOf<List<Subject>>(emptyList()) }
+    var allTasks by remember { mutableStateOf<List<Task>>(emptyList()) }
 
     var loadedTaskId by remember { mutableStateOf(0) }
 
     var message by remember { mutableStateOf<String?>(null) }
     var success by remember { mutableStateOf(false) }
+    var showDeleteConfirmation by remember { mutableStateOf(false) }
 
     val statusOptions = listOf("Pendente", "Em andamento", "Cancelada", "Concluida")
 
@@ -210,7 +213,7 @@ fun TaskRegisterScreen(
                 title = task.title
                 description = task.description
                 status = task.status
-                blockers = task.blockers ?: ""
+                blockerTaskId = task.blockers?.toIntOrNull()
                 dueDate = task.dueDate ?: ""
                 selectedSubjectId = task.subjectId
                 priority = task.priority
@@ -250,6 +253,7 @@ fun TaskRegisterScreen(
 
     LaunchedEffect(userId) {
         subjects = withContext(Dispatchers.IO) { SubjectRepository.listByUser(userId) }
+        allTasks = withContext(Dispatchers.IO) { TaskRepository.listByUser(userId) }
     }
 
     LaunchedEffect(taskId, isEditing) {
@@ -285,7 +289,7 @@ fun TaskRegisterScreen(
         title = title,
         description = description,
         status = status,
-        blockers = blockers.ifBlank { null },
+        blockers = blockerTaskId?.toString(),
         dueDate = dueDate.ifBlank { null },
         subjectId = selectedSubjectId,
     )
@@ -437,10 +441,11 @@ fun TaskRegisterScreen(
 
                 Spacer(Modifier.height(14.dp))
 
-                FormLabel("Blockers:")
-                FieldRoxo(
-                    valor = blockers,
-                    onChange = { if (it.length <= 20) blockers = it },
+                FormLabel("Blocker:")
+                BlockerTaskDropdown(
+                    tasks = allTasks.filter { it.id != loadedTaskId },
+                    selectedTaskId = blockerTaskId,
+                    onTaskSelected = { blockerTaskId = it },
                 )
 
                 Spacer(Modifier.height(14.dp))
@@ -517,7 +522,7 @@ fun TaskRegisterScreen(
                         pressedElevation = 2.dp,
                     ),
                     contentPadding = PaddingValues(horizontal = 24.dp, vertical = 10.dp),
-                    modifier = Modifier.align(Alignment.Start),
+                    modifier = Modifier.align(Alignment.CenterHorizontally).fillMaxWidth(0.75f),
                 ) {
                     Text(
                         text = "Salvar",
@@ -529,11 +534,11 @@ fun TaskRegisterScreen(
                 if (isEditing && loadedTaskId > 0) {
                     Spacer(Modifier.height(12.dp))
                     OutlinedButton(
-                        onClick = { presenter.deleteTask(userId, loadedTaskId) },
+                        onClick = { showDeleteConfirmation = true },
                         border = BorderStroke(1.dp, Color(0xFFD32F2F)),
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFD32F2F)),
                         shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier.align(Alignment.Start),
+                        modifier = Modifier.align(Alignment.CenterHorizontally).fillMaxWidth(0.75f),
                     ) {
                         Text("Excluir", fontWeight = FontWeight.Bold)
                     }
@@ -542,6 +547,35 @@ fun TaskRegisterScreen(
                 Spacer(Modifier.height(24.dp))
             }
         }
+    }
+
+    if (showDeleteConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirmation = false },
+            title = {
+                Text("Excluir tarefa", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+            },
+            text = {
+                Text("Tem certeza que deseja excluir esta tarefa? Esta ação não pode ser desfeita.", fontSize = 14.sp)
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteConfirmation = false
+                        presenter.deleteTask(userId, loadedTaskId)
+                    },
+                ) {
+                    Text("Excluir", color = Color(0xFFD32F2F), fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirmation = false }) {
+                    Text("Cancelar", color = rosa)
+                }
+            },
+            shape = RoundedCornerShape(12.dp),
+            containerColor = Color.White,
+        )
     }
 
     BoxWithConstraints(
@@ -753,6 +787,62 @@ private fun SubjectDropdown(
                         )
                     },
                     onClick = { onSubjectSelected(subject.id); expanded = false },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun BlockerTaskDropdown(
+    tasks: List<Task>,
+    selectedTaskId: Int?,
+    onTaskSelected: (Int?) -> Unit,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val selectedTitle = tasks.find { it.id == selectedTaskId }?.title ?: "Nenhuma"
+    Box(modifier = Modifier.fillMaxWidth()) {
+        FieldRoxo(
+            valor = selectedTitle,
+            onChange = {},
+            readOnly = true,
+            trailing = {
+                IconButton(onClick = { expanded = true }) {
+                    Image(
+                        painter = painterResource(Res.drawable.drop),
+                        contentDescription = "Selecionar blocker",
+                        modifier = Modifier.size(18.dp),
+                        colorFilter = ColorFilter.tint(rosa),
+                    )
+                }
+            },
+        )
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+        ) {
+            DropdownMenuItem(
+                text = {
+                    Text(
+                        text = "Nenhuma",
+                        fontSize = 12.sp,
+                        color = if (selectedTaskId == null) rosa else Color(0xFF333333),
+                        fontWeight = if (selectedTaskId == null) FontWeight.Bold else FontWeight.Normal,
+                    )
+                },
+                onClick = { onTaskSelected(null); expanded = false },
+            )
+            tasks.forEach { task ->
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            text = task.title,
+                            fontSize = 12.sp,
+                            color = if (selectedTaskId == task.id) rosa else Color(0xFF333333),
+                            fontWeight = if (selectedTaskId == task.id) FontWeight.Bold else FontWeight.Normal,
+                        )
+                    },
+                    onClick = { onTaskSelected(task.id); expanded = false },
                 )
             }
         }

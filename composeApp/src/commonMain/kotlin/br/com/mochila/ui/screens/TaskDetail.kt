@@ -22,6 +22,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.com.mochila.data.TaskRepository
 import br.com.mochila.model.Task
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import br.com.mochila.model.TaskPriority
 import br.com.mochila.presenter.TaskDetailPresenter
 import br.com.mochila.presenter.TaskDetailView
@@ -45,6 +47,7 @@ fun TaskDetailScreen(
     val fundoTela = Color(0xFFF8F8F8)
 
     var task by remember { mutableStateOf<Task?>(null) }
+    var blockerTitle by remember { mutableStateOf<String?>(null) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
 
@@ -62,6 +65,13 @@ fun TaskDetailScreen(
 
     LaunchedEffect(taskId) {
         presenter.loadTask(taskId)
+    }
+
+    LaunchedEffect(task?.blockers) {
+        val blockerId = task?.blockers?.toIntOrNull()
+        blockerTitle = if (blockerId != null) {
+            withContext(Dispatchers.IO) { TaskRepository.findById(blockerId) }?.title
+        } else null
     }
 
     @Composable
@@ -136,7 +146,7 @@ fun TaskDetailScreen(
                 FieldDisplay(value = t.title, label = "Título")
                 FieldDisplay(value = t.description.ifBlank { "Sem descrição" }, label = "Descrição")
                 FieldDisplay(value = t.status, label = "Status")
-                FieldDisplay(value = t.blockers ?: "Nenhum", label = "Blockers")
+                FieldDisplay(value = blockerTitle ?: "Nenhuma", label = "Blocker")
                 FieldDisplay(value = t.dueDate ?: "Não definida", label = "Data limite")
 
                 Spacer(modifier = Modifier.height(8.dp))
