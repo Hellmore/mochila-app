@@ -259,7 +259,13 @@ fun RegisterScreen(
                         }
 
                         Button(
-                            onClick = { presenter.register(username, email, password, adminCode) },
+                            onClick = {
+                        scope.launch {
+                            isLoading = true
+                            presenter.register(username, email, password, adminCode)
+                            isLoading = false
+                        }
+                    },
                             enabled = !isLoading,
                             colors = ButtonDefaults.buttonColors(containerColor = rosa),
                             shape = RoundedCornerShape(8.dp),
@@ -432,7 +438,13 @@ fun RegisterScreen(
                 }
 
                 Button(
-                    onClick = { presenter.register(username, email, password, adminCode) },
+                    onClick = {
+                        scope.launch {
+                            isLoading = true
+                            presenter.register(username, email, password, adminCode)
+                            isLoading = false
+                        }
+                    },
                     enabled = !isLoading,
                     colors = ButtonDefaults.buttonColors(containerColor = rosa),
                     shape = RoundedCornerShape(8.dp),
