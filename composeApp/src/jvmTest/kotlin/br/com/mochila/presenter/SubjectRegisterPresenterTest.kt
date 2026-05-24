@@ -77,11 +77,13 @@ class SubjectRegisterPresenterTest {
             SubjectRepository.update(1, match { it.id == 5 && it.weeklyClasses == 2 })
         }
         verify { view.showSaveSuccess(true) }
+        verify { view.navigateToHome() }
     }
 
     @Test fun `deleteSubject com sucesso navega`() {
         every { SubjectRepository.delete(any(), any()) } returns true
         presenter.deleteSubject(1, 5)
+        verify { view.showSaveSuccess(isEditing = true) }
         verify { view.navigateToHome() }
     }
 
@@ -95,5 +97,45 @@ class SubjectRegisterPresenterTest {
         every { SubjectRepository.findById(5) } returns validSubject.copy(id = 5)
         val result = presenter.loadSubjectForEdit(5)
         kotlin.test.assertEquals(5, result?.id)
+    }
+
+    @Test fun `salvar novo com falha exibe erro`() {
+        every { SubjectRepository.insert(any(), any()) } returns null
+        presenter.saveSubject(1, validSubject, false)
+        verify { view.showSaveError() }
+        verify(exactly = 0) { view.navigateToHome() }
+    }
+
+    @Test fun `editar com falha exibe erro`() {
+        every { SubjectRepository.update(any(), any()) } returns false
+        presenter.saveSubject(1, validSubject.copy(id = 5), true)
+        verify { view.showSaveError() }
+        verify(exactly = 0) { view.navigateToHome() }
+    }
+
+    @Test fun `teacher em branco exibe erro de validacao`() {
+        presenter.saveSubject(1, validSubject.copy(teacher = ""), false)
+        verify { view.showValidationError(any()) }
+    }
+
+    @Test fun `startDate em branco exibe erro de validacao`() {
+        presenter.saveSubject(1, validSubject.copy(startDate = ""), false)
+        verify { view.showValidationError(any()) }
+    }
+
+    @Test fun `endDate em branco exibe erro de validacao`() {
+        presenter.saveSubject(1, validSubject.copy(endDate = ""), false)
+        verify { view.showValidationError(any()) }
+    }
+
+    @Test fun `semester em branco exibe erro de validacao`() {
+        presenter.saveSubject(1, validSubject.copy(semester = ""), false)
+        verify { view.showValidationError(any()) }
+    }
+
+    @Test fun `loadSubjectForEdit retorna null quando nao encontrado`() {
+        every { SubjectRepository.findById(99) } returns null
+        val result = presenter.loadSubjectForEdit(99)
+        kotlin.test.assertNull(result)
     }
 }

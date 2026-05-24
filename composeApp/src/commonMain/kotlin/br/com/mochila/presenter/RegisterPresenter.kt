@@ -4,6 +4,7 @@ import br.com.mochila.data.AdminRepository
 import br.com.mochila.data.LogRepository
 import br.com.mochila.data.UserRepository
 import br.com.mochila.model.User
+import br.com.mochila.util.TempEmailValidator
 
 interface RegisterView {
     fun showValidationError(message: String)
@@ -14,7 +15,7 @@ interface RegisterView {
 
 class RegisterPresenter(private val view: RegisterView) {
 
-    fun register(name: String, email: String, password: String, adminCode: String = "") {
+    suspend fun register(name: String, email: String, password: String, adminCode: String = "") {
         if (!isEmailValid(email) && !isNameValid(name) && !isPasswordValid(password)) {
             view.showValidationError("Todos os campos estão incorretos. Verifique e tente novamente.")
             return
@@ -22,6 +23,11 @@ class RegisterPresenter(private val view: RegisterView) {
 
         if (!isEmailValid(email)) {
             view.showValidationError("E-mail inválido. Deve conter '@' e ter no máximo 30 caracteres.")
+            return
+        }
+
+        if (TempEmailValidator.isDisposableAsync(email)) {
+            view.showValidationError("Não é permitido usar e-mails temporários ou descartáveis.")
             return
         }
 

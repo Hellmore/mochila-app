@@ -50,6 +50,7 @@ kotlin {
         jvmTest.dependencies {
             implementation("io.mockk:mockk:1.13.12")
             implementation(kotlin("test-junit"))
+            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
         }
 
         jvmMain.dependencies {
