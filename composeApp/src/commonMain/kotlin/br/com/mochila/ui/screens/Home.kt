@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -26,15 +27,22 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.com.mochila.data.EventRepository
 import br.com.mochila.data.FaltaRepository
+import br.com.mochila.data.NotificationRepository
 import br.com.mochila.data.SubjectRepository
 import br.com.mochila.data.TaskRepository
 import br.com.mochila.data.UserSession
 import br.com.mochila.model.Event
+import br.com.mochila.model.Notification
 import br.com.mochila.model.Subject
 import br.com.mochila.model.Task
 import br.com.mochila.ui.screens.components.AbsenceLimitWarningIcon
+import br.com.mochila.ui.screens.components.NotificationBell
 import br.com.mochila.ui.screens.components.ProfileAvatar
 import br.com.mochila.util.AbsenceLimit
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
@@ -61,9 +69,9 @@ private val taskTextColors = listOf(
     Color(0xFF35841D).copy(alpha = 0.4f),
 )
 private val absenceCardColors = listOf(
-    Color(0xFFFF6694).copy(alpha = 0.8f),
+    Color(0xFFFF6694),
     Color(0xFFFFBA5E),
-    Color(0xFF65D145).copy(alpha = 0.4f),
+    Color(0xFF65D145),
 )
 
 private val monthNamesPt = listOf(
@@ -79,21 +87,28 @@ fun HomeScreen(
     onNavigateToSubjectsList: () -> Unit,
     onNavigateToSubject: (Int) -> Unit,
     onNavigateToTasksList: () -> Unit,
-    onNavigateToFaltasList: () -> Unit,
+    onNavigateToFaltasList: (String) -> Unit,
     onNavigateToEventsList: () -> Unit,
+    onNavigateToTaskEdit: (Int) -> Unit = {},
+    onNavigateToEventEdit: (Int) -> Unit = {},
     onNavigateToAccountSettings: () -> Unit,
     onLogout: () -> Unit,
+    notifVersion: Int = 0,
 ) {
     val today = remember {
         Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
     }
     val todayDayIndex = remember(today) { today.dayOfWeek.ordinal }
 
+    val scope = rememberCoroutineScope()
     var selectedDayIndex by remember { mutableStateOf(todayDayIndex) }
     var subjects by remember { mutableStateOf<List<Subject>>(emptyList()) }
     var tasks by remember { mutableStateOf<List<Task>>(emptyList()) }
     var absencesBySubject by remember { mutableStateOf<Map<Int, Int>>(emptyMap()) }
     var upcomingEvents by remember { mutableStateOf<List<Event>>(emptyList()) }
+    var notifications by remember { mutableStateOf<List<Notification>>(emptyList()) }
+    var showNotificationPanel by remember { mutableStateOf(false) }
+    var notifRefreshKey by remember { mutableStateOf(0) }
 
     LaunchedEffect(userId) {
         subjects = SubjectRepository.listByUser(userId)
@@ -108,6 +123,21 @@ fun HomeScreen(
             }
             .take(3)
     }
+
+    LaunchedEffect(userId, notifRefreshKey, notifVersion) {
+        val loaded = withContext(Dispatchers.IO) { NotificationRepository.listByUser(userId) }
+        println("🔔 [HomeScreen] notifVersion=$notifVersion → ${loaded.size} notificações carregadas")
+        notifications = loaded
+    }
+
+    LaunchedEffect(userId) {
+        while (true) {
+            delay(60_000)
+            notifRefreshKey++
+        }
+    }
+
+    val unreadCount = remember(notifications) { notifications.count { !it.isRead } }
 
     val weekDays = remember(today) {
         val monday = today.minus(todayDayIndex, DateTimeUnit.DAY)
@@ -135,9 +165,13 @@ fun HomeScreen(
                 onNavigateToSubjectsList = onNavigateToSubjectsList,
                 onNavigateToSubject = onNavigateToSubject,
                 onNavigateToTasksList = onNavigateToTasksList,
+                onNavigateToTaskEdit = onNavigateToTaskEdit,
                 onNavigateToFaltasList = onNavigateToFaltasList,
                 onNavigateToEventsList = onNavigateToEventsList,
+                onNavigateToEventEdit = onNavigateToEventEdit,
                 onNavigateToAccountSettings = onNavigateToAccountSettings,
+                unreadCount = unreadCount,
+                onOpenNotifications = { showNotificationPanel = true },
             )
         } else {
             Image(
@@ -162,9 +196,26 @@ fun HomeScreen(
                 onNavigateToSubjectsList = onNavigateToSubjectsList,
                 onNavigateToSubject = onNavigateToSubject,
                 onNavigateToTasksList = onNavigateToTasksList,
+                onNavigateToTaskEdit = onNavigateToTaskEdit,
                 onNavigateToFaltasList = onNavigateToFaltasList,
                 onNavigateToEventsList = onNavigateToEventsList,
+                onNavigateToEventEdit = onNavigateToEventEdit,
                 onNavigateToAccountSettings = onNavigateToAccountSettings,
+                unreadCount = unreadCount,
+                onOpenNotifications = { showNotificationPanel = true },
+            )
+        }
+
+        if (showNotificationPanel) {
+            NotificationPanel(
+                notifications = notifications,
+                onMarkAllAsRead = {
+                    scope.launch(Dispatchers.IO) {
+                        NotificationRepository.markAllAsRead(userId)
+                        notifications = notifications.map { it.copy(isRead = true) }
+                    }
+                },
+                onDismiss = { showNotificationPanel = false },
             )
         }
     }
@@ -186,14 +237,20 @@ private fun HomeMobileLayout(
     onNavigateToSubjectsList: () -> Unit,
     onNavigateToSubject: (Int) -> Unit,
     onNavigateToTasksList: () -> Unit,
-    onNavigateToFaltasList: () -> Unit,
+    onNavigateToFaltasList: (String) -> Unit,
     onNavigateToEventsList: () -> Unit,
+    onNavigateToTaskEdit: (Int) -> Unit = {},
+    onNavigateToEventEdit: (Int) -> Unit = {},
     onNavigateToAccountSettings: () -> Unit,
+    unreadCount: Int = 0,
+    onOpenNotifications: () -> Unit = {},
 ) {
     Column(Modifier.fillMaxSize()) {
         HomeMobileHeader(
             today = today,
             onNavigateToAccountSettings = onNavigateToAccountSettings,
+            unreadCount = unreadCount,
+            onOpenNotifications = onOpenNotifications,
         )
 
         HomeDashboardContent(
@@ -208,8 +265,10 @@ private fun HomeMobileLayout(
             onNavigateToSubjectsList = onNavigateToSubjectsList,
             onNavigateToSubject = onNavigateToSubject,
             onNavigateToTasksList = onNavigateToTasksList,
+            onNavigateToTaskEdit = onNavigateToTaskEdit,
             onNavigateToFaltasList = onNavigateToFaltasList,
             onNavigateToEventsList = onNavigateToEventsList,
+            onNavigateToEventEdit = onNavigateToEventEdit,
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
@@ -239,9 +298,13 @@ private fun HomeDesktopLayout(
     onNavigateToSubjectsList: () -> Unit,
     onNavigateToSubject: (Int) -> Unit,
     onNavigateToTasksList: () -> Unit,
-    onNavigateToFaltasList: () -> Unit,
+    onNavigateToFaltasList: (String) -> Unit,
     onNavigateToEventsList: () -> Unit,
+    onNavigateToTaskEdit: (Int) -> Unit = {},
+    onNavigateToEventEdit: (Int) -> Unit = {},
     onNavigateToAccountSettings: () -> Unit,
+    unreadCount: Int = 0,
+    onOpenNotifications: () -> Unit = {},
 ) {
     val user = UserSession.currentUser
     val name = user?.name.orEmpty()
@@ -321,7 +384,7 @@ private fun HomeDesktopLayout(
             Column(
                 modifier = Modifier.fillMaxSize(),
             ) {
-            // Cabeçalho desktop: data + calendário
+            // Cabeçalho desktop: data + calendário + sino
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -329,6 +392,12 @@ private fun HomeDesktopLayout(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.End,
             ) {
+                NotificationBell(
+                    unreadCount = unreadCount,
+                    tintColor = orange,
+                    onClick = onOpenNotifications,
+                )
+                Spacer(Modifier.width(8.dp))
                 Text(
                     text = dateLabel,
                     color = Color(0xFF333333),
@@ -356,8 +425,10 @@ private fun HomeDesktopLayout(
                 onNavigateToSubjectsList = onNavigateToSubjectsList,
                 onNavigateToSubject = onNavigateToSubject,
                 onNavigateToTasksList = onNavigateToTasksList,
+                onNavigateToTaskEdit = onNavigateToTaskEdit,
                 onNavigateToFaltasList = onNavigateToFaltasList,
                 onNavigateToEventsList = onNavigateToEventsList,
+                onNavigateToEventEdit = onNavigateToEventEdit,
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
@@ -386,10 +457,23 @@ private fun HomeDashboardContent(
     onNavigateToSubjectsList: () -> Unit,
     onNavigateToSubject: (Int) -> Unit,
     onNavigateToTasksList: () -> Unit,
-    onNavigateToFaltasList: () -> Unit,
+    onNavigateToTaskEdit: (Int) -> Unit,
+    onNavigateToFaltasList: (String) -> Unit,
     onNavigateToEventsList: () -> Unit,
+    onNavigateToEventEdit: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val selectedDate = weekDays.getOrNull(selectedDayIndex)
+    val tasksForDay = remember(tasks, selectedDayIndex) {
+        if (selectedDate == null) {
+            tasks.take(3)
+        } else {
+            val dateStr = "${selectedDate.dayOfMonth.toString().padStart(2, '0')}/" +
+                "${selectedDate.monthNumber.toString().padStart(2, '0')}/${selectedDate.year}"
+            tasks.filter { it.dueDate == dateStr }.take(3)
+        }
+    }
+
     LazyColumn(
         modifier = modifier,
         contentPadding = PaddingValues(vertical = 20.dp),
@@ -407,8 +491,9 @@ private fun HomeDashboardContent(
                     weekDays = weekDays,
                     selectedDay = selectedDayIndex,
                     onDaySelected = onDaySelected,
-                    tasks = tasks.take(3),
+                    tasks = tasksForDay,
                     onVerMais = onNavigateToTasksList,
+                    onTaskClick = onNavigateToTaskEdit,
                 )
             }
         }
@@ -430,13 +515,13 @@ private fun HomeDashboardContent(
                         text = "ver mais",
                         color = orange,
                         fontSize = 11.sp,
-                        modifier = Modifier.clickable { onNavigateToFaltasList() },
+                        modifier = Modifier.clickable { onNavigateToFaltasList("Todos") },
                     )
                 }
                 FaltasRow(
                     subjects = subjects,
                     absences = absencesBySubject,
-                    onCardClick = { onNavigateToFaltasList() },
+                    onCardClick = { subjectName -> onNavigateToFaltasList(subjectName) },
                 )
             }
         }
@@ -458,7 +543,7 @@ private fun HomeDashboardContent(
                 }
                 EventsRow(
                     events = upcomingEvents,
-                    onCardClick = onNavigateToEventsList,
+                    onCardClick = onNavigateToEventEdit,
                 )
             }
         }
@@ -513,6 +598,8 @@ private fun HomeDashboardContent(
 private fun HomeMobileHeader(
     today: LocalDate,
     onNavigateToAccountSettings: () -> Unit,
+    unreadCount: Int = 0,
+    onOpenNotifications: () -> Unit = {},
 ) {
     val user = UserSession.currentUser
     val name = user?.name.orEmpty()
@@ -555,6 +642,11 @@ private fun HomeMobileHeader(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
+                NotificationBell(
+                    unreadCount = unreadCount,
+                    tintColor = Color.White,
+                    onClick = onOpenNotifications,
+                )
                 Text(
                     text = dateLabel,
                     color = Color.White,
@@ -579,6 +671,7 @@ private fun AtividadesCard(
     onDaySelected: (Int) -> Unit,
     tasks: List<Task>,
     onVerMais: () -> Unit,
+    onTaskClick: (Int) -> Unit = {},
 ) {
     Column(
         modifier = Modifier
@@ -644,6 +737,7 @@ private fun AtividadesCard(
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(6.dp))
                         .background(taskRowColors[index % taskRowColors.size])
+                        .clickable { onTaskClick(task.id) }
                         .padding(horizontal = 12.dp, vertical = 10.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -692,7 +786,7 @@ private fun AtividadesCard(
 private fun FaltasRow(
     subjects: List<Subject>,
     absences: Map<Int, Int>,
-    onCardClick: () -> Unit,
+    onCardClick: (String) -> Unit,
 ) {
     if (subjects.isEmpty()) {
         Text("Sem matérias cadastradas", color = Color.Gray, fontSize = 12.sp)
@@ -715,7 +809,7 @@ private fun FaltasRow(
                     .height(87.dp)
                     .clip(RoundedCornerShape(9.dp))
                     .background(cardColor)
-                    .clickable(onClick = onCardClick)
+                    .clickable { onCardClick(subject.name) }
                     .padding(horizontal = 8.dp, vertical = 6.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.SpaceBetween,
@@ -767,7 +861,7 @@ private fun FaltasRow(
 @Composable
 private fun EventsRow(
     events: List<Event>,
-    onCardClick: () -> Unit,
+    onCardClick: (Int) -> Unit,
 ) {
     if (events.isEmpty()) {
         Text("Sem eventos próximos", color = Color.Gray, fontSize = 12.sp)
@@ -791,7 +885,7 @@ private fun EventsRow(
                     .height(87.dp)
                     .clip(RoundedCornerShape(9.dp))
                     .background(cardColor)
-                    .clickable(onClick = onCardClick)
+                    .clickable { onCardClick(event.id) }
                     .padding(horizontal = 8.dp, vertical = 6.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),

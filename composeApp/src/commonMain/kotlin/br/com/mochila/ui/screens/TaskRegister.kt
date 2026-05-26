@@ -436,7 +436,7 @@ fun TaskRegisterScreen(
                 FormLabel("Descrição:")
                 FieldRoxo(
                     valor = description,
-                    onChange = { if (it.length <= 50) description = it },
+                    onChange = { if (it.length <= 200) description = it },
                 )
 
                 Spacer(Modifier.height(14.dp))

@@ -281,7 +281,7 @@ fun TaskListScreen(
     onOpenMenu: () -> Unit,
     onBack: () -> Unit,
     onNavigateToAdd: () -> Unit,
-    onNavigateToTaskDetail: (Int) -> Unit,
+    onNavigateToTaskEdit: (Int) -> Unit,
     onNavigateToAccountSettings: () -> Unit,
     onLogout: () -> Unit,
 ) {
@@ -304,8 +304,8 @@ fun TaskListScreen(
                 tasks = emptyList()
             }
 
-            override fun navigateToTaskDetail(taskId: Int) {
-                onNavigateToTaskDetail(taskId)
+            override fun navigateToTaskEdit(taskId: Int) {
+                onNavigateToTaskEdit(taskId)
             }
         }.let { TaskListPresenter(it) }
     }

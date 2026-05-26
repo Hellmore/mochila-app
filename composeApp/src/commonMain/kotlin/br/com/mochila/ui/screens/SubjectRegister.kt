@@ -573,7 +573,7 @@ fun SubjectRegisterScreen(
             FormLabel("Nome da matéria:")
             FieldRoxo(
                 valor = name,
-                onChange = { if (it.length <= 30) name = it },
+                onChange = { if (it.length <= 60) name = it },
                 trailing = {
                     Box(
                         modifier = Modifier

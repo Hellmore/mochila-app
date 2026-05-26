@@ -252,6 +252,43 @@ object DatabaseHelper {
                 )"""
             )
 
+            stmt.execute(
+                """CREATE TABLE IF NOT EXISTS notificacao (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    id_usuario INTEGER NOT NULL,
+                    tipo TEXT NOT NULL,
+                    mensagem TEXT NOT NULL,
+                    lida INTEGER NOT NULL DEFAULT 0,
+                    referencia_id INTEGER,
+                    criado_em DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (id_usuario) REFERENCES usuario (id_usuario)
+                        ON DELETE CASCADE ON UPDATE CASCADE
+                )"""
+            )
+
+            val colsNotif = conn.createStatement().executeQuery("PRAGMA table_info(notificacao)")
+            var hasNotifTipo = false
+            while (colsNotif.next()) {
+                if (colsNotif.getString("name") == "tipo") { hasNotifTipo = true; break }
+            }
+            colsNotif.close()
+            if (!hasNotifTipo) {
+                stmt.execute("DROP TABLE IF EXISTS notificacao")
+                stmt.execute(
+                    """CREATE TABLE notificacao (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        id_usuario INTEGER NOT NULL,
+                        tipo TEXT NOT NULL,
+                        mensagem TEXT NOT NULL,
+                        lida INTEGER NOT NULL DEFAULT 0,
+                        referencia_id INTEGER,
+                        criado_em DATETIME DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (id_usuario) REFERENCES usuario (id_usuario)
+                            ON DELETE CASCADE ON UPDATE CASCADE
+                    )"""
+                )
+            }
+
             stmt.close()
         } catch (e: Exception) {
             e.printStackTrace()

@@ -6,7 +6,7 @@ import br.com.mochila.model.Task
 interface TaskListView {
     fun showTasks(tasks: List<Task>)
     fun showEmptyState()
-    fun navigateToTaskDetail(taskId: Int)
+    fun navigateToTaskEdit(taskId: Int)
 }
 
 class TaskListPresenter(private val view: TaskListView) {
@@ -21,7 +21,7 @@ class TaskListPresenter(private val view: TaskListView) {
     }
 
     fun onTaskClicked(taskId: Int) {
-        view.navigateToTaskDetail(taskId)
+        view.navigateToTaskEdit(taskId)
     }
 
     fun filterTasks(
