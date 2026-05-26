@@ -291,11 +291,12 @@ fun FaltaListScreen(
     onNavigateToFaltaEdit: (Int) -> Unit,
     onNavigateToAccountSettings: () -> Unit,
     onLogout: () -> Unit,
+    initialSubjectFilter: String = "Todos",
 ) {
     var faltas by remember { mutableStateOf<List<Falta>>(emptyList()) }
     var subjects by remember { mutableStateOf<List<Subject>>(emptyList()) }
     var absencesBySubject by remember { mutableStateOf<Map<Int, Int>>(emptyMap()) }
-    var subjectFilter by remember { mutableStateOf("Todos") }
+    var subjectFilter by remember { mutableStateOf(initialSubjectFilter) }
     var statusFilter by remember { mutableStateOf("Todos") }
 
     val subjectOptions = remember(subjects) {

@@ -23,8 +23,10 @@ fun App() {
     var selectedAdminUserId   by remember { mutableStateOf<Int?>(null) }
     var accountPasswordFeedback by remember { mutableStateOf<Pair<String, Boolean>?>(null) }
     var pendingEmail     by remember { mutableStateOf("") }
-    var taskSubjectId    by remember { mutableStateOf<Int?>(null) }
-    var faltaSubjectId   by remember { mutableStateOf<Int?>(null) }
+    var taskSubjectId      by remember { mutableStateOf<Int?>(null) }
+    var faltaSubjectId     by remember { mutableStateOf<Int?>(null) }
+    var faltaSubjectFilter by remember { mutableStateOf("Todos") }
+    var notifVersion       by remember { mutableStateOf(0) }
 
     val currentScreen = screenStack.last()
 
@@ -125,10 +127,19 @@ fun App() {
                                     navigateTo("subject_detail")
                                 },
                                 onNavigateToTasksList = { navigateTo("tasks_list") },
-                                onNavigateToFaltasList = { navigateTo("faltas_list") },
+                                onNavigateToTaskEdit = { id ->
+                                    selectedTaskId = id
+                                    navigateTo("task_edit")
+                                },
+                                onNavigateToFaltasList = { name -> faltaSubjectFilter = name; navigateTo("faltas_list") },
                                 onNavigateToEventsList = { navigateTo("events_list") },
+                                onNavigateToEventEdit = { id ->
+                                    selectedEventId = id
+                                    navigateTo("event_edit")
+                                },
                                 onNavigateToAccountSettings = { navigateTo("account_settings") },
-                                onLogout = { logout() }
+                                onLogout = { logout() },
+                                notifVersion = notifVersion,
                             )
                         } ?: logout()
                     }
@@ -232,9 +243,9 @@ fun App() {
                         currentUserId?.let { userId ->
                             TaskListScreen(
                                 userId = userId,
-                                onNavigateToTaskDetail = { id ->
+                                onNavigateToTaskEdit = { id ->
                                     selectedTaskId = id
-                                    navigateTo("task_detail")
+                                    navigateTo("task_edit")
                                 },
                                 onBack = { goBack() },
                                 onOpenMenu = { openMenu() },
@@ -356,6 +367,7 @@ fun App() {
                                 },
                                 onNavigateToAccountSettings = { navigateTo("account_settings") },
                                 onLogout = { logout() },
+                                initialSubjectFilter = faltaSubjectFilter,
                             )
                         } ?: logout()
                     }
@@ -456,6 +468,7 @@ fun App() {
                 currentUserId?.let { uid ->
                     EventReminderMonitor(userId = uid)
                     TaskReminderMonitor(userId = uid)
+                    NotificationMonitor(userId = uid, onChecked = { notifVersion++ })
                 }
 
                 if (isMenuVisible && currentUserId != null) {
@@ -465,7 +478,7 @@ fun App() {
                         onNavigateToSubjectsList = { closeMenu(); navigateTo("subjects_list") },
                         onNavigateToTasksList = { closeMenu(); navigateTo("tasks_list") },
                         onNavigateToEventos = { closeMenu(); navigateTo("events_list") },
-                        onNavigateToPlanoFaltas = { closeMenu(); navigateTo("faltas_list") },
+                        onNavigateToPlanoFaltas = { closeMenu(); faltaSubjectFilter = "Todos"; navigateTo("faltas_list") },
                         onNavigateToAccountSettings = { closeMenu(); navigateTo("account_settings") },
                         onNavigateToAdmin = { closeMenu(); navigateTo("admin_panel") },
                         onLogout = { logout() }
