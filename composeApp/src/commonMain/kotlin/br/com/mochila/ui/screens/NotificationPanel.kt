@@ -83,20 +83,20 @@ fun NotificationPanel(
                             Text(
                                 text = "Notificações",
                                 color = PanelPink,
-                                fontSize = 18.sp,
+                                fontSize = 22.sp,
                                 fontWeight = FontWeight.SemiBold,
                             )
                             if (notifications.any { !it.isRead }) {
                                 TextButton(onClick = onMarkAllAsRead) {
                                     Text(
                                         text = "Marcar como lidas",
-                                        color = PanelPink,
+                                        color = Color(0xFFFF9800),
                                         fontSize = 11.sp,
                                     )
                                 }
                             }
                         }
-                        Spacer(Modifier.height(12.dp))
+                        Spacer(Modifier.height(24.dp))
                         if (notifications.isEmpty()) {
                             Box(
                                 modifier = Modifier
@@ -152,7 +152,7 @@ private fun NotificationItem(notification: Notification) {
         }
         Text(
             text = notification.message,
-            color = Color(0xFF333333),
+            color = Color(0xFF888888),
             fontSize = 12.sp,
             lineHeight = 18.sp,
         )

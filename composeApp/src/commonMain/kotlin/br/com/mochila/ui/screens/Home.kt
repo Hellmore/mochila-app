@@ -109,8 +109,9 @@ fun HomeScreen(
     var notifications by remember { mutableStateOf<List<Notification>>(emptyList()) }
     var showNotificationPanel by remember { mutableStateOf(false) }
     var notifRefreshKey by remember { mutableStateOf(0) }
+    var dataRefreshKey by remember { mutableStateOf(0) }
 
-    LaunchedEffect(userId) {
+    LaunchedEffect(userId, dataRefreshKey) {
         subjects = SubjectRepository.listByUser(userId)
         tasks = TaskRepository.listByUser(userId)
             .filter { it.status == "Pendente" || it.status == "Em andamento" }
@@ -172,6 +173,7 @@ fun HomeScreen(
                 onNavigateToAccountSettings = onNavigateToAccountSettings,
                 unreadCount = unreadCount,
                 onOpenNotifications = { showNotificationPanel = true },
+                onRefresh = { dataRefreshKey++ },
             )
         } else {
             Image(
@@ -203,6 +205,7 @@ fun HomeScreen(
                 onNavigateToAccountSettings = onNavigateToAccountSettings,
                 unreadCount = unreadCount,
                 onOpenNotifications = { showNotificationPanel = true },
+                onRefresh = { dataRefreshKey++ },
             )
         }
 
@@ -244,6 +247,7 @@ private fun HomeMobileLayout(
     onNavigateToAccountSettings: () -> Unit,
     unreadCount: Int = 0,
     onOpenNotifications: () -> Unit = {},
+    onRefresh: () -> Unit = {},
 ) {
     Column(Modifier.fillMaxSize()) {
         HomeMobileHeader(
@@ -278,6 +282,7 @@ private fun HomeMobileLayout(
         HomeBottomBar(
             onOpenMenu = onOpenMenu,
             onNavigateToAdd = onNavigateToAdd,
+            onRefresh = onRefresh,
         )
     }
 }
@@ -305,6 +310,7 @@ private fun HomeDesktopLayout(
     onNavigateToAccountSettings: () -> Unit,
     unreadCount: Int = 0,
     onOpenNotifications: () -> Unit = {},
+    onRefresh: () -> Unit = {},
 ) {
     val user = UserSession.currentUser
     val name = user?.name.orEmpty()
@@ -438,6 +444,7 @@ private fun HomeDesktopLayout(
             HomeBottomBar(
                 onOpenMenu = onOpenMenu,
                 onNavigateToAdd = onNavigateToAdd,
+                onRefresh = onRefresh,
             )
         }
         }
@@ -981,6 +988,7 @@ private fun SubjectRowItem(
 private fun HomeBottomBar(
     onOpenMenu: () -> Unit,
     onNavigateToAdd: () -> Unit,
+    onRefresh: () -> Unit = {},
 ) {
     Row(
         modifier = Modifier
@@ -990,8 +998,7 @@ private fun HomeBottomBar(
     ) {
         Row(
             modifier = Modifier
-                .background(Color.White, RoundedCornerShape(38.dp))
-                .border(0.5.dp, Color.LightGray, RoundedCornerShape(38.dp))
+                .background(pink.copy(alpha = 0.95f), RoundedCornerShape(8.dp))
                 .padding(horizontal = 20.dp),
             horizontalArrangement = Arrangement.spacedBy(5.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -1001,7 +1008,7 @@ private fun HomeBottomBar(
                     painter = painterResource(Res.drawable.menu),
                     contentDescription = "Menu lateral",
                     modifier = Modifier.size(16.dp),
-                    colorFilter = ColorFilter.tint(pink),
+                    colorFilter = ColorFilter.tint(Color.White),
                 )
             }
             IconButton(onClick = onNavigateToAdd) {
@@ -1009,15 +1016,15 @@ private fun HomeBottomBar(
                     painter = painterResource(Res.drawable.add),
                     contentDescription = "Adicionar",
                     modifier = Modifier.size(16.dp),
-                    colorFilter = ColorFilter.tint(pink),
+                    colorFilter = ColorFilter.tint(Color.White),
                 )
             }
-            IconButton(onClick = {}) {
+            IconButton(onClick = onRefresh) {
                 Image(
                     painter = painterResource(Res.drawable.home),
                     contentDescription = "Início",
                     modifier = Modifier.size(16.dp),
-                    colorFilter = ColorFilter.tint(pink),
+                    colorFilter = ColorFilter.tint(Color.White),
                 )
             }
         }

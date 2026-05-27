@@ -446,6 +446,8 @@ fun App() {
                         else AdminLogsScreen(onBack = { goBack() })
                     }
 
+                    "plans" -> PlansScreen(onBack = { goBack() })
+
                     "event_edit" -> {
                         currentUserId?.let { userId ->
                             selectedEventId?.let { eid ->
@@ -481,6 +483,7 @@ fun App() {
                         onNavigateToPlanoFaltas = { closeMenu(); faltaSubjectFilter = "Todos"; navigateTo("faltas_list") },
                         onNavigateToAccountSettings = { closeMenu(); navigateTo("account_settings") },
                         onNavigateToAdmin = { closeMenu(); navigateTo("admin_panel") },
+                        onNavigateToPlus = { closeMenu(); navigateTo("plans") },
                         onLogout = { logout() }
                     )
                 }
