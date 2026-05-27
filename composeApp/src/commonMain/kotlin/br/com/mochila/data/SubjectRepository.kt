@@ -6,8 +6,10 @@ import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.Statement
 
+// CRUD de disciplinas vinculadas ao usuario
 object SubjectRepository {
 
+    // Converte linha do ResultSet em Subject
     private fun ResultSet.toSubject() = Subject(
         id = getInt("id_disciplina"),
         name = getString("nome"),
@@ -26,6 +28,7 @@ object SubjectRepository {
         colorRgb = getInt("cor_rgb").let { if (wasNull()) DEFAULT_SUBJECT_COLOR_RGB else it },
     )
 
+    // Insere disciplina e retorna id gerado
     fun insert(userId: Int, subject: Subject): Int? {
         val conn = DatabaseHelper.connect() ?: return null
         return try {
@@ -63,6 +66,7 @@ object SubjectRepository {
         }
     }
 
+    // Lista disciplinas do usuario
     fun listByUser(userId: Int): List<Subject> {
         val conn = DatabaseHelper.connect() ?: return emptyList()
         return try {
@@ -86,6 +90,7 @@ object SubjectRepository {
         }
     }
 
+    // Atualiza dados da disciplina
     fun update(
         userId: Int,
         subject: Subject
@@ -121,6 +126,7 @@ object SubjectRepository {
         }
     }
 
+    // Remove disciplina do usuario
     fun delete(userId: Int, subjectId: Int): Boolean {
         val conn = DatabaseHelper.connect() ?: return false
         return try {
@@ -140,6 +146,7 @@ object SubjectRepository {
         }
     }
 
+    // Lista semestres distintos cadastrados pelo usuario
     fun listDistinctSemesters(userId: Int): List<String> {
         val conn = DatabaseHelper.connect() ?: return emptyList()
         return try {
@@ -166,6 +173,7 @@ object SubjectRepository {
         }
     }
 
+    // Busca disciplina por id
     fun findById(subjectId: Int): Subject? {
         val conn = DatabaseHelper.connect() ?: return null
         return try {

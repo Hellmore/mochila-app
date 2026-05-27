@@ -4,22 +4,11 @@ import br.com.mochila.model.Subject
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.daysUntil
 
-/**
- * Limite de faltas com base no período letivo, aulas semanais, duração de cada aula
- * e frequência mínima de presença.
- *
- * - Período ([Subject.startDate] … [Subject.endDate]): semanas no intervalo (inclusivo).
- * - Aulas semanais: [Subject.weeklyClasses] (campo "Frequência" no cadastro).
- * - [Subject.classHours]: horas de uma única aula.
- * - [Subject.minFrequency]: % mínimo de presença sobre a carga total de aulas.
- *
- * Aulas no período = semanas × aulasSemanais
- * Carga horária semanal = aulasSemanais × horasPorAula
- * Carga horária total = aulasNoPeríodo × horasPorAula
- * Máximo de faltas = aulasNoPeríodo × (100 − frequenciaMinima) / 100
- */
+
+// Calculo de limite de faltas por disciplina
 object AbsenceLimit {
 
+    // Converte string de exibicao em LocalDate
     fun parseDisplayDate(date: String): LocalDate? {
         if (!DateValidator.isValid(date)) return null
         val parts = date.split("/")
@@ -30,6 +19,7 @@ object AbsenceLimit {
         }
     }
 
+    // Semanas entre inicio e fim do periodo letivo
     fun weeksInPeriod(startDate: String, endDate: String): Int {
         val start = parseDisplayDate(startDate) ?: return 1
         val end = parseDisplayDate(endDate) ?: return 1
@@ -66,6 +56,7 @@ object AbsenceLimit {
     fun totalHoursInPeriod(subject: Subject): Int =
         totalClassSessionsInPeriod(subject) * subject.classHours.coerceAtLeast(0)
 
+    // Maximo de faltas permitido pela frequencia minima
     fun maxAllowedAbsences(subject: Subject): Int {
         val sessions = totalClassSessionsInPeriod(subject)
         if (subject.minFrequency <= 0) return 1
@@ -75,6 +66,7 @@ object AbsenceLimit {
     fun isAtOrOverLimit(absenceCount: Int, subject: Subject): Boolean =
         absenceCount >= maxAllowedAbsences(subject)
 
+    // Mensagem exibida ao atingir o limite
     fun warningMessage(subjectName: String, absenceCount: Int, maxAllowed: Int): String =
         "Atenção: você atingiu ou ultrapassou o limite de faltas em \"$subjectName\" " +
             "($absenceCount de $maxAllowed aulas permitidas). Verifique sua frequência mínima na disciplina."

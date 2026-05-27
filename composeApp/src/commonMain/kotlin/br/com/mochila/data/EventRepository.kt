@@ -8,8 +8,10 @@ import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.Statement
 
+// CRUD de eventos e lembretes
 object EventRepository {
 
+    // Converte linha do ResultSet em Event (colunas opcionais por migracao)
     private fun ResultSet.toEvent(): Event? = try {
         val subjectIdRaw = findColumn("id_disciplina").let { col ->
             if (col > 0) getInt(col).let { if (wasNull()) null else it } else null
@@ -49,6 +51,7 @@ object EventRepository {
         null
     }
 
+    // Insere evento e retorna id gerado
     fun insert(userId: Int, event: Event): Int? {
         val conn = DatabaseHelper.connect() ?: return null
         return try {
@@ -86,6 +89,7 @@ object EventRepository {
         }
     }
 
+    // Lista eventos do usuario com nome da disciplina
     fun listByUser(userId: Int): List<Event> {
         val conn = DatabaseHelper.connect() ?: return emptyList()
         return try {
@@ -112,6 +116,7 @@ object EventRepository {
         }
     }
 
+    // Atualiza evento existente
     fun update(userId: Int, event: Event): Boolean {
         val conn = DatabaseHelper.connect() ?: return false
         return try {
@@ -145,6 +150,7 @@ object EventRepository {
         }
     }
 
+    // Remove evento do usuario
     fun delete(userId: Int, eventId: Int): Boolean {
         val conn = DatabaseHelper.connect() ?: return false
         return try {
@@ -163,6 +169,7 @@ object EventRepository {
         }
     }
 
+    // Busca evento por id
     fun findById(eventId: Int): Event? {
         val conn = DatabaseHelper.connect() ?: return null
         return try {
@@ -187,6 +194,7 @@ object EventRepository {
         }
     }
 
+    // Retorna primeiro evento cujo lembrete deve ser exibido agora
     fun findDueReminder(userId: Int, now: LocalDateTime): Event? {
         val nowEpoch = now.date.toEpochDays() * 24 * 60 + now.hour * 60 + now.minute
         return listByUser(userId).firstOrNull { event ->
@@ -199,6 +207,7 @@ object EventRepository {
         }
     }
 
+    // Marca lembrete como ja exibido
     fun markReminderShown(eventId: Int) {
         val conn = DatabaseHelper.connect() ?: return
         try {
@@ -215,6 +224,7 @@ object EventRepository {
         }
     }
 
+    // Interpreta data/hora em varios formatos (ISO, SQL, dd/MM/yyyy)
     fun parseEventDateTime(raw: String): LocalDateTime? {
         val trimmed = raw.trim()
         if (trimmed.isEmpty()) return null
@@ -251,12 +261,14 @@ object EventRepository {
         }
     }
 
+    // Converte dd/MM/yyyy para formato do banco
     fun formatEventDateForDb(displayDate: String): String {
         if (!Regex("""\d{2}/\d{2}/\d{4}""").matches(displayDate)) return displayDate
         val p = displayDate.split("/")
         return "${p[2]}-${p[1]}-${p[0]} 00:00:00"
     }
 
+    // Converte data do banco para dd/MM/yyyy
     fun formatEventDateForDisplay(dbDate: String): String {
         val dt = parseEventDateTime(dbDate) ?: return dbDate
         val dd = dt.dayOfMonth.toString().padStart(2, '0')
@@ -264,5 +276,6 @@ object EventRepository {
         return "$dd/$mm/${dt.year}"
     }
 
+    // Extrai numero do mes a partir da data do evento
     fun eventMonthNumber(dbDate: String): Int? = parseEventDateTime(dbDate)?.monthNumber
 }

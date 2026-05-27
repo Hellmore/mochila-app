@@ -22,6 +22,7 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 
+// Cabecalhos e nomes de mes para o calendario
 private val dayHeaders = listOf("Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb")
 
 private val monthNamesFull = listOf(
@@ -50,6 +51,7 @@ private fun parseDDMMYYYY(date: String): Triple<Int, Int, Int>? {
     return Triple(d, m, y)
 }
 
+// Seletor de data no formato DD/MM/AAAA
 @Composable
 fun CalendarPicker(
     selectedDate: String,
@@ -92,7 +94,7 @@ fun CalendarPicker(
             .border(1.dp, accentColor, RoundedCornerShape(8.dp))
             .padding(horizontal = 6.dp, vertical = 4.dp),
     ) {
-        // Header row: < [Mês] [Ano] >
+        
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
@@ -184,7 +186,7 @@ fun CalendarPicker(
 
         Spacer(Modifier.height(3.dp))
 
-        // Day-of-week headers
+        
         Row(modifier = Modifier.fillMaxWidth()) {
             dayHeaders.forEach { header ->
                 Text(
@@ -200,7 +202,7 @@ fun CalendarPicker(
 
         Spacer(Modifier.height(1.dp))
 
-        // Days grid — altura fixa por linha para manter o container compacto
+        
         repeat(rowCount) { row ->
             Row(
                 modifier = Modifier

@@ -61,6 +61,7 @@ private fun sdFormatDate(date: LocalDate): String {
     return "$dd $mon $yy"
 }
 
+// Tela de visualizacao dos dados de uma materia
 @Composable
 fun SubjectDetailScreen(
     userId: Int,
@@ -74,10 +75,12 @@ fun SubjectDetailScreen(
     onBack: () -> Unit,
     onLogout: () -> Unit,
 ) {
+    // Materia carregada e dialogs de exclusao e menu
     var subject by remember { mutableStateOf<Subject?>(null) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
 
+    // Presenter para carregar, editar e excluir materia
     val presenter = remember {
         object : SubjectDetailView {
             override fun showSubject(s: Subject) { subject = s }
@@ -98,6 +101,7 @@ fun SubjectDetailScreen(
 
     @Composable
     fun FieldDisplay(label: String, value: String) {
+        // Campo somente leitura para exibir dados da materia
         OutlinedTextField(
             value = value,
             onValueChange = {},
@@ -270,6 +274,7 @@ fun SubjectDetailScreen(
 
     @Composable
     fun ContentBody(modifier: Modifier = Modifier, fieldsMaxWidth: Dp? = null) {
+        // Lista de campos e acoes de editar ou excluir
         val widthCap = fieldsMaxWidth?.let { Modifier.widthIn(max = it) } ?: Modifier
         Box(modifier = modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
             subject?.let { s ->
@@ -335,6 +340,7 @@ fun SubjectDetailScreen(
     }
 
     if (showDeleteDialog) {
+        // Confirmacao antes de remover a materia
         subject?.let { s ->
             AlertDialog(
                 onDismissRequest = { showDeleteDialog = false },
@@ -368,6 +374,7 @@ fun SubjectDetailScreen(
         )
         val wide = maxWidth >= 700.dp
         if (wide) {
+            // Layout desktop com sidebar e detalhes
             Row(Modifier.fillMaxSize()) {
                 Box(Modifier.weight(0.4f).fillMaxHeight()) {
                     DesktopSidebar()
@@ -402,6 +409,7 @@ fun SubjectDetailScreen(
     }
 
     if (showMenu) {
+        // Menu lateral local da tela de detalhes
         MenuScreen(
             onCloseMenu = { showMenu = false },
             onNavigateToHome = { showMenu = false; onNavigateToHome() },

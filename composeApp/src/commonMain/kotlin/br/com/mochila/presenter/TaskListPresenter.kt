@@ -3,15 +3,18 @@ package br.com.mochila.presenter
 import br.com.mochila.data.TaskRepository
 import br.com.mochila.model.Task
 
+// Contrato da tela de listagem de tarefas
 interface TaskListView {
     fun showTasks(tasks: List<Task>)
     fun showEmptyState()
-    fun navigateToTaskEdit(taskId: Int)
+    fun navigateToTaskDetail(taskId: Int)
 }
 
+// Carrega tarefas, aplica filtros e altera status
 class TaskListPresenter(private val view: TaskListView) {
 
     fun loadTasks(userId: Int) {
+        // Busca tarefas do usuario
         val tasks = TaskRepository.listByUser(userId)
         if (tasks.isEmpty()) {
             view.showEmptyState()
@@ -21,9 +24,10 @@ class TaskListPresenter(private val view: TaskListView) {
     }
 
     fun onTaskClicked(taskId: Int) {
-        view.navigateToTaskEdit(taskId)
+        view.navigateToTaskDetail(taskId)
     }
 
+    // Filtra tarefas por busca e status
     fun filterTasks(
         tasks: List<Task>,
         searchQuery: String,
@@ -42,6 +46,7 @@ class TaskListPresenter(private val view: TaskListView) {
     fun completeTask(userId: Int, task: Task) {
         if (task.status == "Concluida") return
         val updated = task.copy(status = "Concluida")
+        // Atualiza status no repositorio
         if (TaskRepository.update(userId, updated)) {
             loadTasks(userId)
         }
@@ -50,6 +55,7 @@ class TaskListPresenter(private val view: TaskListView) {
     fun cancelTask(userId: Int, task: Task) {
         if (task.status == "Cancelada") return
         val updated = task.copy(status = "Cancelada")
+        // Atualiza status no repositorio
         if (TaskRepository.update(userId, updated)) {
             loadTasks(userId)
         }

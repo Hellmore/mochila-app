@@ -24,12 +24,14 @@ import mochila_app.composeapp.generated.resources.background
 import mochila_app.composeapp.generated.resources.logo
 import org.jetbrains.compose.resources.painterResource
 
+// Paleta da tela de planos
 private val PlansRosa    = Color(0xFFFF6694)
 private val PlansAmarelo = Color(0xFFFFC107)
 private val PlansRoxo    = Color(0xFF7F55CE)
 private val PlansBg      = Color(0xFFF8F8F8)
 private val PlansLaranja = Color(0xFFFFBA5E)
 
+// Apresentacao dos planos Free e Premium
 @Composable
 fun PlansScreen(onBack: () -> Unit) {
     BoxWithConstraints(

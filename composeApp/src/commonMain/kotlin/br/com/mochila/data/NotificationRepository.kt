@@ -4,8 +4,10 @@ import br.com.mochila.model.Notification
 import br.com.mochila.model.NotificationType
 import java.sql.ResultSet
 
+// Persistencia de notificacoes do usuario
 object NotificationRepository {
 
+    // Converte linha do ResultSet em Notification
     private fun ResultSet.toNotification(): Notification? = try {
         val typeStr = getString("tipo")
         val type = NotificationType.entries.find { it.name == typeStr } ?: return null
@@ -22,6 +24,7 @@ object NotificationRepository {
         null
     }
 
+    // Insere notificacao se ainda nao existir para o mesmo tipo e referencia
     fun insertIfNotExists(
         userId: Int,
         type: NotificationType,
@@ -64,6 +67,7 @@ object NotificationRepository {
         }
     }
 
+    // Lista notificacoes do usuario (mais recentes primeiro)
     fun listByUser(userId: Int): List<Notification> {
         val conn = DatabaseHelper.connect() ?: return emptyList()
         return try {
@@ -85,6 +89,7 @@ object NotificationRepository {
         }
     }
 
+    // Conta notificacoes nao lidas
     fun countUnread(userId: Int): Int {
         val conn = DatabaseHelper.connect() ?: return 0
         return try {
@@ -103,6 +108,7 @@ object NotificationRepository {
         }
     }
 
+    // Marca todas as notificacoes do usuario como lidas
     fun markAllAsRead(userId: Int): Boolean =
         DatabaseHelper.executeUpdate(
             "UPDATE notificacao SET lida = 1 WHERE id_usuario = ? AND lida = 0",

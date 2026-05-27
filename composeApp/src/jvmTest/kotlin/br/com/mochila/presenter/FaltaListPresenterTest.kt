@@ -8,6 +8,7 @@ import org.junit.Before
 import org.junit.Test
 import kotlin.test.assertEquals
 
+// Testa listagem, filtros e navegacao de faltas
 class FaltaListPresenterTest {
 
     private val view = mockk<FaltaListView>(relaxed = true)
@@ -16,6 +17,7 @@ class FaltaListPresenterTest {
     @Before fun setUp()    { mockkObject(FaltaRepository) }
     @After  fun tearDown() { unmockkAll() }
 
+    // Carregamento da lista
     @Test fun `lista vazia exibe estado vazio`() {
         every { FaltaRepository.listByUser(any()) } returns emptyList()
         presenter.loadFaltas(1)
@@ -29,11 +31,13 @@ class FaltaListPresenterTest {
         verify { view.showFaltas(faltas) }
     }
 
+    // Navegacao
     @Test fun `onFaltaClicked navega para edicao`() {
         presenter.onFaltaClicked(4)
         verify { view.navigateToFaltaEdit(4) }
     }
 
+    // Filtros
     @Test fun `filterFaltas sem filtro retorna todas`() {
         val faltas = listOf(
             Falta(subjectName = "Cálculo", status = "Justificada"),

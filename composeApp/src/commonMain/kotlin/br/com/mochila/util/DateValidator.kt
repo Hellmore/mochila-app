@@ -1,11 +1,7 @@
 package br.com.mochila.util
 
-/**
- * Utilitário compartilhado de validação de datas no formato DD/MM/YYYY.
- *
- * Extraído de SubjectRegisterPresenter e TaskRegisterPresenter para eliminar
- * duplicação de código (princípio DRY).
- */
+
+// Validacao de datas no formato DD/MM/AAAA
 object DateValidator {
 
     fun isValid(date: String): Boolean {

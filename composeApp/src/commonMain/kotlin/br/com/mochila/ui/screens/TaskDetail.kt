@@ -1,5 +1,6 @@
 package br.com.mochila.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -15,12 +16,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.com.mochila.data.TaskRepository
+import br.com.mochila.data.UserSession
 import br.com.mochila.model.Task
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -28,10 +32,15 @@ import br.com.mochila.model.TaskPriority
 import br.com.mochila.presenter.TaskDetailPresenter
 import br.com.mochila.presenter.TaskDetailView
 import br.com.mochila.ui.screens.components.BackButton
-import br.com.mochila.ui.screens.components.UserAvatarButton
+import br.com.mochila.ui.screens.components.ProfileAvatar
+import kotlinx.datetime.Clock
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import mochila_app.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.painterResource
 
+// Tela de visualizacao e edicao de uma tarefa
 @Composable
 fun TaskDetailScreen(
     userId: Int,
@@ -43,8 +52,10 @@ fun TaskDetailScreen(
     onBack: () -> Unit,
     onLogout: () -> Unit
 ) {
-    val rosa = Color(0xFFFF6694)
+    // Paleta e estado da tela
     val fundoTela = Color(0xFFF8F8F8)
+    val laranjaHeader = Color(0xFFFFBA5E)
+    val rosa = Color(0xFFFF6694)
 
     var task by remember { mutableStateOf<Task?>(null) }
     var blockerTitle by remember { mutableStateOf<String?>(null) }
@@ -74,14 +85,37 @@ fun TaskDetailScreen(
         } else null
     }
 
+    val monthNamesPt = remember {
+        listOf(
+            "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+            "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
+        )
+    }
+
+    fun formatDatePt(date: LocalDate): String {
+        val dd = date.dayOfMonth.toString().padStart(2, '0')
+        val mon = monthNamesPt[date.monthNumber - 1]
+        val yy = (date.year % 100).toString().padStart(2, '0')
+        return "$dd $mon $yy"
+    }
+
+    val user = UserSession.currentUser
+    val displayName = user?.name.orEmpty()
+    val today = remember { Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date }
+    val dateLabel = remember(today) { formatDatePt(today) }
+
     @Composable
-    fun FieldDisplay(value: String, label: String) {
+    fun FieldDisplay(
+        label: String,
+        value: String,
+        singleLine: Boolean,
+    ) {
         OutlinedTextField(
             value = value,
             onValueChange = {},
             readOnly = true,
-            label = { Text(text = label, color = rosa, fontSize = 14.sp) },
-            singleLine = false,
+            label = { Text(text = label, color = rosa, fontSize = 12.sp) },
+            singleLine = singleLine,
             colors = OutlinedTextFieldDefaults.colors(
                 focusedContainerColor = Color.White,
                 unfocusedContainerColor = Color.White,
@@ -89,22 +123,213 @@ fun TaskDetailScreen(
                 unfocusedBorderColor = rosa,
                 focusedLabelColor = rosa,
                 unfocusedLabelColor = rosa,
-                focusedTextColor = Color.Black.copy(alpha = 0.85f),
-                unfocusedTextColor = Color.Black.copy(alpha = 0.85f),
-                cursorColor = Color.Transparent
+                focusedTextColor = rosa,
+                unfocusedTextColor = rosa,
+                cursorColor = Color.Transparent,
             ),
-            shape = RoundedCornerShape(12.dp),
-            modifier = Modifier
-                .widthIn(max = 600.dp)
-                .fillMaxWidth(0.9f)
-                .padding(vertical = 6.dp)
+            textStyle = LocalTextStyle.current.copy(
+                fontSize = 12.sp,
+                fontWeight = FontWeight.ExtraLight,
+                color = rosa,
+            ),
+            shape = RoundedCornerShape(7.dp),
+            modifier = Modifier.fillMaxWidth(),
         )
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(fundoTela)
+    @Composable
+    fun OrangeHeaderBar() {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp))
+                .background(laranjaHeader)
+                .padding(vertical = 20.dp, horizontal = 22.dp),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    BackButton(
+                        onBack = onBack,
+                        backgroundColor = Color.Transparent,
+                        iconTint = Color.White,
+                        buttonSize = 40.dp,
+                        iconSize = 22.dp,
+                    )
+                    ProfileAvatar(
+                        name = displayName,
+                        photoPath = user?.photoPath,
+                        size = 40.dp,
+                        accentColor = Color.White,
+                        onClick = onNavigateToAccountSettings,
+                    )
+                    Text(
+                        text = displayName.ifBlank { " " },
+                        color = Color.White,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Medium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.widthIn(max = 120.dp),
+                    )
+                }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    Text(text = dateLabel, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                    Image(
+                        painter = painterResource(Res.drawable.menu_icon_today),
+                        contentDescription = "Calendário",
+                        modifier = Modifier.size(22.dp),
+                        colorFilter = ColorFilter.tint(Color.White),
+                    )
+                }
+            }
+        }
+    }
+
+    @Composable
+    fun BottomBar() {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp),
+            horizontalArrangement = Arrangement.Center,
+        ) {
+            Row(
+                modifier = Modifier
+                    .background(rosa.copy(alpha = 0.95f), RoundedCornerShape(8.dp))
+                    .padding(horizontal = 20.dp),
+                horizontalArrangement = Arrangement.spacedBy(5.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                IconButton(onClick = { showMenu = true }) {
+                    Image(
+                        painter = painterResource(Res.drawable.menu),
+                        contentDescription = "Menu",
+                        modifier = Modifier.size(16.dp),
+                        colorFilter = ColorFilter.tint(Color.White),
+                    )
+                }
+                IconButton(onClick = onNavigateToTasksList) {
+                    Image(
+                        painter = painterResource(Res.drawable.add),
+                        contentDescription = "Lista de tarefas",
+                        modifier = Modifier.size(16.dp),
+                        colorFilter = ColorFilter.tint(Color.White),
+                    )
+                }
+                IconButton(onClick = onNavigateToHome) {
+                    Image(
+                        painter = painterResource(Res.drawable.home),
+                        contentDescription = "Início",
+                        modifier = Modifier.size(16.dp),
+                        colorFilter = ColorFilter.tint(Color.White),
+                    )
+                }
+            }
+        }
+    }
+
+    @Composable
+    fun ContentBody(modifier: Modifier = Modifier, fieldsMaxWidth: Dp? = null) {
+        val widthCap = fieldsMaxWidth?.let { Modifier.widthIn(max = it) } ?: Modifier
+        Box(modifier = modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
+            task?.let { t ->
+                Column(
+                    modifier = widthCap
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 36.dp, vertical = 20.dp),
+                ) {
+                    Text(
+                        text = "Detalhes da Tarefa",
+                        color = laranjaHeader,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    Spacer(Modifier.height(20.dp))
+
+                    FieldDisplay(label = "Título", value = t.title, singleLine = true)
+                    Spacer(Modifier.height(14.dp))
+                    FieldDisplay(label = "Descrição", value = t.description.ifBlank { "Sem descrição" }, singleLine = false)
+                    Spacer(Modifier.height(14.dp))
+                    FieldDisplay(label = "Status", value = t.status, singleLine = true)
+                    Spacer(Modifier.height(14.dp))
+                    FieldDisplay(label = "Blocker", value = blockerTitle ?: "Nenhuma", singleLine = true)
+                    Spacer(Modifier.height(14.dp))
+                    FieldDisplay(label = "Data limite", value = t.dueDate ?: "Não definida", singleLine = true)
+
+                    Spacer(Modifier.height(14.dp))
+
+                    TaskPrioritySelector(
+                        userId = userId,
+                        task = t,
+                        accentColor = rosa,
+                        onPriorityChanged = { updated -> task = updated },
+                    )
+
+                    Spacer(Modifier.height(24.dp))
+
+                    Button(
+                        onClick = { presenter.onEditClicked(t) },
+                        colors = ButtonDefaults.buttonColors(containerColor = rosa, contentColor = Color.White),
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.align(Alignment.CenterHorizontally).fillMaxWidth(0.75f),
+                    ) {
+                        Text("Editar", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    }
+
+                    Spacer(Modifier.height(12.dp))
+
+                    OutlinedButton(
+                        onClick = { showDeleteDialog = true },
+                        border = BorderStroke(1.dp, Color(0xFFD32F2F)),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFD32F2F)),
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.align(Alignment.CenterHorizontally).fillMaxWidth(0.75f),
+                    ) {
+                        Text("Excluir", fontWeight = FontWeight.Bold)
+                    }
+
+                    Spacer(Modifier.height(24.dp))
+                }
+            }
+        }
+    }
+
+    if (showDeleteDialog) {
+        task?.let { t ->
+            AlertDialog(
+                onDismissRequest = { showDeleteDialog = false },
+                title = { Text("Excluir tarefa", fontWeight = FontWeight.Bold, fontSize = 18.sp) },
+                text = { Text("Tem certeza que deseja excluir \"${t.title}\"?", fontSize = 14.sp) },
+                confirmButton = {
+                    TextButton(onClick = {
+                        showDeleteDialog = false
+                        presenter.onDeleteConfirmed(userId, t)
+                    }) {
+                        Text("Excluir", color = Color(0xFFD32F2F), fontWeight = FontWeight.Bold)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDeleteDialog = false }) {
+                        Text("Cancelar", color = rosa)
+                    }
+                },
+                shape = RoundedCornerShape(12.dp),
+                containerColor = Color.White,
+            )
+        }
+    }
+
+    BoxWithConstraints(
+        modifier = Modifier.fillMaxSize().background(fundoTela),
     ) {
         Image(
             painter = painterResource(Res.drawable.background),
@@ -113,147 +338,34 @@ fun TaskDetailScreen(
             contentScale = ContentScale.Crop,
             alpha = 0.50f,
         )
-        task?.let { t ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 24.dp, vertical = 16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
+
+        // Layout responsivo desktop ou mobile
+        val wide = maxWidth >= 700.dp
+        if (wide) {
+            Column(Modifier.fillMaxSize()) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 40.dp, start = 8.dp, end = 16.dp, bottom = 16.dp),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 16.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    BackButton(onBack = onBack, backgroundColor = rosa, iconTint = Color.White)
-                    UserAvatarButton(size = 60.dp, onClick = onNavigateToAccountSettings)
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = "Tarefa",
-                    color = rosa,
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.Bold
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                FieldDisplay(value = t.title, label = "Título")
-                FieldDisplay(value = t.description.ifBlank { "Sem descrição" }, label = "Descrição")
-                FieldDisplay(value = t.status, label = "Status")
-                FieldDisplay(value = blockerTitle ?: "Nenhuma", label = "Blocker")
-                FieldDisplay(value = t.dueDate ?: "Não definida", label = "Data limite")
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                TaskPrioritySelector(
-                    userId = userId,
-                    task = t,
-                    accentColor = rosa,
-                    onPriorityChanged = { updated -> task = updated },
-                )
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                Button(
-                    onClick = { presenter.onEditClicked(t) },
-                    colors = ButtonDefaults.buttonColors(containerColor = rosa),
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier
-                        .widthIn(max = 600.dp)
-                        .fillMaxWidth(0.9f)
-                        .height(45.dp)
-                ) {
-                    Text("Editar", color = Color.White, fontWeight = FontWeight.Bold)
-                }
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                Button(
-                    onClick = { showDeleteDialog = true },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD9534F)),
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier
-                        .widthIn(max = 600.dp)
-                        .fillMaxWidth(0.9f)
-                        .height(45.dp)
-                ) {
-                    Text("Excluir Tarefa", color = Color.White, fontWeight = FontWeight.Bold)
-                }
-
-                if (showDeleteDialog) {
-                    AlertDialog(
-                        onDismissRequest = { showDeleteDialog = false },
-                        title = {
-                            Text("Confirmar Exclusão", fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                        },
-                        text = {
-                            Text("Tem certeza que deseja excluir a tarefa \"${t.title}\"?")
-                        },
-                        confirmButton = {
-                            TextButton(onClick = {
-                                showDeleteDialog = false
-                                presenter.onDeleteConfirmed(userId, t)
-                            }) {
-                                Text("Excluir", color = Color(0xFFD9534F), fontWeight = FontWeight.Bold)
-                            }
-                        },
-                        dismissButton = {
-                            TextButton(onClick = { showDeleteDialog = false }) {
-                                Text("Cancelar")
-                            }
-                        },
-                        shape = RoundedCornerShape(12.dp),
-                        containerColor = Color.White
+                    BackButton(onBack = onBack, backgroundColor = rosa.copy(alpha = 0.92f), iconTint = Color.White)
+                    Spacer(Modifier.weight(1f))
+                    Text(text = dateLabel, color = Color(0xFF333333), fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                    Spacer(Modifier.width(6.dp))
+                    Image(
+                        painter = painterResource(Res.drawable.menu_icon_today),
+                        contentDescription = "Calendário",
+                        modifier = Modifier.size(22.dp),
+                        colorFilter = ColorFilter.tint(rosa),
                     )
                 }
-
-                Spacer(modifier = Modifier.height(120.dp))
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 20.dp),
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .background(rosa.copy(alpha = 0.95f), RoundedCornerShape(8.dp))
-                            .padding(horizontal = 20.dp),
-                        horizontalArrangement = Arrangement.spacedBy(5.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        IconButton(onClick = { showMenu = true }) {
-                            Image(
-                                painter = painterResource(Res.drawable.menu),
-                                contentDescription = "Menu lateral",
-                                modifier = Modifier.size(16.dp),
-                                colorFilter = ColorFilter.tint(Color.White)
-                            )
-                        }
-                        IconButton(onClick = onNavigateToTasksList) {
-                            Image(
-                                painter = painterResource(Res.drawable.add),
-                                contentDescription = "Lista de tarefas",
-                                modifier = Modifier.size(16.dp),
-                                colorFilter = ColorFilter.tint(Color.White)
-                            )
-                        }
-                        IconButton(onClick = onNavigateToHome) {
-                            Image(
-                                painter = painterResource(Res.drawable.home),
-                                contentDescription = "Home",
-                                modifier = Modifier.size(16.dp),
-                                colorFilter = ColorFilter.tint(Color.White)
-                            )
-                        }
-                    }
-                }
+                ContentBody(modifier = Modifier.weight(1f), fieldsMaxWidth = 600.dp)
+                BottomBar()
+            }
+        } else {
+            Column(Modifier.fillMaxSize()) {
+                OrangeHeaderBar()
+                ContentBody(modifier = Modifier.weight(1f))
+                BottomBar()
             }
         }
     }
@@ -269,6 +381,7 @@ fun TaskDetailScreen(
     }
 }
 
+// Dropdown para alterar prioridade da tarefa
 @Composable
 private fun TaskPrioritySelector(
     userId: Int,

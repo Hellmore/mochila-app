@@ -1,8 +1,9 @@
 package br.com.mochila.model
 
-/** RGB sem canal alpha; padrão verde do Figma. */
+// Cor padrao dos eventos (RGB compactado)
 const val DEFAULT_EVENT_COLOR_RGB = 0x65D145
 
+// Evento de calendario com lembrete e disciplina opcional
 data class Event(
     val id: Int = 0,
     val userId: Int = 0,

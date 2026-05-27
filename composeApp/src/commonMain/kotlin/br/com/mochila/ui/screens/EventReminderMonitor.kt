@@ -18,6 +18,7 @@ import kotlinx.datetime.toLocalDateTime
 
 private val rosa = Color(0xFFFF6694)
 
+// Dialog quando lembrete de evento dispara
 @Composable
 fun EventReminderMonitor(userId: Int) {
     var pendingReminder by remember { mutableStateOf<Event?>(null) }

@@ -7,8 +7,10 @@ import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.Statement
 
+// CRUD de tarefas do usuario
 object TaskRepository {
 
+    // Converte linha do ResultSet em Task
     private fun ResultSet.toTask() = Task(
         id = getInt("id_tarefa"),
         userId = getInt("id_usuario"),
@@ -28,6 +30,7 @@ object TaskRepository {
         subjectId = getInt("id_disciplina").takeIf { !wasNull() },
     )
 
+    // Insere tarefa e retorna id gerado
     fun insert(userId: Int, task: Task): Int? {
         val conn = DatabaseHelper.connect() ?: return null
         return try {
@@ -68,6 +71,7 @@ object TaskRepository {
         }
     }
 
+    // Lista todas as tarefas do usuario
     fun listByUser(userId: Int): List<Task> {
         val conn = DatabaseHelper.connect() ?: return emptyList()
         return try {
@@ -91,6 +95,7 @@ object TaskRepository {
         }
     }
 
+    // Atualiza tarefa existente
     fun update(userId: Int, task: Task): Boolean {
         val conn = DatabaseHelper.connect() ?: return false
         return try {
@@ -122,6 +127,7 @@ object TaskRepository {
         }
     }
 
+    // Lista tarefas vinculadas a uma disciplina
     fun listBySubject(subjectId: Int): List<Task> {
         val conn = DatabaseHelper.connect() ?: return emptyList()
         return try {
@@ -142,6 +148,7 @@ object TaskRepository {
         }
     }
 
+    // Remove tarefa do usuario
     fun delete(userId: Int, taskId: Int): Boolean {
         val conn = DatabaseHelper.connect() ?: return false
         return try {
@@ -161,6 +168,7 @@ object TaskRepository {
         }
     }
 
+    // Busca tarefa por id
     fun findById(taskId: Int): Task? {
         val conn = DatabaseHelper.connect() ?: return null
         return try {

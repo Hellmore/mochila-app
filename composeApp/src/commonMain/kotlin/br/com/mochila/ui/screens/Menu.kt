@@ -39,12 +39,13 @@ import mochila_app.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 
-/** Cor do painel do menu lateral ([Figma — menu lateral](https://www.figma.com/design/UlejWl0a4xUohJj42JbzuQ/App---Mochila?node-id=53-988)). */
+
 private val MenuPink = Color(0xFFFF6694)
 
 private val MenuScrim = Color.Black.copy(alpha = 0.3f)
 private val MenuShadow = Color.Black.copy(alpha = 0.25f)
 
+// Menu lateral deslizante com atalhos de navegacao
 @Composable
 fun MenuScreen(
     onCloseMenu: () -> Unit,
@@ -58,9 +59,11 @@ fun MenuScreen(
     onNavigateToPlus: () -> Unit = {},
     onNavigateToAdmin: () -> Unit = {},
 ) {
+    // Exibe item de admin apenas para usuarios administradores
     val isAdmin = br.com.mochila.data.UserSession.currentUser?.isAdmin == true
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val sidebarWidth = (maxWidth * 0.8174f).coerceAtMost(394.dp)
+        // Animacao de entrada do menu lateral
         AnimatedVisibility(
             visible = true,
             enter = slideInHorizontally(
@@ -73,6 +76,7 @@ fun MenuScreen(
             ) + fadeOut(tween(400))
         ) {
             Row(Modifier.fillMaxSize()) {
+                // Painel rosa com links de navegacao
                 Box(
                     modifier = Modifier
                         .width(sidebarWidth)
@@ -163,6 +167,7 @@ fun MenuScreen(
                         )
                     }
                 }
+                // Area escurecida que fecha o menu ao tocar
                 Box(
                     modifier = Modifier
                         .weight(1f)
@@ -195,6 +200,7 @@ private fun MenuSideItem(
     icon: DrawableResource?,
     onClick: () -> Unit
 ) {
+    // Item clicavel com icone e texto
     val textStyle = TextStyle(
         color = Color.White,
         fontSize = 14.sp,

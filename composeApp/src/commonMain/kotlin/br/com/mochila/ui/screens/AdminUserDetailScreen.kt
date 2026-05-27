@@ -24,10 +24,12 @@ import mochila_app.composeapp.generated.resources.Res
 import mochila_app.composeapp.generated.resources.background
 import org.jetbrains.compose.resources.painterResource
 
+// Paleta do detalhe de usuario admin
 private val audRosa  = Color(0xFFFF6694)
 private val audFundo = Color(0xFFF8F8F8)
 private val audRed   = Color(0xFFD9534F)
 
+// Estatisticas e acoes sobre um usuario
 @Composable
 fun AdminUserDetailScreen(
     currentAdminId: Int,

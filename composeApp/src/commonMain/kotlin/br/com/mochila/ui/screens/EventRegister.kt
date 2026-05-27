@@ -48,6 +48,7 @@ import mochila_app.composeapp.generated.resources.Res
 import mochila_app.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.painterResource
 
+// Paleta do cadastro de evento
 private val fundoTela = Color(0xFFF8F8F8)
 private val laranjaHeader = Color(0xFFFFBA5E)
 private val rosa = Color(0xFFFF6694)
@@ -141,6 +142,7 @@ private fun EventRegisterBottomBar(
     }
 }
 
+// Modal para escolher cor do evento
 @Composable
 private fun ColorPickerOverlay(
     visible: Boolean,
@@ -212,6 +214,7 @@ private fun ColorPickerOverlay(
     }
 }
 
+// Modal para escolher antecedencia do lembrete
 @Composable
 private fun ReminderPickerOverlay(
     visible: Boolean,
@@ -257,6 +260,7 @@ private fun ReminderPickerOverlay(
     }
 }
 
+// Formulario de novo evento ou edicao
 @Composable
 fun EventRegisterScreen(
     userId: Int,

@@ -10,6 +10,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
+// Testa CRUD e conversao de datas de eventos
 class EventRepositoryTest : RepositoryTestBase() {
 
     private val userId = 1
@@ -26,6 +27,7 @@ class EventRepositoryTest : RepositoryTestBase() {
         status = "Agendado",
     )
 
+    // Insercao e listagem
     @Test fun `insert retorna id gerado`() {
         assertNotNull(EventRepository.insert(userId, sampleEvent()))
     }
@@ -40,6 +42,7 @@ class EventRepositoryTest : RepositoryTestBase() {
         assertEquals(0, EventRepository.listByUser(userId).size)
     }
 
+    // Busca por id
     @Test fun `findById retorna evento correto`() {
         EventRepository.insert(userId, sampleEvent("Seminário"))
         val events = EventRepository.listByUser(userId)
@@ -52,6 +55,7 @@ class EventRepositoryTest : RepositoryTestBase() {
         assertNull(EventRepository.findById(99999))
     }
 
+    // Exclusao
     @Test fun `delete remove evento`() {
         EventRepository.insert(userId, sampleEvent())
         val event = EventRepository.listByUser(userId).first()
@@ -72,6 +76,7 @@ class EventRepositoryTest : RepositoryTestBase() {
         assertFalse(EventRepository.delete(userId, 99999))
     }
 
+    // Conversao e extracao de datas
     @Test fun `formatEventDateForDb converte DD-MM-YYYY para YYYY-MM-DD com horario`() {
         assertEquals("2025-06-15 00:00:00", EventRepository.formatEventDateForDb("15/06/2025"))
     }

@@ -9,6 +9,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
+// Testa cadastro, edicao, exclusao e limite de faltas
 class FaltaRegisterPresenterTest {
 
     private val view = mockk<FaltaRegisterView>(relaxed = true)
@@ -25,7 +26,6 @@ class FaltaRegisterPresenterTest {
 
     private val faltaComDisciplina = Falta(subjectId = 1)
 
-    /** 01/03–30/06/2025, 2 aulas/sem → 36 aulas; 75% freq. → limite de 9 faltas. */
     private val subjectCalculo = Subject(
         id = 1,
         name = "Cálculo",
@@ -36,6 +36,7 @@ class FaltaRegisterPresenterTest {
         minFrequency = 75,
     )
 
+    // Validacao de campos
     @Test fun `disciplina nao selecionada exibe erro`() {
         presenter.saveFalta(1, faltaComDisciplina.copy(subjectId = 0), "10/06/2025", "Justificada", false)
         verify { view.showValidationError(any()) }
@@ -51,6 +52,7 @@ class FaltaRegisterPresenterTest {
         verify { view.showValidationError(any()) }
     }
 
+    // Salvamento de nova falta
     @Test fun `salvar novo com sucesso navega para lista quando abaixo do limite`() {
         every { FaltaRepository.formatDateForDb("10/06/2025") } returns "2025-06-10"
         every { FaltaRepository.insert(any(), any()) } returns true
@@ -81,6 +83,7 @@ class FaltaRegisterPresenterTest {
         kotlin.test.assertEquals("Nao Justificada", capturado.captured.status)
     }
 
+    // Edicao de falta existente
     @Test fun `editar com sucesso chama showSaveSuccess com true`() {
         every { FaltaRepository.formatDateForDb(any()) } returns "2025-06-10"
         every { FaltaRepository.update(any(), any()) } returns true
@@ -88,6 +91,7 @@ class FaltaRegisterPresenterTest {
         verify { view.showSaveSuccess(true) }
     }
 
+    // Exclusao de falta
     @Test fun `deleteFalta com sucesso navega para lista`() {
         every { FaltaRepository.delete(any(), any()) } returns true
         presenter.deleteFalta(1, 4)
@@ -101,6 +105,7 @@ class FaltaRegisterPresenterTest {
         verify { view.showDeleteError() }
     }
 
+    // Carregamento para edicao
     @Test fun `loadFalta encontrada exibe falta`() {
         val falta = Falta(id = 2, subjectId = 1)
         every { FaltaRepository.findById(2) } returns falta

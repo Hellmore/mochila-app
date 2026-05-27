@@ -41,6 +41,7 @@ import mochila_app.composeapp.generated.resources.Res
 import mochila_app.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.painterResource
 
+// Paleta da lista de eventos
 private val fundoTela = Color(0xFFF8F8F8)
 private val laranjaHeader = Color(0xFFFFBA5E)
 private val rosa = Color(0xFFFF6694)
@@ -229,6 +230,7 @@ private fun EventInfoTag(
     }
 }
 
+// Card de evento com troca rapida de categoria
 @Composable
 private fun EventCard(
     event: Event,
@@ -338,6 +340,7 @@ private fun EventCard(
     }
 }
 
+// Tela principal da agenda de eventos
 @Composable
 fun EventListScreen(
     userId: Int,

@@ -27,15 +27,18 @@ import org.jetbrains.compose.resources.painterResource
 private val recoveryFormMaxWidth = 360.dp
 private val recoveryFormHorizontalMargin = 48.dp
 
+// Tela inicial do fluxo de recuperacao de senha
 @Composable
 fun RecoveryScreen(
     onBackToLogin: () -> Unit,
     onNavigateToCodeEntry: (email: String) -> Unit
 ) {
+    // Cores da tela de recuperacao de senha
     val fundoTela = Color(0xFFF8F8F8)
     val rosa = Color(0xFFFF6694)
     val logoArea = Color(0xFFFF6694)
 
+    // E-mail digitado, confirmacao e feedback de erro
     var email by remember { mutableStateOf("") }
     var confirmEmail by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -44,6 +47,7 @@ fun RecoveryScreen(
     val scope = rememberCoroutineScope()
     val presenter = remember { RecoveryPresenter() }
 
+    // Envia codigo de recuperacao apos validar os e-mails
     fun onSend() {
         errorMessage = null
         scope.launch {
@@ -68,6 +72,7 @@ fun RecoveryScreen(
         val isWide = maxWidth >= 700.dp
 
         if (isWide) {
+            // Layout desktop: marca a esquerda, formulario a direita
             Row(modifier = Modifier.fillMaxSize()) {
                 Box(
                     modifier = Modifier
@@ -211,6 +216,7 @@ fun RecoveryScreen(
                 }
             }
         } else {
+            // Layout mobile centralizado
             Image(
                 painter = painterResource(Res.drawable.background),
                 contentDescription = null,

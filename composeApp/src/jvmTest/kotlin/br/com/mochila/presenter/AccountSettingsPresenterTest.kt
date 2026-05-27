@@ -9,6 +9,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
+// Testa configuracoes de conta, edicao de perfil e codigo admin
 class AccountSettingsPresenterTest {
 
     private val view = mockk<AccountSettingsView>(relaxed = true)
@@ -28,6 +29,7 @@ class AccountSettingsPresenterTest {
 
     private val user = User(id = 1, name = "Ana", email = "ana@x.com")
 
+    // Carregamento do usuario
     @Test fun `loadUser existente exibe usuario`() {
         every { UserRepository.findById(1) } returns user
         presenter.loadUser(1)
@@ -40,6 +42,7 @@ class AccountSettingsPresenterTest {
         verify(exactly = 0) { view.showUser(any()) }
     }
 
+    // Validacao ao salvar alteracoes
     @Test fun `nome muito curto exibe erro de validacao`() {
         presenter.saveChanges(1, "AB", "ana@x.com")
         verify { view.showValidationError(any()) }
@@ -50,6 +53,7 @@ class AccountSettingsPresenterTest {
         verify { view.showValidationError(any()) }
     }
 
+    // Persistencia de alteracoes
     @Test fun `dados validos com sucesso chama showSaveSuccess`() {
         every { UserRepository.update(any(), any(), any(), any()) } returns true
         presenter.saveChanges(1, "AnaLuiza", "ana@x.com")
@@ -62,6 +66,7 @@ class AccountSettingsPresenterTest {
         verify { view.showSaveError() }
     }
 
+    // Exclusao de conta
     @Test fun `deleteAccount com sucesso navega para login`() {
         every { UserRepository.delete(any()) } returns true
         presenter.deleteAccount(1)
@@ -75,6 +80,7 @@ class AccountSettingsPresenterTest {
         verify { view.showDeleteError() }
     }
 
+    // Resgate de codigo de administrador
     @Test fun `redeemAdminCode com codigo em branco exibe erro`() {
         presenter.redeemAdminCode(1, "   ")
         verify { view.showAdminCodeError(any()) }

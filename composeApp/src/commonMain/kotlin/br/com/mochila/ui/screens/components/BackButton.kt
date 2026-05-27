@@ -17,11 +17,12 @@ import mochila_app.composeapp.generated.resources.Res
 import mochila_app.composeapp.generated.resources.esquerda
 import org.jetbrains.compose.resources.painterResource
 
+// Botao circular de voltar com icone customizavel
 @Composable
 fun BackButton(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
-    backgroundColor: Color = Color(0xFF7F55CE), // RoxoClaro
+    backgroundColor: Color = Color(0xFF7F55CE), 
     iconTint: Color = Color.White,
     buttonSize: Dp = 45.dp,
     iconSize: Dp = 24.dp,

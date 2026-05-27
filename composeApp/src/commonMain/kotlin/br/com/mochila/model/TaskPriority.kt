@@ -1,5 +1,6 @@
 package br.com.mochila.model
 
+// Prioridade da tarefa com peso para ordenacao
 enum class TaskPriority(val label: String, val weight: Int) {
     ALTA("Alta", 3),
     MEDIA("Média", 2),
@@ -10,6 +11,7 @@ enum class TaskPriority(val label: String, val weight: Int) {
         val options = entries.toList()
         val default = MEDIA
 
+        // Resolve enum pelo nome persistido no banco
         fun fromNameOrNull(name: String): TaskPriority? =
             entries.find { it.name == name }
     }

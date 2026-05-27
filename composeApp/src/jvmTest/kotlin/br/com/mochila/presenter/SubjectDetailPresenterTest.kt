@@ -7,6 +7,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
+// Testa detalhe, edicao e exclusao de disciplinas
 class SubjectDetailPresenterTest {
 
     private val view = mockk<SubjectDetailView>(relaxed = true)
@@ -17,6 +18,7 @@ class SubjectDetailPresenterTest {
 
     private val subject = Subject(id = 2, name = "Física")
 
+    // Carregamento da disciplina
     @Test fun `loadSubject encontrado exibe disciplina`() {
         every { SubjectRepository.findById(2) } returns subject
         presenter.loadSubject(2)
@@ -29,11 +31,13 @@ class SubjectDetailPresenterTest {
         verify { view.navigateBack() }
     }
 
+    // Navegacao para edicao
     @Test fun `onEditClicked navega para edicao`() {
         presenter.onEditClicked(subject)
         verify { view.navigateToEdit(subject) }
     }
 
+    // Exclusao de disciplina
     @Test fun `onDeleteConfirmed com sucesso navega para home`() {
         every { SubjectRepository.delete(any(), any()) } returns true
         presenter.onDeleteConfirmed(1, subject)

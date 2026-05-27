@@ -8,6 +8,7 @@ import org.junit.Before
 import org.junit.Test
 import kotlin.test.assertEquals
 
+// Testa listagem, filtros e navegacao de eventos
 class EventListPresenterTest {
 
     private val view = mockk<EventListView>(relaxed = true)
@@ -21,6 +22,7 @@ class EventListPresenterTest {
         "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"
     )
 
+    // Carregamento da lista
     @Test fun `lista vazia exibe estado vazio`() {
         every { EventRepository.listByUser(any()) } returns emptyList()
         presenter.loadEvents(1)
@@ -34,11 +36,13 @@ class EventListPresenterTest {
         verify { view.showEvents(events) }
     }
 
+    // Navegacao
     @Test fun `onEventClicked navega para edicao`() {
         presenter.onEventClicked(3)
         verify { view.navigateToEventEdit(3) }
     }
 
+    // Filtros
     @Test fun `filterEvents sem filtro retorna todos`() {
         val events = listOf(Event(title = "A"), Event(title = "B"))
         val result = presenter.filterEvents(events, "Todos", "Todos", monthNames)

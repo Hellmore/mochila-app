@@ -51,6 +51,7 @@ import mochila_app.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 
+// Paleta e medidas da tela de tarefas
 private val fundoTela = Color(0xFFF8F8F8)
 private val laranjaHeader = Color(0xFFFFBA5E)
 private val rosa = Color(0xFFFF6694)
@@ -62,6 +63,7 @@ private val taskActionHeight = 28.dp
 private val taskStatusToCategorySpacing = 8.dp
 private val taskCategoryToActionsSpacing = 8.dp
 
+// Opcoes do filtro por status
 private val taskStatusFilterOptions = listOf(
     "Todos",
     "Pendente",
@@ -75,6 +77,7 @@ private val monthNamesPt = listOf(
     "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
 )
 
+// Chave numerica para ordenar por data limite
 private fun dueDateSortKey(dueDate: String?): Long {
     if (dueDate.isNullOrBlank()) return Long.MAX_VALUE
     val parts = dueDate.split("/")
@@ -110,6 +113,7 @@ private fun formatDatePt(date: LocalDate): String {
     return "$dd $mon $yy"
 }
 
+// Icone de calendario no cabecalho
 @Composable
 private fun CalendarGlyph(
     tint: Color,
@@ -274,6 +278,7 @@ private fun TaskListBottomBar(
     }
 }
 
+// Tela principal da lista de tarefas
 @Composable
 fun TaskListScreen(
     userId: Int,
@@ -281,10 +286,11 @@ fun TaskListScreen(
     onOpenMenu: () -> Unit,
     onBack: () -> Unit,
     onNavigateToAdd: () -> Unit,
-    onNavigateToTaskEdit: (Int) -> Unit,
+    onNavigateToTaskDetail: (Int) -> Unit,
     onNavigateToAccountSettings: () -> Unit,
     onLogout: () -> Unit,
 ) {
+    // Estado local, filtros e cores das disciplinas
     var tasks by remember { mutableStateOf<List<Task>>(emptyList()) }
     var subjects by remember { mutableStateOf<List<Subject>>(emptyList()) }
     var searchQuery by remember { mutableStateOf("") }
@@ -304,8 +310,8 @@ fun TaskListScreen(
                 tasks = emptyList()
             }
 
-            override fun navigateToTaskEdit(taskId: Int) {
-                onNavigateToTaskEdit(taskId)
+            override fun navigateToTaskDetail(taskId: Int) {
+                onNavigateToTaskDetail(taskId)
             }
         }.let { TaskListPresenter(it) }
     }
@@ -331,6 +337,7 @@ fun TaskListScreen(
             .fillMaxSize()
             .background(fundoTela),
     ) {
+        // Layout desktop ou mobile conforme largura
         val isWide = maxWidth >= 700.dp
 
         if (isWide) {
@@ -684,6 +691,7 @@ private fun TaskListDesktopLayout(
     }
 }
 
+// Grade de cards com estados vazio e filtrado
 @Composable
 private fun TaskGrid(
     tasks: List<Task>,
@@ -888,6 +896,7 @@ private fun TaskCategoryTag(
     }
 }
 
+// Card individual com acoes de concluir ou cancelar
 @Composable
 private fun TaskCard(
     task: Task,

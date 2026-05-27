@@ -4,8 +4,10 @@ import br.com.mochila.model.DEFAULT_SUBJECT_COLOR_RGB
 import br.com.mochila.model.Falta
 import java.sql.ResultSet
 
+// CRUD e consultas de faltas por disciplina
 object FaltaRepository {
 
+    // Converte linha do ResultSet em Falta (com dados da disciplina)
     private fun ResultSet.toFalta(): Falta? = try {
         val colorRaw = try { getInt("cor_disciplina").let { if (wasNull()) DEFAULT_SUBJECT_COLOR_RGB else it } }
         catch (_: Exception) { DEFAULT_SUBJECT_COLOR_RGB }
@@ -23,6 +25,7 @@ object FaltaRepository {
         null
     }
 
+    // Lista faltas do usuario ordenadas por data
     fun listByUser(userId: Int): List<Falta> {
         val conn = DatabaseHelper.connect() ?: return emptyList()
         return try {
@@ -51,6 +54,7 @@ object FaltaRepository {
         }
     }
 
+    // Busca falta por id
     fun findById(faltaId: Int): Falta? {
         val conn = DatabaseHelper.connect() ?: return null
         return try {
@@ -77,6 +81,7 @@ object FaltaRepository {
         }
     }
 
+    // Registra nova falta
     fun insert(userId: Int, falta: Falta): Boolean {
         val conn = DatabaseHelper.connect() ?: return false
         return try {
@@ -98,6 +103,7 @@ object FaltaRepository {
         }
     }
 
+    // Atualiza disciplina, data ou status da falta
     fun update(userId: Int, falta: Falta): Boolean {
         val conn = DatabaseHelper.connect() ?: return false
         return try {
@@ -121,6 +127,7 @@ object FaltaRepository {
         }
     }
 
+    // Remove falta do usuario
     fun delete(userId: Int, faltaId: Int): Boolean {
         val conn = DatabaseHelper.connect() ?: return false
         return try {
@@ -137,6 +144,7 @@ object FaltaRepository {
         }
     }
 
+    // Conta faltas por disciplina para o usuario
     fun countByUser(userId: Int): Map<Int, Int> {
         val conn = DatabaseHelper.connect() ?: return emptyMap()
         return try {
@@ -159,6 +167,7 @@ object FaltaRepository {
         }
     }
 
+    // Conta faltas em uma disciplina especifica
     fun countBySubject(userId: Int, subjectId: Int): Int {
         val conn = DatabaseHelper.connect() ?: return 0
         return try {
@@ -179,14 +188,14 @@ object FaltaRepository {
         }
     }
 
-    /** Converte YYYY-MM-DD → DD/MM/YYYY para exibição. */
+    // Converte yyyy-MM-dd para dd/MM/yyyy
     fun formatDateForDisplay(dbDate: String): String {
         val parts = dbDate.split("-")
         if (parts.size != 3) return dbDate
         return "${parts[2]}/${parts[1]}/${parts[0]}"
     }
 
-    /** Converte DD/MM/YYYY → YYYY-MM-DD para persistência. */
+    // Converte dd/MM/yyyy para yyyy-MM-dd
     fun formatDateForDb(displayDate: String): String {
         val parts = displayDate.split("/")
         if (parts.size != 3) return displayDate

@@ -43,6 +43,7 @@ import mochila_app.composeapp.generated.resources.Res
 import mochila_app.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.painterResource
 
+// Paleta do cadastro de falta
 private val faltaRegFundoTela = Color(0xFFF8F8F8)
 private val faltaRegLaranja = Color(0xFFFFBA5E)
 private val faltaRegRosa = Color(0xFFFF6694)
@@ -61,6 +62,7 @@ private fun faltaRegFormatDatePt(date: LocalDate): String {
     return "$dd $mon $yy"
 }
 
+// Formulario de nova falta ou edicao
 @Composable
 fun FaltaRegisterScreen(
     userId: Int,
@@ -111,7 +113,7 @@ fun FaltaRegisterScreen(
     LaunchedEffect(faltaId, isEditing) {
         if (isEditing && faltaId != null) presenter.loadFalta(faltaId) else loadedFaltaId = 0
     }
-    // Pré-seleciona matéria quando vem do detalhe da disciplina
+    
     LaunchedEffect(subjects) {
         if (preselectedSubjectId != null && !isEditing && subjects.isNotEmpty()
             && selectedSubjectName == "Selecione uma matéria"
@@ -441,6 +443,7 @@ fun FaltaRegisterScreen(
         )
     }
 
+    // Dialog apos salvar quando disciplina atinge limite de faltas
     absenceLimitWarning?.let { warningText ->
         AlertDialog(
             onDismissRequest = {

@@ -3,6 +3,7 @@ package br.com.mochila.presenter
 import br.com.mochila.data.SubjectRepository
 import br.com.mochila.model.Subject
 
+// Contrato da tela de detalhes da disciplina
 interface SubjectDetailView {
     fun showSubject(subject: Subject)
     fun showDeleteSuccess()
@@ -12,9 +13,11 @@ interface SubjectDetailView {
     fun navigateBack()
 }
 
+// Carrega, edita e exclui uma disciplina
 class SubjectDetailPresenter(private val view: SubjectDetailView) {
 
     fun loadSubject(subjectId: Int) {
+        // Busca a disciplina no repositorio
         val subject = SubjectRepository.findById(subjectId)
         if (subject != null) {
             view.showSubject(subject)
@@ -28,6 +31,7 @@ class SubjectDetailPresenter(private val view: SubjectDetailView) {
     }
 
     fun onDeleteConfirmed(userId: Int, subject: Subject) {
+        // Remove a disciplina do banco
         val success = SubjectRepository.delete(
             userId = userId,
             subjectId = subject.id

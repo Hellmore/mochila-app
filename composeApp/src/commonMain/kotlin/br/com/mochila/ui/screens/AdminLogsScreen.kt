@@ -27,11 +27,13 @@ import mochila_app.composeapp.generated.resources.Res
 import mochila_app.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.painterResource
 
+// Paleta da tela de logs do sistema
 private val alRosa      = Color(0xFFFF6694)
 private val alFundo     = Color(0xFFF8F8F8)
 private val alErroColor = Color(0xFFD32F2F)
 private val alLaranja   = Color(0xFFFFBA5E)
 
+// Visualizacao de logs de acao e erro
 @Composable
 fun AdminLogsScreen(onBack: () -> Unit) {
     var logsAcao   by remember { mutableStateOf<List<LogAcao>>(emptyList()) }

@@ -5,11 +5,12 @@ import br.com.mochila.model.TaskCategory
 import java.io.File
 import java.sql.*
 
+// Acesso centralizado ao SQLite: conexao, migracoes e execucao de SQL
 object DatabaseHelper {
 
     private const val DB_NAME = "mochila.db"
 
-    // Conecta ao banco e inicializa se necessário
+    // Abre conexao e garante schema inicializado
     fun connect(): Connection? {
         return try {
             val conn = DriverManager.getConnection("jdbc:sqlite:$DB_NAME")
@@ -21,7 +22,7 @@ object DatabaseHelper {
         }
     }
 
-    // Cria as tabelas se o banco estiver vazio
+    // Cria tabelas na primeira execucao e aplica migracoes incrementais
     private fun initializeDatabase(conn: Connection) {
         try {
             val meta = conn.metaData
@@ -36,7 +37,7 @@ object DatabaseHelper {
                 val script = resourceUrl?.readText()
                 if (script != null) {
                     val stmt = conn.createStatement()
-                    // Executa o script SQL em lote, separando os comandos
+                    
                     script.split(';').forEach { sqlStatement ->
                         if (sqlStatement.trim().isNotEmpty()) {
                             stmt.addBatch(sqlStatement)
@@ -59,10 +60,12 @@ object DatabaseHelper {
         }
     }
 
+    // Adiciona colunas e tabelas ausentes em bancos ja existentes
     private fun runMigrations(conn: Connection) {
         try {
             val stmt = conn.createStatement()
 
+            // Tabela de tokens para recuperacao de senha
             stmt.execute(
                 """CREATE TABLE IF NOT EXISTS token_recuperacao (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -74,7 +77,7 @@ object DatabaseHelper {
                 )"""
             )
 
-            // Adiciona email_verificado se ainda não existe; marca usuários antigos como verificados
+            // Coluna de e-mail verificado em usuario
             val columns = conn.createStatement()
                 .executeQuery("PRAGMA table_info(usuario)")
             var hasEmailVerificado = false
@@ -91,6 +94,7 @@ object DatabaseHelper {
                 stmt.execute("UPDATE usuario SET email_verificado = 1")
             }
 
+            // Foto de perfil do usuario
             val colsFoto = conn.createStatement().executeQuery("PRAGMA table_info(usuario)")
             var hasFotoPerfil = false
             while (colsFoto.next()) {
@@ -101,6 +105,7 @@ object DatabaseHelper {
                 stmt.execute("ALTER TABLE usuario ADD COLUMN foto_perfil TEXT")
             }
 
+            // Cor RGB da disciplina
             val colsDisc = conn.createStatement().executeQuery("PRAGMA table_info(disciplina)")
             var hasCorRgb = false
             while (colsDisc.next()) {
@@ -115,6 +120,7 @@ object DatabaseHelper {
                 stmt.execute("UPDATE disciplina SET cor_rgb = 3710463 WHERE cor_rgb IS NULL")
             }
 
+            // Vinculo opcional de tarefa com disciplina
             val colsTarefa = conn.createStatement().executeQuery("PRAGMA table_info(tarefa)")
             var hasTarefaIdDisciplina = false
             while (colsTarefa.next()) {
@@ -125,6 +131,7 @@ object DatabaseHelper {
                 stmt.execute("ALTER TABLE tarefa ADD COLUMN id_disciplina INTEGER REFERENCES disciplina(id_disciplina) ON DELETE SET NULL")
             }
 
+            // Campos extras de evento (disciplina, cor, lembrete)
             val colsEvento = conn.createStatement().executeQuery("PRAGMA table_info(evento)")
             var hasIdDisciplina = false
             var hasEventCorRgb = false
@@ -153,6 +160,7 @@ object DatabaseHelper {
                 stmt.execute("ALTER TABLE evento ADD COLUMN lembrete_exibido INTEGER DEFAULT 0")
             }
 
+            // Categoria do evento (prova, seminario, etc.)
             val colsEventoCat = conn.createStatement().executeQuery("PRAGMA table_info(evento)")
             var hasCategoriaEvento = false
             while (colsEventoCat.next()) {
@@ -168,6 +176,7 @@ object DatabaseHelper {
                 )
             }
 
+            // Categoria e prioridade da tarefa
             val colsTarefaMeta = conn.createStatement().executeQuery("PRAGMA table_info(tarefa)")
             var hasCategoriaTarefa = false
             var hasPrioridade = false
@@ -187,6 +196,7 @@ object DatabaseHelper {
                 stmt.execute("ALTER TABLE tarefa ADD COLUMN prioridade TEXT NOT NULL DEFAULT 'MEDIA'")
             }
 
+            // Aulas por semana na disciplina
             val colsDiscAula = conn.createStatement().executeQuery("PRAGMA table_info(disciplina)")
             var hasAulaSemana = false
             while (colsDiscAula.next()) {
@@ -200,6 +210,7 @@ object DatabaseHelper {
                 stmt.execute("ALTER TABLE disciplina ADD COLUMN aula_semana INTEGER NOT NULL DEFAULT 1")
             }
 
+            // Converte hora_aula legada para minutos
             val colsDiscMin = conn.createStatement().executeQuery("PRAGMA table_info(disciplina)")
             var hasHoraAulaEmMinutos = false
             while (colsDiscMin.next()) {
@@ -214,6 +225,7 @@ object DatabaseHelper {
             }
 
             migrateLegacyCacheFiles(conn)
+            // Tabelas de administracao, logs e notificacoes
             stmt.execute(
                 """CREATE TABLE IF NOT EXISTS administrador (
                     id_adm INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -266,6 +278,7 @@ object DatabaseHelper {
                 )"""
             )
 
+            // Recria notificacao se schema antigo nao tiver coluna tipo
             val colsNotif = conn.createStatement().executeQuery("PRAGMA table_info(notificacao)")
             var hasNotifTipo = false
             while (colsNotif.next()) {
@@ -295,6 +308,7 @@ object DatabaseHelper {
         }
     }
 
+    // Importa arquivos de cache legados para o banco e remove os arquivos
     private fun migrateLegacyCacheFiles(conn: Connection) {
         try {
             migrateEnumCacheFile(
@@ -327,6 +341,7 @@ object DatabaseHelper {
         }
     }
 
+    // Atualiza coluna enum a partir de arquivo id=valor
     private fun migrateEnumCacheFile(
         conn: Connection,
         fileName: String,
@@ -356,6 +371,7 @@ object DatabaseHelper {
         file.delete()
     }
 
+    // Atualiza coluna inteira a partir de arquivo id=valor
     private fun migrateIntCacheFile(
         conn: Connection,
         fileName: String,
@@ -384,16 +400,7 @@ object DatabaseHelper {
         file.delete()
     }
 
-    // ============================================================
-    // Funções auxiliares
-    // ============================================================
-
-    /**
-     * Executa consultas SELECT no banco (retorna ResultSet)
-     *
-     * @param sql comando SQL (ex: "SELECT * FROM disciplina WHERE id_usuario = ?")
-     * @param params lista de parâmetros (opcional)
-     */
+    // Executa SELECT parametrizado e retorna linhas como mapas
     fun executeQuery(sql: String, params: List<Any> = emptyList()): List<Map<String, Any?>> {
         val conn = connect() ?: return emptyList()
         val results = mutableListOf<Map<String, Any?>>()
@@ -424,13 +431,7 @@ object DatabaseHelper {
         return results
     }
 
-    /**
-     * Executa comandos INSERT, UPDATE ou DELETE
-     *
-     * @param sql comando SQL (ex: "INSERT INTO disciplina (...) VALUES (?, ?, ...)")
-     * @param params lista de parâmetros (opcional)
-     * @return true se o comando for executado com sucesso
-     */
+    // Executa INSERT/UPDATE/DELETE parametrizado
     fun executeUpdate(sql: String, params: List<Any?> = emptyList()): Boolean {
         val conn = connect() ?: return false
         return try {
@@ -450,8 +451,8 @@ object DatabaseHelper {
         }
     }
 
-    // Fecha a conexão (SQLite fecha automaticamente ao sair de escopo)
+    // Encerra conexao (reservado para uso futuro)
     fun close() {
-        // Nenhuma ação necessária para SQLite
+        
     }
 }

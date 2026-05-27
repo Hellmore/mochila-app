@@ -28,10 +28,12 @@ import mochila_app.composeapp.generated.resources.Res
 import mochila_app.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.painterResource
 
+// Paleta da gestao de usuarios
 private val auRosa    = Color(0xFFFF6694)
 private val auFundo   = Color(0xFFF8F8F8)
 private val auLaranja = Color(0xFFFFBA5E)
 
+// Lista de usuarios para o admin
 @Composable
 fun AdminUsersScreen(
     currentUserId: Int,

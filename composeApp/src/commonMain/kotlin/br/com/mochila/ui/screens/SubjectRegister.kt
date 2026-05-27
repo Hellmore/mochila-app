@@ -55,7 +55,7 @@ private val monthNamesPt = listOf(
     "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
 )
 
-/** Grade 4×6 — tons alinhados ao app e ao [Seletor de cores](https://www.figma.com/design/UlejWl0a4xUohJj42JbzuQ/App---Mochila?node-id=78-202). */
+
 private val subjectColorPickerPalette: List<Color> = listOf(
     Color(0xFFFFDE59), Color(0xFFFF6694), Color(0xFFFFBA5E), Color(0xFF65D145), Color(0xFFCB6CE6), Color(0xFF38B6FF),
     Color(0xFFFF9800), Color(0xFFE91E63), Color(0xFFFF5722), Color(0xFF4CAF50), Color(0xFF9C27B0), Color(0xFF2196F3),
@@ -161,6 +161,7 @@ private fun ColorPickerOverlay(
     onDismiss: () -> Unit,
     onPick: (Int) -> Unit,
 ) {
+    // Modal com paleta de cores da materia
     if (!visible) return
     val scrimInteraction = remember { MutableInteractionSource() }
     val cardInteraction = remember { MutableInteractionSource() }
@@ -306,6 +307,7 @@ private fun DesktopProfileStrip(
     }
 }
 
+// Formulario de cadastro e edicao de materias
 @Composable
 fun SubjectRegisterScreen(
     userId: Int,
@@ -317,6 +319,7 @@ fun SubjectRegisterScreen(
     isEditing: Boolean = false,
     subjectId: Int? = null,
 ) {
+    // Campos do formulario de cadastro ou edicao
     var name by remember { mutableStateOf("") }
     var teacher by remember { mutableStateOf("") }
     var minFrequency by remember { mutableStateOf("") }
@@ -336,6 +339,7 @@ fun SubjectRegisterScreen(
 
     var semesterOptions by remember { mutableStateOf<List<String>>(emptyList()) }
 
+    // Carrega semestres ja usados pelo usuario
     LaunchedEffect(userId) {
         semesterOptions = SubjectRepository.listDistinctSemesters(userId)
     }
@@ -349,6 +353,7 @@ fun SubjectRegisterScreen(
         semester = if (digits.isNotEmpty()) "$digits°" else digits
     }
 
+    // Presenter com validacao e persistencia da materia
     val presenter = remember {
         object : SubjectRegisterView {
             override fun showValidationError(msg: String) {
@@ -373,6 +378,7 @@ fun SubjectRegisterScreen(
     }
 
     LaunchedEffect(subjectId, isEditing) {
+        // Preenche campos ao editar uma materia existente
         if (isEditing && subjectId != null) {
             val subject = presenter.loadSubjectForEdit(subjectId)
             subject?.let { s ->
@@ -549,6 +555,7 @@ fun SubjectRegisterScreen(
 
     @Composable
     fun FormBody(modifier: Modifier = Modifier, fieldsMaxWidth: Dp? = null) {
+        // Corpo rolavel com todos os campos da materia
         val widthCap = fieldsMaxWidth?.let { Modifier.widthIn(max = it) } ?: Modifier
         Box(
             modifier = modifier.fillMaxWidth(),
@@ -733,6 +740,7 @@ fun SubjectRegisterScreen(
     }
 
     if (showDeleteConfirmation) {
+        // Confirmacao antes de excluir a materia
         AlertDialog(
             onDismissRequest = { showDeleteConfirmation = false },
             title = {
@@ -775,6 +783,7 @@ fun SubjectRegisterScreen(
         )
         val wide = maxWidth >= 700.dp
         if (wide) {
+            // Desktop: sidebar rosa e formulario a direita
             Row(Modifier.fillMaxSize()) {
                 Box(Modifier.weight(0.4f).fillMaxHeight()) {
                     DesktopProfileStrip(onNavigateToAccountSettings = onNavigateToAccountSettings)
@@ -816,6 +825,7 @@ fun SubjectRegisterScreen(
                 }
             }
         } else {
+            // Mobile: cabecalho laranja e formulario abaixo
             Column(Modifier.fillMaxSize()) {
                 OrangeHeaderBar(includeCenterProfile = true)
                 FormBody(modifier = Modifier.weight(1f))
@@ -827,6 +837,7 @@ fun SubjectRegisterScreen(
         }
 
         ColorPickerOverlay(
+            // Sobreposicao de selecao de cor da materia
             visible = showColorPicker,
             selectedRgb = subjectColorRgb,
             onDismiss = { showColorPicker = false },

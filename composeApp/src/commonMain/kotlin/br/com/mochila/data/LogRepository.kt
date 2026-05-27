@@ -3,8 +3,10 @@ package br.com.mochila.data
 import br.com.mochila.model.LogAcao
 import br.com.mochila.model.LogErro
 
+// Registro e consulta de logs de acao e erro
 object LogRepository {
 
+    // Grava acao do usuario sobre uma tabela
     fun insertAcao(
         userId: Int,
         acao: String,
@@ -19,6 +21,7 @@ object LogRepository {
         )
     }
 
+    // Grava erro de aplicacao, com usuario opcional
     fun insertErro(
         modulo: String,
         mensagem: String,
@@ -30,6 +33,7 @@ object LogRepository {
         )
     }
 
+    // Lista acoes recentes com nome do usuario
     fun listAcoes(limit: Int = 200): List<LogAcao> {
         val rows = DatabaseHelper.executeQuery(
             """SELECT la.id_acao, la.id_usuario, la.acao, la.descricao,
@@ -54,6 +58,7 @@ object LogRepository {
         }
     }
 
+    // Lista erros recentes com nome do usuario
     fun listErros(limit: Int = 200): List<LogErro> {
         val rows = DatabaseHelper.executeQuery(
             """SELECT le.id_erro, le.id_usuario, le.modulo, le.mensagem, le.criado_em,

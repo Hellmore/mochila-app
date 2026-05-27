@@ -5,6 +5,7 @@ import kotlinx.coroutines.withContext
 import java.net.HttpURLConnection
 import java.net.URL
 
+// Consulta mailcheck.ai via HttpURLConnection
 actual suspend fun checkDisposableApi(domain: String): Boolean = withContext(Dispatchers.IO) {
     try {
         val url = URL("https://api.mailcheck.ai/domain/$domain")

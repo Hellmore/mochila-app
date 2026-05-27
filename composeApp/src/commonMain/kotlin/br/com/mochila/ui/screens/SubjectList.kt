@@ -161,6 +161,7 @@ private fun SubjectListBottomBar(
     }
 }
 
+// Lista de materias com busca e grade responsiva
 @Composable
 fun SubjectListScreen(
     userId: Int,
@@ -173,6 +174,7 @@ fun SubjectListScreen(
     onNavigateToAccountSettings: () -> Unit,
     onLogout: () -> Unit,
 ) {
+    // Lista de materias, faltas e termo de busca
     var subjects by remember { mutableStateOf<List<Subject>>(emptyList()) }
     var absencesBySubject by remember { mutableStateOf<Map<Int, Int>>(emptyMap()) }
     var searchQuery by remember { mutableStateOf("") }
@@ -182,6 +184,7 @@ fun SubjectListScreen(
         else subjects.filter { it.name.contains(searchQuery, ignoreCase = true) }
     }
 
+    // Presenter reutilizado da home para listar materias
     val presenter = remember {
         object : HomeView {
             override fun showSubjects(list: List<Subject>) {
@@ -197,7 +200,7 @@ fun SubjectListScreen(
             }
 
             override fun showPendingTasks(tasks: List<Task>) {
-                /* não usado nesta tela */
+                
             }
         }.let { view -> HomePresenter(view) }
     }
@@ -227,6 +230,7 @@ fun SubjectListScreen(
         val isWide = maxWidth >= 700.dp
 
         if (isWide) {
+            // Grade com tres colunas no desktop
             SubjectListDesktopLayout(
                 subjects = subjects,
                 absencesBySubject = absencesBySubject,
@@ -242,6 +246,7 @@ fun SubjectListScreen(
                 onSubjectClick = { id -> presenter.onSubjectClicked(id) },
             )
         } else {
+            // Grade com duas colunas no mobile
             SubjectListMobileLayout(
                 subjects = subjects,
                 absencesBySubject = absencesBySubject,
@@ -279,6 +284,7 @@ private fun SubjectListMobileLayout(
     val name = user?.name.orEmpty()
 
     Column(Modifier.fillMaxSize()) {
+        // Cabecalho laranja com perfil e data
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -553,6 +559,7 @@ private fun SubjectGrid(
     onSubjectClick: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    // Estado vazio: apenas botao de adicionar materia
     if (allSubjectsEmpty) {
         val gridSpacing = 16.dp
         BoxWithConstraints(modifier = modifier.verticalScroll(rememberScrollState())) {
@@ -581,6 +588,7 @@ private fun SubjectGrid(
     }
 
     if (noSearchResults) {
+        // Busca sem resultados
         BoxWithConstraints(modifier = modifier.verticalScroll(rememberScrollState())) {
             val gridSpacing = 16.dp
             val cellWidth =
@@ -612,6 +620,7 @@ private fun SubjectGrid(
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
+        // Celula fixa para cadastrar nova materia
         item {
             AddSubjectCell(
                 onClick = onNavigateToAdd,

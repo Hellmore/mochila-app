@@ -23,10 +23,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.com.mochila.data.UserSession
 
+// Selecao e decodificacao de foto por plataforma
 expect fun pickImageFile(userId: Int): String?
+
 
 expect fun decodeProfilePhotoPainter(photoPath: String): Painter?
 
+// Avatar circular com foto ou inicial do nome
 @Composable
 fun ProfileAvatar(
     name: String,

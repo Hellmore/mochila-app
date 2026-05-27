@@ -20,6 +20,7 @@ import mochila_app.composeapp.generated.resources.Res
 import mochila_app.composeapp.generated.resources.bell
 import org.jetbrains.compose.resources.painterResource
 
+// Icone de sino com badge de nao lidas
 @Composable
 fun NotificationBell(
     unreadCount: Int,

@@ -1031,25 +1031,71 @@ Inserir capturas de tela das telas abaixo com legenda descritiva:
 
 ### 7.1. Análise Crítica dos Resultados
 
-O Mochila HUB atingiu o **pacote básico funcional** em ambiente multiplataforma, com arquitetura clara (MVP + SQLite local) e **alta cobertura de testes na camada de apresentação (96%)**. A modelagem UML e o esquema relacional estão alinhados e contemplam evolução SaaS (módulos, pagamentos, logs). Pontos ainda em maturação: integração completa de pagamentos, logs transversais (UC21) em todos os fluxos e cobertura de infraestrutura (`DatabaseHelper`, `EmailService`).
+O **Mochila HUB** cumpriu o objetivo geral de centralizar ferramentas de apoio à rotina acadêmica em uma aplicação **multiplataforma** (Android e desktop JVM), com arquitetura em camadas **MVP**, persistência local em **SQLite** e interface compartilhada em **Compose Multiplatform**.
+
+**Entregas consolidadas**
+
+| Área | Resultado |
+|------|-----------|
+| Pacote básico (RF04) | Calendário de eventos, lista de tarefas e controle de faltas por disciplina operacionais |
+| Autenticação (RF01–RF03) | Cadastro com verificação de e-mail (SendGrid), login por perfil, recuperação de senha com token de uso único e expiração |
+| Regras de negócio | Senha com PBKDF2, vínculo de dados ao usuário, alerta de faltas em ≥ 75% do limite (RF13), priorização de tarefas (RF09) |
+| Evoluções recentes | Categorização de eventos e tarefas (RF10), filtros por mês/disciplina em eventos, bloqueio de e-mails descartáveis no cadastro, painel de notificações in-app (faltas e tarefas), gestão administrativa de usuários e consulta de logs de erro |
+| Qualidade | Suíte extensa de testes unitários nos *presenters* (cobertura reportada de **96%** na camada de apresentação) e repositórios parcialmente exercitados |
+
+**Limitações e lacunas**
+
+- **RF07 (notificações por e-mail ou push):** implementado monitoramento periódico com alertas **in-app** (`NotificationMonitor`), sem envio automático por e-mail ou push nativo no Android.
+- **RF16 / RF17 (SaaS):** tabelas `modulo`, `assinatura` e `pagamento` modeladas no banco; fluxo de assinatura e gateway de pagamento permanecem conceituais.
+- **RF14 (pesquisa e filtros):** filtros presentes em eventos, disciplinas e faltas, porém sem busca textual unificada em todos os módulos.
+- **Cobertura de testes:** camada `data` (~57%), `util` (~37%) e classes de infraestrutura (`DatabaseHelper`, `UserSession`, `EmailService`) com cobertura muito baixa ou nula; a suíte exige manutenção contínua quando a interface dos *presenters* evolui.
+- **RNF03 (disponibilidade 24×7):** o modelo **offline-first** atende uso local, mas não substitui implantação em nuvem com sincronização entre dispositivos.
+
+Em síntese, o produto demonstra **viabilidade técnica e aderência ao escopo acadêmico** do pacote básico, com base sólida para evolução comercial (módulos pagos, auditoria e perfil administrador), ainda que parte dos requisitos de notificação externa, pagamento e alta disponibilidade dependa de trabalhos futuros.
 
 ### 7.2. Dificuldades Encontradas
 
-- Configuração do **SendGrid** em ambiente local sem expor credenciais.
-- **KMP + JDBC/SQLite** no desktop e Android com um único módulo Gradle.
-- Navegação manual por pilha de telas, exigindo disciplina para manter fluxos consistentes.
-- Testes de banco e serviços externos com baixa cobertura automatizada.
-- Conciliação entre requisito de disponibilidade 24×7 e implementação **offline-first** atual.
+Durante o desenvolvimento, a equipe enfrentou desafios técnicos e de processo recorrentes em projetos KMP de porte acadêmico:
+
+1. **Integração SendGrid** — Configurar envio de e-mails (verificação de conta e recuperação de senha) em ambiente local sem versionar chaves de API (`sendgrid.properties` / variáveis de ambiente) e tratar falhas de rede de forma amigável ao usuário.
+
+2. **Kotlin Multiplatform + SQLite JDBC** — Manter um único módulo Gradle (`composeApp`) com código compartilhado, drivers JDBC no *common* e *entry points* distintos para Android e desktop exigiu atenção a caminhos de banco, migrações de esquema e comportamento em cada plataforma.
+
+3. **Navegação manual** — A pilha de telas em `App.kt` (`screenStack`) simplificou o protótipo, mas aumentou o risco de inconsistência entre fluxos (parâmetros pendentes, retorno de telas) e a necessidade de atualizar testes que simulam contratos de *View*.
+
+4. **Validação de e-mails temporários** — Lista estática de domínios descartáveis (`TempEmailValidator`) complementada por verificação assíncrona via API demandou tratamento de latência e mensagens de erro no cadastro.
+
+5. **Notificações sem push** — Implementar lembretes de faltas e tarefas apenas no banco local e na UI, com verificação periódica em segundo plano, sem infraestrutura de *push* ou agendamento nativo no Android.
+
+6. **Cobertura desigual de testes** — Alta cobertura nos *presenters* contrastou com baixa cobertura em persistência (`DatabaseHelper`), sessão (`UserSession`) e serviço de e-mail; testes de repositório dependem de banco em memória e setup compartilhado (`RepositoryTestBase`).
+
+7. **Conciliação de requisitos** — Equilibrar o RNF de disponibilidade contínua com a decisão de **dados locais** e ausência de backend centralizado; logs de ação ainda não estão transversais a todos os casos de uso (UC21).
+
+8. **Evolução incremental do backlog** — Entregas em *pull requests* (faltas, priorização, logs administrativos, notificações) exigiram retrabalho em modelagem, migrações SQLite e alinhamento da documentação do relatório com o código.
 
 ### 7.3. Sugestões para Trabalhos Futuros
 
-1. API backend e sincronização em nuvem.
-2. Notificações push no Android.
-3. Integração real com gateway de pagamento (Pix/cartão).
-4. Painel administrador web para UC16.
-5. Testes de integração para `DatabaseHelper` e contrato SendGrid.
-6. Categorização e filtros avançados (RF10, RF14) com UX dedicada.
-7. Dashboard de analytics de faltas e desempenho acadêmico.
+Com base nas lacunas identificadas e no roadmap previsto no projeto, sugere-se:
+
+1. **Backend e sincronização** — API REST ou GraphQL com autenticação centralizada, backup de dados e uso em múltiplos dispositivos (atendimento pleno ao RNF03).
+
+2. **Notificações push e e-mail para eventos** — Completar RF07 com Firebase Cloud Messaging no Android e lembretes por SendGrid para eventos próximos do prazo.
+
+3. **Gateway de pagamento** — Integrar Pix/cartão ao fluxo de assinatura de módulos (RF16), com registro em `log_pagamento` e tratamento de webhooks.
+
+4. **Painel web do administrador** — Interface dedicada para UC16 (CRUD de módulos) e analytics de uso, complementando as telas já existentes no app (`AdminUsersScreen`, `AdminLogsScreen`).
+
+5. **Testes de integração** — Cobrir `DatabaseHelper` (migrações e FKs), contrato do `EmailService` com *mocks* do SendGrid e estabilizar a suíte JVM após mudanças nas interfaces de *View*.
+
+6. **Navegação declarativa** — Adotar Navigation Compose (ou equivalente KMP) para reduzir complexidade da pilha manual e facilitar testes de fluxo.
+
+7. **RF14 com UX dedicada** — Busca global, filtros combinados (status, categoria, período) e ordenação persistente em calendário, tarefas e faltas.
+
+8. **Dashboard acadêmico** — Gráficos de frequência, tarefas concluídas vs. pendentes e projeção de risco de reprovação por disciplina.
+
+9. **LGPD operacional** — Termo de consentimento, exportação e exclusão de dados do titular, além do que já é garantido por hash de senha e exclusão em cascata.
+
+10. **Manutenção da lista de e-mails descartáveis** — Atualização periódica do `TempEmailValidator` ou serviço centralizado para reduzir cadastros fraudulentos.
 
 ---
 

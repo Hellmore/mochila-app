@@ -11,6 +11,7 @@ import org.junit.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
+// Testa recuperacao de senha, verificacao de codigo e nova senha
 class RecoveryPresenterTest {
 
     @Before fun setUp() {
@@ -21,8 +22,7 @@ class RecoveryPresenterTest {
 
     @After fun tearDown() { unmockkAll() }
 
-    // ── RecoveryPresenter ────────────────────────────────────────────────
-
+    // Envio do codigo de recuperacao
     @Test fun `sendRecoveryCode com campos em branco retorna erro`() {
         val result = RecoveryPresenter().sendRecoveryCode("", "a@b.com")
         assertNotNull(result)
@@ -49,8 +49,7 @@ class RecoveryPresenterTest {
         assertNull(result)
     }
 
-    // ── CodeVerificationPresenter ────────────────────────────────────────
-
+    // Verificacao do codigo de recuperacao
     @Test fun `verifyCode em branco retorna erro`() {
         val result = CodeVerificationPresenter().verifyCode("a@b.com", "")
         assertNotNull(result)
@@ -73,8 +72,7 @@ class RecoveryPresenterTest {
         assertNull(result)
     }
 
-    // ── NewPasswordPresenter ─────────────────────────────────────────────
-
+    // Redefinicao de senha
     @Test fun `resetPassword com senhas diferentes retorna erro`() {
         val result = NewPasswordPresenter().resetPassword("a@b.com", "Nova@123", "Diferente@1")
         assertNotNull(result)
@@ -99,8 +97,7 @@ class RecoveryPresenterTest {
         assertNull(result)
     }
 
-    // ── EmailVerificationPresenter ───────────────────────────────────────
-
+    // Verificacao de email no cadastro
     @Test fun `verifyCode de verificacao em branco retorna erro`() {
         val result = EmailVerificationPresenter().verifyCode("a@b.com", "")
         assertNotNull(result)

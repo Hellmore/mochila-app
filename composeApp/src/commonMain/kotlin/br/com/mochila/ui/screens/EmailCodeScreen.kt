@@ -28,16 +28,19 @@ import org.jetbrains.compose.resources.painterResource
 private val codeFormMaxWidth = 360.dp
 private val codeFormHorizontalMargin = 48.dp
 
+// Tela para informar o codigo recebido por e-mail na recuperacao
 @Composable
 fun EmailCodeScreen(
     email: String,
     onBackToRecovery: () -> Unit,
     onNavigateToNewPassword: () -> Unit,
 ) {
+    // Cores da tela de codigo de recuperacao
     val fundoTela = Color(0xFFF8F8F8)
     val rosa = Color(0xFFFF6694)
     val logoArea = Color(0xFFFF6694)
 
+    // Codigo de 6 digitos e estado de carregamento
     var code by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(false) }
@@ -45,6 +48,7 @@ fun EmailCodeScreen(
     val scope = rememberCoroutineScope()
     val presenter = remember { CodeVerificationPresenter() }
 
+    // Valida o codigo recebido por e-mail
     fun onVerify() {
         errorMessage = null
         scope.launch {
@@ -70,7 +74,7 @@ fun EmailCodeScreen(
 
         if (isWide) {
             Row(modifier = Modifier.fillMaxSize()) {
-                // Painel esquerdo com logo
+                // Painel lateral com identidade visual
                 Box(
                     modifier = Modifier
                         .weight(0.4f)
@@ -98,7 +102,8 @@ fun EmailCodeScreen(
                     }
                 }
 
-                // Painel direito com formulário
+                
+                // Area do formulario de verificacao
                 Box(
                     modifier = Modifier
                         .weight(0.6f)
@@ -218,6 +223,7 @@ fun EmailCodeScreen(
                 }
             }
         } else {
+            // Formulario compacto para telas estreitas
             Image(
                 painter = painterResource(Res.drawable.background),
                 contentDescription = null,

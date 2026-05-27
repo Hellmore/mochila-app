@@ -79,6 +79,7 @@ private val monthNamesPt = listOf(
     "Jul", "Ago", "Set", "Out", "Nov", "Dez",
 )
 
+// Tela inicial com resumo de tarefas, faltas, eventos e materias
 @Composable
 fun HomeScreen(
     userId: Int,
@@ -89,18 +90,20 @@ fun HomeScreen(
     onNavigateToTasksList: () -> Unit,
     onNavigateToFaltasList: (String) -> Unit,
     onNavigateToEventsList: () -> Unit,
-    onNavigateToTaskEdit: (Int) -> Unit = {},
+    onNavigateToTaskDetail: (Int) -> Unit = {},
     onNavigateToEventEdit: (Int) -> Unit = {},
     onNavigateToAccountSettings: () -> Unit,
     onLogout: () -> Unit,
     notifVersion: Int = 0,
 ) {
+    // Data atual e indice do dia na semana
     val today = remember {
         Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
     }
     val todayDayIndex = remember(today) { today.dayOfWeek.ordinal }
 
     val scope = rememberCoroutineScope()
+    // Estado do dashboard: materias, tarefas, faltas, eventos e notificacoes
     var selectedDayIndex by remember { mutableStateOf(todayDayIndex) }
     var subjects by remember { mutableStateOf<List<Subject>>(emptyList()) }
     var tasks by remember { mutableStateOf<List<Task>>(emptyList()) }
@@ -111,6 +114,7 @@ fun HomeScreen(
     var notifRefreshKey by remember { mutableStateOf(0) }
     var dataRefreshKey by remember { mutableStateOf(0) }
 
+    // Carrega dados principais do usuario ao abrir ou atualizar
     LaunchedEffect(userId, dataRefreshKey) {
         subjects = SubjectRepository.listByUser(userId)
         tasks = TaskRepository.listByUser(userId)
@@ -125,12 +129,14 @@ fun HomeScreen(
             .take(3)
     }
 
+    // Atualiza lista de notificacoes quando a versao muda
     LaunchedEffect(userId, notifRefreshKey, notifVersion) {
         val loaded = withContext(Dispatchers.IO) { NotificationRepository.listByUser(userId) }
         println("🔔 [HomeScreen] notifVersion=$notifVersion → ${loaded.size} notificações carregadas")
         notifications = loaded
     }
 
+    // Recarrega notificacoes a cada minuto
     LaunchedEffect(userId) {
         while (true) {
             delay(60_000)
@@ -145,6 +151,7 @@ fun HomeScreen(
         (0..6).map { monday.plus(it, DateTimeUnit.DAY) }
     }
 
+    // Escolhe layout desktop ou mobile conforme largura
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
@@ -166,7 +173,7 @@ fun HomeScreen(
                 onNavigateToSubjectsList = onNavigateToSubjectsList,
                 onNavigateToSubject = onNavigateToSubject,
                 onNavigateToTasksList = onNavigateToTasksList,
-                onNavigateToTaskEdit = onNavigateToTaskEdit,
+                onNavigateToTaskDetail = onNavigateToTaskDetail,
                 onNavigateToFaltasList = onNavigateToFaltasList,
                 onNavigateToEventsList = onNavigateToEventsList,
                 onNavigateToEventEdit = onNavigateToEventEdit,
@@ -198,7 +205,7 @@ fun HomeScreen(
                 onNavigateToSubjectsList = onNavigateToSubjectsList,
                 onNavigateToSubject = onNavigateToSubject,
                 onNavigateToTasksList = onNavigateToTasksList,
-                onNavigateToTaskEdit = onNavigateToTaskEdit,
+                onNavigateToTaskDetail = onNavigateToTaskDetail,
                 onNavigateToFaltasList = onNavigateToFaltasList,
                 onNavigateToEventsList = onNavigateToEventsList,
                 onNavigateToEventEdit = onNavigateToEventEdit,
@@ -210,6 +217,7 @@ fun HomeScreen(
         }
 
         if (showNotificationPanel) {
+            // Painel flutuante de notificacoes
             NotificationPanel(
                 notifications = notifications,
                 onMarkAllAsRead = {
@@ -242,13 +250,14 @@ private fun HomeMobileLayout(
     onNavigateToTasksList: () -> Unit,
     onNavigateToFaltasList: (String) -> Unit,
     onNavigateToEventsList: () -> Unit,
-    onNavigateToTaskEdit: (Int) -> Unit = {},
+    onNavigateToTaskDetail: (Int) -> Unit = {},
     onNavigateToEventEdit: (Int) -> Unit = {},
     onNavigateToAccountSettings: () -> Unit,
     unreadCount: Int = 0,
     onOpenNotifications: () -> Unit = {},
     onRefresh: () -> Unit = {},
 ) {
+    // Cabecalho, conteudo rolavel e barra inferior
     Column(Modifier.fillMaxSize()) {
         HomeMobileHeader(
             today = today,
@@ -269,7 +278,7 @@ private fun HomeMobileLayout(
             onNavigateToSubjectsList = onNavigateToSubjectsList,
             onNavigateToSubject = onNavigateToSubject,
             onNavigateToTasksList = onNavigateToTasksList,
-            onNavigateToTaskEdit = onNavigateToTaskEdit,
+            onNavigateToTaskDetail = onNavigateToTaskDetail,
             onNavigateToFaltasList = onNavigateToFaltasList,
             onNavigateToEventsList = onNavigateToEventsList,
             onNavigateToEventEdit = onNavigateToEventEdit,
@@ -305,7 +314,7 @@ private fun HomeDesktopLayout(
     onNavigateToTasksList: () -> Unit,
     onNavigateToFaltasList: (String) -> Unit,
     onNavigateToEventsList: () -> Unit,
-    onNavigateToTaskEdit: (Int) -> Unit = {},
+    onNavigateToTaskDetail: (Int) -> Unit = {},
     onNavigateToEventEdit: (Int) -> Unit = {},
     onNavigateToAccountSettings: () -> Unit,
     unreadCount: Int = 0,
@@ -317,7 +326,7 @@ private fun HomeDesktopLayout(
     val dateLabel = "${today.dayOfMonth.toString().padStart(2, '0')} ${monthNamesPt[today.monthNumber - 1]} ${(today.year % 100).toString().padStart(2, '0')}"
 
     Row(Modifier.fillMaxSize()) {
-        // Sidebar permanente
+        // Coluna rosa com logo e perfil do usuario
         Box(
             modifier = Modifier
                 .weight(0.4f)
@@ -373,7 +382,8 @@ private fun HomeDesktopLayout(
             }
         }
 
-        // Área de conteúdo
+        
+        // Area principal com calendario e cards do dashboard
         Box(
             modifier = Modifier
                 .weight(0.6f)
@@ -390,7 +400,7 @@ private fun HomeDesktopLayout(
             Column(
                 modifier = Modifier.fillMaxSize(),
             ) {
-            // Cabeçalho desktop: data + calendário + sino
+            
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -431,7 +441,7 @@ private fun HomeDesktopLayout(
                 onNavigateToSubjectsList = onNavigateToSubjectsList,
                 onNavigateToSubject = onNavigateToSubject,
                 onNavigateToTasksList = onNavigateToTasksList,
-                onNavigateToTaskEdit = onNavigateToTaskEdit,
+                onNavigateToTaskDetail = onNavigateToTaskDetail,
                 onNavigateToFaltasList = onNavigateToFaltasList,
                 onNavigateToEventsList = onNavigateToEventsList,
                 onNavigateToEventEdit = onNavigateToEventEdit,
@@ -464,7 +474,7 @@ private fun HomeDashboardContent(
     onNavigateToSubjectsList: () -> Unit,
     onNavigateToSubject: (Int) -> Unit,
     onNavigateToTasksList: () -> Unit,
-    onNavigateToTaskEdit: (Int) -> Unit,
+    onNavigateToTaskDetail: (Int) -> Unit,
     onNavigateToFaltasList: (String) -> Unit,
     onNavigateToEventsList: () -> Unit,
     onNavigateToEventEdit: (Int) -> Unit,
@@ -486,6 +496,7 @@ private fun HomeDashboardContent(
         contentPadding = PaddingValues(vertical = 20.dp),
         verticalArrangement = Arrangement.spacedBy(28.dp),
     ) {
+        // Secao de atividades do dia selecionado
         item {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
@@ -500,12 +511,13 @@ private fun HomeDashboardContent(
                     onDaySelected = onDaySelected,
                     tasks = tasksForDay,
                     onVerMais = onNavigateToTasksList,
-                    onTaskClick = onNavigateToTaskEdit,
+                    onTaskClick = onNavigateToTaskDetail,
                 )
             }
         }
 
         item {
+            // Secao de controle de faltas por materia
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -534,6 +546,7 @@ private fun HomeDashboardContent(
         }
 
         item {
+            // Secao de proximos eventos agendados
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -556,6 +569,7 @@ private fun HomeDashboardContent(
         }
 
         item {
+            // Lista resumida de materias cadastradas
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -680,6 +694,7 @@ private fun AtividadesCard(
     onVerMais: () -> Unit,
     onTaskClick: (Int) -> Unit = {},
 ) {
+    // Card com seletor de dias da semana e tarefas do dia
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -990,6 +1005,7 @@ private fun HomeBottomBar(
     onNavigateToAdd: () -> Unit,
     onRefresh: () -> Unit = {},
 ) {
+    // Barra fixa com menu, adicionar e atualizar home
     Row(
         modifier = Modifier
             .fillMaxWidth()

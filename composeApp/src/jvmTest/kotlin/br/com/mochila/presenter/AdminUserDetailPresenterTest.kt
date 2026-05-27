@@ -10,6 +10,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
+// Testa detalhe de usuario, promocao admin e exclusao na area admin
 class AdminUserDetailPresenterTest {
 
     private val view = mockk<AdminUserDetailView>(relaxed = true)
@@ -31,6 +32,7 @@ class AdminUserDetailPresenterTest {
 
     @After fun tearDown() { unmockkAll() }
 
+    // Carregamento do usuario
     @Test fun `loadUser existente chama showUser com stats`() {
         every { UserRepository.findSummaryById(2) } returns regularUser
         every { AdminRepository.getUserStats(2) } returns defaultStats
@@ -45,6 +47,7 @@ class AdminUserDetailPresenterTest {
         verify(exactly = 0) { view.showUser(any(), any()) }
     }
 
+    // Alternar status de administrador
     @Test fun `toggleAdmin auto-remocao exibe erro`() {
         presenter.toggleAdmin(currentAdminId = 1, target = adminUser)
         verify { view.showActionError(any()) }
@@ -75,6 +78,7 @@ class AdminUserDetailPresenterTest {
         verify { view.showActionError(any()) }
     }
 
+    // Exclusao de usuario
     @Test fun `deleteUser auto-exclusao exibe erro`() {
         presenter.deleteUser(currentAdminId = 1, target = adminUser)
         verify { view.showActionError(any()) }

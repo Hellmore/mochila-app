@@ -9,6 +9,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
+// Testa CRUD, contagem e conversao de datas de faltas
 class FaltaRepositoryTest : RepositoryTestBase() {
 
     private val userId = 1
@@ -34,6 +35,7 @@ class FaltaRepositoryTest : RepositoryTestBase() {
         status = "Nao Justificada",
     )
 
+    // Insercao e listagem
     @Test fun `insert retorna true`() {
         assertTrue(FaltaRepository.insert(userId, sampleFalta()))
     }
@@ -48,6 +50,7 @@ class FaltaRepositoryTest : RepositoryTestBase() {
         assertEquals(0, FaltaRepository.listByUser(userId).size)
     }
 
+    // Exclusao
     @Test fun `delete remove falta`() {
         FaltaRepository.insert(userId, sampleFalta())
         val falta = FaltaRepository.listByUser(userId).first()
@@ -59,6 +62,7 @@ class FaltaRepositoryTest : RepositoryTestBase() {
         assertFalse(FaltaRepository.delete(userId, 99999))
     }
 
+    // Contagem por disciplina
     @Test fun `countByUser retorna contagem por disciplina`() {
         FaltaRepository.insert(userId, sampleFalta("2025-06-10"))
         FaltaRepository.insert(userId, sampleFalta("2025-06-11"))
@@ -71,6 +75,7 @@ class FaltaRepositoryTest : RepositoryTestBase() {
         assertEquals(1, FaltaRepository.countBySubject(userId, subjectId))
     }
 
+    // Conversao de datas
     @Test fun `formatDateForDisplay converte YYYY-MM-DD para DD-MM-YYYY`() {
         assertEquals("10/06/2025", FaltaRepository.formatDateForDisplay("2025-06-10"))
     }

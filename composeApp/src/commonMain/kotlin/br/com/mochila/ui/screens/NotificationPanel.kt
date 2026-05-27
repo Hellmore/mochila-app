@@ -37,11 +37,13 @@ import androidx.compose.ui.unit.sp
 import br.com.mochila.model.Notification
 import br.com.mochila.model.NotificationType
 
+// Cores do painel lateral de notificacoes
 private val PanelPink = Color(0xFFFF6694)
 private val PanelBg = Color(0xFFFFF0F4)
 private val UnreadBg = Color(0xFFFFE0EB)
 private val Scrim = Color.Black.copy(alpha = 0.3f)
 
+// Drawer com lista de notificacoes do usuario
 @Composable
 fun NotificationPanel(
     notifications: List<Notification>,

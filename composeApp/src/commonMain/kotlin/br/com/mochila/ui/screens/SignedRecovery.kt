@@ -29,15 +29,18 @@ import org.jetbrains.compose.resources.painterResource
 private val signedRecoveryFormMaxWidth = 360.dp
 private val signedRecoveryFormHorizontalMargin = 48.dp
 
+// Tela de alteracao de senha para usuario autenticado
 @Composable
 fun SignedRecoveryScreen(
     userId: Int,
     onBack: () -> Unit,
     onPasswordChangeFinished: (message: String, success: Boolean) -> Unit,
 ) {
+    // Cores da tela de alteracao de senha logado
     val fundoTela = Color(0xFFF8F8F8)
     val rosa = Color(0xFFFF6694)
 
+    // Campos de senha atual, nova e confirmacao
     var currentPassword by remember { mutableStateOf("") }
     var newPassword by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
@@ -45,6 +48,7 @@ fun SignedRecoveryScreen(
 
     val onFinished by rememberUpdatedState(onPasswordChangeFinished)
 
+    // Presenter para validar e salvar a nova senha
     val presenter = remember {
         object : SignedRecoveryView {
             override fun showValidationError(msg: String) { message = msg }
@@ -62,7 +66,7 @@ fun SignedRecoveryScreen(
 
         if (isWide) {
             Row(modifier = Modifier.fillMaxSize()) {
-                // Painel esquerdo — avatar
+                // Sidebar com logo e avatar do usuario
                 Box(
                     modifier = Modifier
                         .weight(0.4f)
@@ -106,7 +110,8 @@ fun SignedRecoveryScreen(
                     }
                 }
 
-                // Painel direito — formulário
+                
+                // Formulario de alteracao de senha
                 Box(
                     modifier = Modifier
                         .weight(0.6f)
@@ -201,6 +206,7 @@ fun SignedRecoveryScreen(
                 }
             }
         } else {
+            // Layout mobile com avatar e campos empilhados
             Image(
                 painter = painterResource(Res.drawable.background),
                 contentDescription = null,
@@ -307,6 +313,7 @@ private fun PasswordFields(
     onConfirmPasswordChange: (String) -> Unit,
     rosa: Color
 ) {
+    // Campo de senha atual
     Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text("Senha atual", color = rosa, fontSize = 14.sp, fontWeight = FontWeight.Medium, lineHeight = 20.sp)
         OutlinedTextField(
@@ -329,6 +336,7 @@ private fun PasswordFields(
 
     Spacer(modifier = Modifier.height(16.dp))
 
+    // Campo de nova senha
     Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text("Nova senha", color = rosa, fontSize = 14.sp, fontWeight = FontWeight.Medium, lineHeight = 20.sp)
         OutlinedTextField(
@@ -351,6 +359,7 @@ private fun PasswordFields(
 
     Spacer(modifier = Modifier.height(16.dp))
 
+    // Confirmacao da nova senha
     Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text("Confirmar nova senha", color = rosa, fontSize = 14.sp, fontWeight = FontWeight.Medium, lineHeight = 20.sp)
         OutlinedTextField(

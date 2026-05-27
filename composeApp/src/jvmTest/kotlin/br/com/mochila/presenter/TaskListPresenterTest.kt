@@ -8,6 +8,7 @@ import org.junit.Before
 import org.junit.Test
 import kotlin.test.assertEquals
 
+// Testa listagem, filtros e alteracao de status de tarefas
 class TaskListPresenterTest {
 
     private val view = mockk<TaskListView>(relaxed = true)
@@ -16,6 +17,7 @@ class TaskListPresenterTest {
     @Before fun setUp()    { mockkObject(TaskRepository) }
     @After  fun tearDown() { unmockkAll() }
 
+    // Carregamento da lista
     @Test fun `lista vazia exibe estado vazio`() {
         every { TaskRepository.listByUser(any()) } returns emptyList()
         presenter.loadTasks(1)
@@ -30,11 +32,13 @@ class TaskListPresenterTest {
         verify { view.showTasks(tasks) }
     }
 
+    // Navegacao
     @Test fun `onTaskClicked navega para o detalhe`() {
         presenter.onTaskClicked(7)
         verify { view.navigateToTaskDetail(7) }
     }
 
+    // Filtros
     @Test fun `filterTasks com query vazia e filtro Todos retorna todas`() {
         val tasks = listOf(Task(title = "A"), Task(title = "B"))
         val result = presenter.filterTasks(tasks, "", "Todos")
@@ -58,6 +62,7 @@ class TaskListPresenterTest {
         assertEquals("T1", result.first().title)
     }
 
+    // Conclusao de tarefa
     @Test fun `completeTask atualiza status para Concluida`() {
         val task = Task(id = 1, title = "Estudar", status = "Pendente")
         every { TaskRepository.update(any(), any()) } returns true
@@ -74,6 +79,7 @@ class TaskListPresenterTest {
         verify(exactly = 0) { TaskRepository.update(any(), any()) }
     }
 
+    // Cancelamento de tarefa
     @Test fun `cancelTask atualiza status para Cancelada`() {
         val task = Task(id = 1, title = "Estudar", status = "Pendente")
         every { TaskRepository.update(any(), any()) } returns true
