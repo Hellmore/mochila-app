@@ -6,6 +6,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
+// Testa promocao, remocao e estatisticas de administradores
 class AdminRepositoryTest : RepositoryTestBase() {
 
     private val DB_URL = "jdbc:sqlite:file:testmochila?mode=memory&cache=shared"
@@ -35,6 +36,7 @@ class AdminRepositoryTest : RepositoryTestBase() {
         stmt.close(); conn.close()
     }
 
+    // Verificacao de status admin
     @Test fun `isAdmin retorna false para usuario sem registro admin`() {
         val uid = insertUser()
         assertFalse(AdminRepository.isAdmin(uid))
@@ -46,6 +48,7 @@ class AdminRepositoryTest : RepositoryTestBase() {
         assertTrue(AdminRepository.isAdmin(uid))
     }
 
+    // Promocao a administrador
     @Test fun `promoteToAdmin retorna true para usuario valido`() {
         val uid = insertUser()
         assertTrue(AdminRepository.promoteToAdmin(uid))
@@ -58,6 +61,7 @@ class AdminRepositoryTest : RepositoryTestBase() {
         assertTrue(AdminRepository.isAdmin(uid))
     }
 
+    // Remocao de administrador
     @Test fun `demoteFromAdmin retorna true e remove o status de admin`() {
         val uid = insertUser()
         AdminRepository.promoteToAdmin(uid)
@@ -65,6 +69,7 @@ class AdminRepositoryTest : RepositoryTestBase() {
         assertFalse(AdminRepository.isAdmin(uid))
     }
 
+    // Estatisticas do usuario
     @Test fun `getUserStats retorna zeros para usuario sem dados`() {
         val uid = insertUser()
         val stats = AdminRepository.getUserStats(uid)

@@ -29,16 +29,19 @@ import org.jetbrains.compose.resources.painterResource
 private val verifyFormMaxWidth = 360.dp
 private val verifyFormHorizontalMargin = 48.dp
 
+// Tela de confirmacao de e-mail apos o cadastro
 @Composable
 fun EmailVerifyScreen(
     email: String,
     onBackToRegister: () -> Unit,
     onNavigateToLogin: () -> Unit,
 ) {
+    // Cores da tela de confirmacao de cadastro
     val fundoTela = Color(0xFFF8F8F8)
     val rosa = Color(0xFFFF6694)
     val logoArea = Color(0xFFFF6694)
 
+    // Codigo, mensagens e estado de envio
     var code by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var successMessage by remember { mutableStateOf<String?>(null) }
@@ -47,6 +50,7 @@ fun EmailVerifyScreen(
     val scope = rememberCoroutineScope()
     val presenter = remember { EmailVerificationPresenter() }
 
+    // Confirma o codigo e redireciona ao login
     fun onVerify() {
         errorMessage = null
         scope.launch {
@@ -74,7 +78,7 @@ fun EmailVerifyScreen(
 
         if (isWide) {
             Row(modifier = Modifier.fillMaxSize()) {
-                // Painel esquerdo com logo
+                // Coluna de marca e slogan
                 Box(
                     modifier = Modifier
                         .weight(0.4f)
@@ -102,7 +106,8 @@ fun EmailVerifyScreen(
                     }
                 }
 
-                // Painel direito com formulário
+                
+                // Formulario de confirmacao do cadastro
                 Box(
                     modifier = Modifier
                         .weight(0.6f)
@@ -232,6 +237,7 @@ fun EmailVerifyScreen(
                 }
             }
         } else {
+            // Versao mobile do fluxo de verificacao
             Image(
                 painter = painterResource(Res.drawable.background),
                 contentDescription = null,

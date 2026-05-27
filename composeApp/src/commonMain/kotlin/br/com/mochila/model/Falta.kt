@@ -1,5 +1,6 @@
 package br.com.mochila.model
 
+// Registro de falta em aula de uma disciplina
 data class Falta(
     val id: Int = 0,
     val userId: Int = 0,

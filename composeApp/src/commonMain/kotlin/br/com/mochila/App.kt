@@ -11,8 +11,10 @@ import br.com.mochila.data.UserSession
 import br.com.mochila.ui.screens.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+// Composable raiz: gerencia navegacao manual e estado global da aplicacao
 @Composable
 fun App() {
+    // Estado de navegacao, usuario logado e selecoes entre telas
     var currentUserId    by remember { mutableStateOf<Int?>(null) }
     var screenStack      by remember { mutableStateOf(listOf("login")) }
     var isMenuVisible    by remember { mutableStateOf(false) }
@@ -30,6 +32,7 @@ fun App() {
 
     val currentScreen = screenStack.last()
 
+    // Helpers para empilhar telas, voltar e controlar o menu
     fun navigateTo(screen: String) {
         if (screenStack.last() != screen) screenStack = screenStack + screen
     }
@@ -56,6 +59,7 @@ fun App() {
         screenStack = listOf("home")
     }
 
+    // Sincroniza UserSession quando o usuario autenticado muda
     LaunchedEffect(currentUserId) {
         val uid = currentUserId ?: return@LaunchedEffect
         val user = withContext(Dispatchers.IO) { UserRepository.findById(uid) }
@@ -65,8 +69,10 @@ fun App() {
     MaterialTheme {
         Surface {
             Box(modifier = Modifier.fillMaxSize()) {
+                // Exibe a tela no topo da pilha de navegacao
                 when (currentScreen) {
 
+                    // Fluxo de login, cadastro e recuperacao de senha
                     "login" -> LoginScreen(
                         onNavigateToRegister = { navigateTo("register") },
                         onNavigateToRecovery = { navigateTo("recovery") },
@@ -115,6 +121,7 @@ fun App() {
                         onBack = { goBack() }
                     )
 
+                    // Area principal apos autenticacao
                     "home" -> {
                         currentUserId?.let { userId ->
                             HomeScreen(
@@ -127,9 +134,9 @@ fun App() {
                                     navigateTo("subject_detail")
                                 },
                                 onNavigateToTasksList = { navigateTo("tasks_list") },
-                                onNavigateToTaskEdit = { id ->
+                                onNavigateToTaskDetail = { id ->
                                     selectedTaskId = id
-                                    navigateTo("task_edit")
+                                    navigateTo("task_detail")
                                 },
                                 onNavigateToFaltasList = { name -> faltaSubjectFilter = name; navigateTo("faltas_list") },
                                 onNavigateToEventsList = { navigateTo("events_list") },
@@ -207,9 +214,9 @@ fun App() {
                     "subject_edit" -> {
                         currentUserId?.let { userId ->
                             selectedSubjectId?.let { subjectId ->
-                                // ✅ CORRIGIDO: não buscamos mais Subject aqui.
-                                // SubjectRegisterScreen recebe apenas o ID e carrega
-                                // os dados internamente via SubjectRegisterPresenter.loadSubjectForEdit()
+                                
+                                
+                                
                                 SubjectRegisterScreen(
                                     userId = userId,
                                     onNavigateToHome = { navigateTo("home") },
@@ -243,9 +250,9 @@ fun App() {
                         currentUserId?.let { userId ->
                             TaskListScreen(
                                 userId = userId,
-                                onNavigateToTaskEdit = { id ->
+                                onNavigateToTaskDetail = { id ->
                                     selectedTaskId = id
-                                    navigateTo("task_edit")
+                                    navigateTo("task_detail")
                                 },
                                 onBack = { goBack() },
                                 onOpenMenu = { openMenu() },
@@ -405,6 +412,7 @@ fun App() {
                         } ?: logout()
                     }
 
+                    // Painel administrativo (somente admin)
                     "admin_panel" -> {
                         if (UserSession.currentUser?.isAdmin != true) { navigateTo("home") }
                         else AdminPanelScreen(
@@ -467,12 +475,14 @@ fun App() {
                     }
                 }
 
+                // Monitores em segundo plano para lembretes e notificacoes
                 currentUserId?.let { uid ->
                     EventReminderMonitor(userId = uid)
                     TaskReminderMonitor(userId = uid)
                     NotificationMonitor(userId = uid, onChecked = { notifVersion++ })
                 }
 
+                // Menu lateral sobreposto as telas autenticadas
                 if (isMenuVisible && currentUserId != null) {
                     MenuScreen(
                         onCloseMenu = { closeMenu() },

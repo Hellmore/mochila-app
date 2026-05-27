@@ -10,6 +10,7 @@ import java.io.File
 private val File.extension: String
     get() = name.substringAfterLast('.', "")
 
+// Dialog nativo AWT para escolher foto e copiar para ~/.mochila/avatars
 actual fun pickImageFile(userId: Int): String? {
     val dialog = FileDialog(null as Frame?, "Selecionar foto de perfil", FileDialog.LOAD)
     dialog.setFilenameFilter { _, name ->
@@ -27,6 +28,7 @@ actual fun pickImageFile(userId: Int): String? {
     return dest.absolutePath
 }
 
+// Decodifica arquivo de imagem para BitmapPainter
 actual fun decodeProfilePhotoPainter(photoPath: String): Painter? {
     return runCatching {
         BitmapPainter(loadImageBitmap(File(photoPath).inputStream()))

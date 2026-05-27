@@ -2,6 +2,7 @@ import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.gradle.language.jvm.tasks.ProcessResources
 
+// Modulo Kotlin Multiplatform: Android + desktop JVM com Compose
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidApplication)
@@ -11,6 +12,7 @@ plugins {
     jacoco
 }
 
+// Alvos de compilacao e dependencias por source set
 kotlin {
     androidTarget {
         compilerOptions {
@@ -36,10 +38,10 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
 
-            // 🔹 Driver SQLite
+            
             implementation("org.xerial:sqlite-jdbc:3.45.3.0")
 
-            // ✅ Biblioteca multiplataforma para datas (usada nos calendários)
+            
             implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
         }
 
@@ -60,6 +62,7 @@ kotlin {
     }
 }
 
+// Configuracao do app Android
 android {
     namespace = "br.com.mochila"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
@@ -94,6 +97,7 @@ dependencies {
     debugImplementation(compose.uiTooling)
 }
 
+// Empacotamento do app desktop
 compose.desktop {
     application {
         mainClass = "br.com.mochila.MainKt"
@@ -106,6 +110,7 @@ compose.desktop {
     }
 }
 
+// Relatorio de cobertura de testes JVM
 tasks.register<JacocoReport>("jacocoJvmReport") {
     dependsOn(tasks.named("jvmTest"))
 
@@ -140,13 +145,14 @@ tasks.register<JacocoReport>("jacocoJvmReport") {
     )
 }
 
-// ✅ Inclui os arquivos de recursos no build final (SQL, JSON, etc.)
+
+// Copia SQL e recursos estaticos para o classpath em runtime
 tasks.withType<ProcessResources> {
     from("src/commonMain/composeResources") {
         include("**/*.sql")
         include("**/*.txt")
         include("**/*.json")
         include("**/*.db")
-        into("") // mantém a estrutura de pastas
+        into("") 
     }
 }

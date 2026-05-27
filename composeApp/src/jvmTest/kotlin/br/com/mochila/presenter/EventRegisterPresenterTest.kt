@@ -8,6 +8,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
+// Testa cadastro, edicao e exclusao de eventos
 class EventRegisterPresenterTest {
 
     private val view = mockk<EventRegisterView>(relaxed = true)
@@ -21,6 +22,7 @@ class EventRegisterPresenterTest {
 
     private val validEvent = Event(id = 0, title = "Prova", eventDate = "15/06/2025")
 
+    // Validacao de campos
     @Test fun `titulo em branco exibe erro`() {
         presenter.saveEvent(1, validEvent.copy(title = ""), false, EventCategory.default)
         verify { view.showValidationError(any()) }
@@ -33,6 +35,7 @@ class EventRegisterPresenterTest {
         verify { view.showValidationError(any()) }
     }
 
+    // Salvamento de novo evento
     @Test fun `salvar novo com sucesso navega para lista`() {
         every { EventRepository.formatEventDateForDb("15/06/2025") } returns "2025-06-15 00:00:00"
         every { EventRepository.insert(any(), any()) } returns 7
@@ -44,6 +47,7 @@ class EventRegisterPresenterTest {
         verify { view.navigateToEventsList() }
     }
 
+    // Edicao de evento existente
     @Test fun `editar com sucesso chama showSaveSuccess com true`() {
         every { EventRepository.formatEventDateForDb("15/06/2025") } returns "2025-06-15 00:00:00"
         every { EventRepository.update(any(), any()) } returns true
@@ -61,6 +65,7 @@ class EventRegisterPresenterTest {
         verify { view.showSaveError() }
     }
 
+    // Exclusao de evento
     @Test fun `deleteEvent com sucesso navega para lista`() {
         every { EventRepository.delete(any(), any()) } returns true
         presenter.deleteEvent(1, 3)
@@ -74,6 +79,7 @@ class EventRegisterPresenterTest {
         verify { view.showDeleteError() }
     }
 
+    // Carregamento para edicao
     @Test fun `loadEvent encontrado exibe evento`() {
         every { EventRepository.findById(3) } returns validEvent.copy(id = 3)
         presenter.loadEvent(3)

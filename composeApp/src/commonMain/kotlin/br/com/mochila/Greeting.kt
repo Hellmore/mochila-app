@@ -1,5 +1,6 @@
 package br.com.mochila
 
+// Exemplo de uso multiplataforma
 class Greeting {
     private val platform = getPlatform()
 

@@ -6,6 +6,7 @@ import br.com.mochila.data.UserRepository
 import br.com.mochila.model.AdminUserStats
 import br.com.mochila.model.UserSummary
 
+// Contrato da tela de detalhes do usuario no painel admin
 interface AdminUserDetailView {
     fun showUser(user: UserSummary, stats: AdminUserStats)
     fun showNotFound()
@@ -14,11 +15,13 @@ interface AdminUserDetailView {
     fun navigateBack()
 }
 
+// Exibe detalhes e gerencia acoes admin sobre um usuario
 class AdminUserDetailPresenter(private val view: AdminUserDetailView) {
 
     private var currentTarget: UserSummary? = null
 
     fun loadUser(targetUserId: Int) {
+        // Busca resumo e estatisticas do usuario
         val user = UserRepository.findSummaryById(targetUserId)
         if (user == null) { view.showNotFound(); return }
         val stats = AdminRepository.getUserStats(targetUserId)
@@ -27,10 +30,12 @@ class AdminUserDetailPresenter(private val view: AdminUserDetailView) {
     }
 
     fun toggleAdmin(currentAdminId: Int, target: UserSummary) {
+        // Impede que o admin remova o proprio status
         if (currentAdminId == target.id && target.isAdmin) {
             view.showActionError("Você não pode remover seu próprio status de admin.")
             return
         }
+        // Promove ou rebaixa o usuario no repositorio admin
         val success = if (target.isAdmin) {
             AdminRepository.demoteFromAdmin(target.id)
         } else {
@@ -48,10 +53,12 @@ class AdminUserDetailPresenter(private val view: AdminUserDetailView) {
     }
 
     fun deleteUser(currentAdminId: Int, target: UserSummary) {
+        // Impede que o admin exclua a propria conta
         if (currentAdminId == target.id) {
             view.showActionError("Você não pode excluir sua própria conta pelo painel admin.")
             return
         }
+        // Exclui o usuario e registra a acao
         val success = UserRepository.delete(target.id)
         if (success) {
             LogRepository.insertAcao(currentAdminId, "ADMIN_EXCLUIR_USUARIO", "usuario", target.id, "Email: ${target.email}")

@@ -1,5 +1,6 @@
 package br.com.mochila.model
 
+// Tarefa academica com categoria, prioridade e prazo
 data class Task(
     val id: Int = 0,
     val userId: Int = 0,

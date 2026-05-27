@@ -4,10 +4,10 @@ import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
+// Valida datas no formato DD/MM/YYYY
 class DateValidatorTest {
 
-    // ── Formato ──────────────────────────────────────────────────────────
-
+    // Formato da string de data
     @Test fun `formato invalido sem barras retorna false`() {
         assertFalse(DateValidator.isValid("31122025"))
     }
@@ -20,8 +20,7 @@ class DateValidatorTest {
         assertTrue(DateValidator.isValid("15/06/2025"))
     }
 
-    // ── Meses ────────────────────────────────────────────────────────────
-
+    // Validacao do mes
     @Test fun `mes zero retorna false`() {
         assertFalse(DateValidator.isValid("01/00/2025"))
     }
@@ -34,8 +33,7 @@ class DateValidatorTest {
         assertTrue(DateValidator.isValid("31/12/2025"))
     }
 
-    // ── Dias ─────────────────────────────────────────────────────────────
-
+    // Validacao do dia conforme o mes
     @Test fun `dia zero retorna false`() {
         assertFalse(DateValidator.isValid("00/01/2025"))
     }
@@ -52,8 +50,7 @@ class DateValidatorTest {
         assertTrue(DateValidator.isValid("30/04/2025"))
     }
 
-    // ── Fevereiro e bissexto ─────────────────────────────────────────────
-
+    // Anos bissextos e fevereiro
     @Test fun `fevereiro dia 29 em ano nao bissexto retorna false`() {
         assertFalse(DateValidator.isValid("29/02/2025"))
     }

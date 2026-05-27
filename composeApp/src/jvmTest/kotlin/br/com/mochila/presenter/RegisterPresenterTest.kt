@@ -10,6 +10,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
+// Testa validacao e cadastro de novos usuarios
 class RegisterPresenterTest {
 
     private val view = mockk<RegisterView>(relaxed = true)
@@ -29,6 +30,7 @@ class RegisterPresenterTest {
 
     private val registeredUser = User(id = 1, name = "NomeValido", email = "a@b.com")
 
+    // Validacao de email
     @Test fun `email sem arroba exibe erro de validacao`() = runTest {
         presenter.register("NomeValido", "emailinvalido", "Senha@123")
         verify { view.showValidationError(any()) }
@@ -59,6 +61,7 @@ class RegisterPresenterTest {
         verify(exactly = 0) { UserRepository.insert(any()) }
     }
 
+    // Validacao de nome e senha
     @Test fun `nome com menos de 3 caracteres exibe erro`() = runTest {
         presenter.register("Ab", "a@b.com", "Senha@123")
         verify { view.showValidationError(any()) }
@@ -74,6 +77,7 @@ class RegisterPresenterTest {
         verify { view.showValidationError(any()) }
     }
 
+    // Cadastro bem sucedido e falhas
     @Test fun `cadastro bem sucedido chama showRegisterSuccess e navega`() = runTest {
         every { UserRepository.insert(any()) } returns true
         every { UserRepository.findByEmail(any()) } returns registeredUser
@@ -88,6 +92,7 @@ class RegisterPresenterTest {
         verify { view.showRegisterError(any()) }
     }
 
+    // Codigo de administrador no cadastro
     @Test fun `registro com adminCode valido promove usuario a admin`() = runTest {
         every { UserRepository.insert(any()) } returns true
         every { UserRepository.findByEmail(any()) } returns registeredUser

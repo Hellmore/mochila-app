@@ -26,21 +26,25 @@ import org.jetbrains.compose.resources.painterResource
 private val loginFormMaxWidth = 360.dp
 private val loginFormHorizontalMargin = 48.dp
 
+// Tela de login com layouts responsivos
 @Composable
 fun LoginScreen(
     onNavigateToRegister: () -> Unit,
     onNavigateToRecovery: () -> Unit,
     onLoginSuccess: (userId: Int) -> Unit
 ) {
+    // Paleta de cores da tela de login
     val fundoTela = Color(0xFFF8F8F8)
     val rosa = Color(0xFFFF6694)
     val laranja = Color(0xFFFFBA5E)
     val logoArea = Color(0xFFFF6694)
 
+    // Campos do formulario e mensagem de erro
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
+    // Presenter conectado a interface LoginView
     val presenter = remember {
         object : LoginView {
             override fun showError(message: String) { errorMessage = message }
@@ -55,8 +59,10 @@ fun LoginScreen(
     ) {
         val isWide = maxWidth >= 700.dp
 
+        // Layout em duas colunas para telas largas
         if (isWide) {
             Row(modifier = Modifier.fillMaxSize()) {
+                // Coluna esquerda com logo e slogan
                 Box(
                     modifier = Modifier
                         .weight(0.4f)
@@ -84,6 +90,7 @@ fun LoginScreen(
                     }
                 }
 
+                // Coluna direita com formulario de login
                 Box(
                     modifier = Modifier
                         .weight(0.6f)
@@ -158,6 +165,7 @@ fun LoginScreen(
                         Spacer(Modifier.height(24.dp))
 
                         errorMessage?.let { msg ->
+                            // Banner de erro de validacao ou credenciais
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -168,6 +176,7 @@ fun LoginScreen(
                         }
 
                         Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            // Botoes de login, recuperacao e cadastro
                             OutlinedButton(
                                 onClick = { presenter.login(email, password) },
                                 shape = RoundedCornerShape(8.dp),
@@ -201,6 +210,7 @@ fun LoginScreen(
                 }
             }
         } else {
+            // Layout compacto centralizado para mobile
             Image(
                 painter = painterResource(Res.drawable.background),
                 contentDescription = null,

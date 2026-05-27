@@ -8,6 +8,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
+// Testa cadastro, autenticacao e verificacao de email de usuarios
 class UserRepositoryTest : RepositoryTestBase() {
 
     private fun insertUser(
@@ -16,6 +17,7 @@ class UserRepositoryTest : RepositoryTestBase() {
         password: String = "Senha@123",
     ) = UserRepository.insert(User(name = name, email = email, password = password))
 
+    // Insercao e busca por email
     @Test fun `insert retorna true e usuario pode ser encontrado por email`() {
         assertTrue(insertUser())
         assertTrue(UserRepository.emailExists("ana@test.com"))
@@ -41,6 +43,7 @@ class UserRepositoryTest : RepositoryTestBase() {
         assertNull(UserRepository.findByEmail("naoexiste@x.com"))
     }
 
+    // Busca por id
     @Test fun `findById retorna usuario correto`() {
         insertUser()
         val user = UserRepository.findByEmail("ana@test.com")
@@ -54,6 +57,7 @@ class UserRepositoryTest : RepositoryTestBase() {
         assertNull(UserRepository.findById(99999))
     }
 
+    // Atualizacao e exclusao
     @Test fun `update altera nome e email`() {
         insertUser()
         val user = UserRepository.findByEmail("ana@test.com")!!
@@ -71,6 +75,7 @@ class UserRepositoryTest : RepositoryTestBase() {
         assertFalse(UserRepository.emailExists("ana@test.com"))
     }
 
+    // Verificacao de email
     @Test fun `verifyEmail marca email como verificado`() {
         insertUser()
         assertFalse(UserRepository.isEmailVerified("ana@test.com"))
@@ -78,6 +83,7 @@ class UserRepositoryTest : RepositoryTestBase() {
         assertTrue(UserRepository.isEmailVerified("ana@test.com"))
     }
 
+    // Login
     @Test fun `validateLogin retorna userId para credenciais corretas`() {
         insertUser(password = "Senha@123")
         val userId = UserRepository.validateLogin("ana@test.com", "Senha@123")

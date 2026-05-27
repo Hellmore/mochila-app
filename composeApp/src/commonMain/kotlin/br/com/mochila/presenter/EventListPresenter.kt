@@ -3,15 +3,18 @@ package br.com.mochila.presenter
 import br.com.mochila.data.EventRepository
 import br.com.mochila.model.Event
 
+// Contrato da tela de listagem de eventos
 interface EventListView {
     fun showEvents(events: List<Event>)
     fun showEmptyState()
     fun navigateToEventEdit(eventId: Int)
 }
 
+// Carrega eventos do usuario e aplica filtros
 class EventListPresenter(private val view: EventListView) {
 
     fun loadEvents(userId: Int) {
+        // Busca eventos registrados pelo usuario
         val events = EventRepository.listByUser(userId)
         if (events.isEmpty()) view.showEmptyState() else view.showEvents(events)
     }
@@ -20,6 +23,7 @@ class EventListPresenter(private val view: EventListView) {
         view.navigateToEventEdit(eventId)
     }
 
+    // Filtra eventos por materia e mes
     fun filterEvents(
         events: List<Event>,
         subjectFilter: String,

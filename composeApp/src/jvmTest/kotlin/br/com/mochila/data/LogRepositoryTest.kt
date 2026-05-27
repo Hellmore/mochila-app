@@ -6,6 +6,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
+// Testa registro e listagem de logs de acao e erro
 class LogRepositoryTest : RepositoryTestBase() {
 
     private val DB_URL = "jdbc:sqlite:file:testmochila?mode=memory&cache=shared"
@@ -23,6 +24,7 @@ class LogRepositoryTest : RepositoryTestBase() {
         return id
     }
 
+    // Logs de acao
     @Test fun `insertAcao e listAcoes retorna log com campos corretos`() {
         val uid = insertUser()
         LogRepository.insertAcao(uid, "CRIAR_TAREFA", "tarefa", 42)
@@ -42,6 +44,7 @@ class LogRepositoryTest : RepositoryTestBase() {
         assertNull(logs[0].idRegistroAfetado)
     }
 
+    // Logs de erro
     @Test fun `insertErro e listErros retorna log com campos corretos`() {
         val uid = insertUser()
         LogRepository.insertErro("MeuModulo", "Mensagem de erro", uid)
@@ -59,6 +62,7 @@ class LogRepositoryTest : RepositoryTestBase() {
         assertNull(erros[0].userId)
     }
 
+    // Paginacao e listas vazias
     @Test fun `listAcoes respeita parametro limit`() {
         val uid = insertUser()
         repeat(5) { LogRepository.insertAcao(uid, "ACAO", "tabela") }

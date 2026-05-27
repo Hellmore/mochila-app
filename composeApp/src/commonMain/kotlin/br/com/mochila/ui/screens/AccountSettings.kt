@@ -34,6 +34,7 @@ import org.jetbrains.compose.resources.painterResource
 private val accountFormMaxWidth = 360.dp
 private val accountFormHorizontalMargin = 48.dp
 
+// Tela de configuracoes da conta do usuario
 @Composable
 fun AccountSettingsScreen(
     userId: Int,
@@ -43,6 +44,7 @@ fun AccountSettingsScreen(
     passwordFlowMessage: Pair<String, Boolean>? = null,
     onPasswordFlowMessageConsumed: () -> Unit = {},
 ) {
+    // Cores e estado do perfil do usuario
     val fundoTela = Color(0xFFF8F8F8)
     val rosa    = Color(0xFFFF6694)
     val laranja = Color(0xFFFFBA5E)
@@ -59,6 +61,7 @@ fun AccountSettingsScreen(
     var redeemSuccess     by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
 
+    // Presenter para carregar, salvar e excluir conta
     val presenter = remember {
         object : AccountSettingsView {
             override fun showUser(user: User) {
@@ -90,6 +93,7 @@ fun AccountSettingsScreen(
 
     LaunchedEffect(userId) { presenter.loadUser(userId) }
 
+    // Exibe feedback retornado do fluxo de alteracao de senha
     LaunchedEffect(passwordFlowMessage) {
         val feedback = passwordFlowMessage ?: return@LaunchedEffect
         message = feedback.first
@@ -105,6 +109,7 @@ fun AccountSettingsScreen(
         val isWide = maxWidth >= 700.dp
 
         if (isWide) {
+            // Layout desktop com foto na sidebar
             Row(modifier = Modifier.fillMaxSize()) {
                 Box(
                     modifier = Modifier
@@ -320,6 +325,7 @@ fun AccountSettingsScreen(
                 }
             }
         } else {
+            // Layout mobile com formulario centralizado
             Image(
                 painter = painterResource(Res.drawable.background),
                 contentDescription = null,
@@ -485,6 +491,7 @@ fun AccountSettingsScreen(
         }
 
         if (showDeleteDialog) {
+            // Confirmacao antes de excluir a conta
             AlertDialog(
                 onDismissRequest = { showDeleteDialog = false },
                 title = { Text("Excluir Conta", fontWeight = FontWeight.Bold, fontSize = 18.sp) },
@@ -503,6 +510,7 @@ fun AccountSettingsScreen(
         }
 
         if (showRedeemDialog) {
+            // Dialogo para resgatar codigo de administrador
             AlertDialog(
                 onDismissRequest = { showRedeemDialog = false; redeemCode = ""; redeemMessage = null },
                 shape = RoundedCornerShape(12.dp),

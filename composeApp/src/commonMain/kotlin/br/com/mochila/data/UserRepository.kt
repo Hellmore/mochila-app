@@ -6,8 +6,10 @@ import br.com.mochila.util.PasswordHash
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 
+// CRUD e autenticacao de usuarios
 object UserRepository {
 
+    // Converte linha do ResultSet em User
     private fun ResultSet.toUser() = User(
         id = getInt("id_usuario"),
         name = getString("nome"),
@@ -17,6 +19,7 @@ object UserRepository {
         isAdmin = runCatching { getInt("is_admin") == 1 }.getOrDefault(false),
     )
 
+    // Cadastra novo usuario com senha hasheada
     fun insert(user: User): Boolean {
         val conn = DatabaseHelper.connect() ?: return false
         return try {
@@ -37,6 +40,7 @@ object UserRepository {
         }
     }
 
+    // Valida credenciais e retorna id do usuario ou null
     fun validateLogin(email: String, password: String): Int? {
         val conn = DatabaseHelper.connect() ?: return null
         return try {
@@ -63,6 +67,7 @@ object UserRepository {
         }
     }
 
+    // Busca usuario completo por id
     fun findById(userId: Int): User? {
         val conn = DatabaseHelper.connect() ?: return null
         return try {
@@ -88,6 +93,7 @@ object UserRepository {
         }
     }
 
+    // Atualiza nome, email e opcionalmente senha
     fun update(userId: Int, name: String, email: String, newPassword: String?): Boolean {
         val conn = DatabaseHelper.connect() ?: return false
         return try {
@@ -116,6 +122,7 @@ object UserRepository {
         }
     }
 
+    // Remove referencia da foto de perfil
     fun removePhoto(userId: Int): Boolean {
         val conn = DatabaseHelper.connect() ?: return false
         return try {
@@ -134,6 +141,7 @@ object UserRepository {
         }
     }
 
+    // Salva caminho da foto de perfil
     fun updatePhoto(userId: Int, photoPath: String): Boolean {
         val conn = DatabaseHelper.connect() ?: return false
         return try {
@@ -153,6 +161,7 @@ object UserRepository {
         }
     }
 
+    // Exclui usuario do banco
     fun delete(userId: Int): Boolean {
         val conn = DatabaseHelper.connect() ?: return false
         return try {
@@ -170,6 +179,7 @@ object UserRepository {
         }
     }
 
+    // Marca e-mail como verificado
     fun verifyEmail(email: String): Boolean {
         val conn = DatabaseHelper.connect() ?: return false
         return try {
@@ -188,6 +198,7 @@ object UserRepository {
         }
     }
 
+    // Consulta se e-mail ja foi verificado
     fun isEmailVerified(email: String): Boolean {
         val conn = DatabaseHelper.connect() ?: return false
         return try {
@@ -208,6 +219,7 @@ object UserRepository {
         }
     }
 
+    // Lista resumo de todos os usuarios (painel admin)
     fun listAll(): List<UserSummary> {
         val conn = DatabaseHelper.connect() ?: return emptyList()
         return try {
@@ -242,6 +254,7 @@ object UserRepository {
         }
     }
 
+    // Busca resumo de um usuario por id
     fun findSummaryById(userId: Int): UserSummary? {
         val conn = DatabaseHelper.connect() ?: return null
         return try {
@@ -274,6 +287,7 @@ object UserRepository {
         }
     }
 
+    // Busca usuario completo por e-mail
     fun findByEmail(email: String): User? {
         val conn = DatabaseHelper.connect() ?: return null
         return try {
@@ -299,6 +313,7 @@ object UserRepository {
         }
     }
 
+    // Verifica se e-mail ja esta cadastrado
     fun emailExists(email: String): Boolean {
         val conn = DatabaseHelper.connect() ?: return false
         return try {

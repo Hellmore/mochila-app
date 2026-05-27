@@ -32,15 +32,18 @@ import org.jetbrains.compose.resources.painterResource
 private val registerFormMaxWidth = 360.dp
 private val registerFormHorizontalMargin = 48.dp
 
+// Tela de cadastro de novo usuario
 @Composable
 fun RegisterScreen(
     onBackToLogin: () -> Unit,
     onNavigateToEmailVerify: (email: String) -> Unit
 ) {
+    // Cores padrao das telas de autenticacao
     val fundoTela = Color(0xFFF8F8F8)
     val rosa = Color(0xFFFF6694)
     val logoArea = Color(0xFFFF6694)
 
+    // Estado do formulario de cadastro
     var email by remember { mutableStateOf("") }
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -51,6 +54,7 @@ fun RegisterScreen(
 
     val scope = rememberCoroutineScope()
 
+    // Presenter com envio de codigo de verificacao por e-mail
     val presenter = remember {
         object : RegisterView {
             override fun showValidationError(msg: String) { message = msg; success = false }
@@ -95,6 +99,7 @@ fun RegisterScreen(
     ) {
         val isWide = maxWidth >= 700.dp
 
+        // Versao desktop com painel lateral de marca
         if (isWide) {
             Row(modifier = Modifier.fillMaxSize()) {
                 Box(
@@ -294,6 +299,7 @@ fun RegisterScreen(
                 }
             }
         } else {
+            // Versao mobile com logo e formulario central
             Image(
                 painter = painterResource(Res.drawable.background),
                 contentDescription = null,

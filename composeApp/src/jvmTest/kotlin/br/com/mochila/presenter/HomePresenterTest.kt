@@ -11,6 +11,7 @@ import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
+// Testa tela inicial com disciplinas, filtros e tarefas pendentes
 class HomePresenterTest {
 
     private val view = mockk<HomeView>(relaxed = true)
@@ -23,6 +24,7 @@ class HomePresenterTest {
 
     @After fun tearDown() { unmockkAll() }
 
+    // Carregamento de disciplinas
     @Test fun `lista vazia de disciplinas exibe estado vazio`() {
         every { SubjectRepository.listByUser(any()) } returns emptyList()
         presenter.loadSubjects(1)
@@ -37,6 +39,7 @@ class HomePresenterTest {
         verify { view.showSubjects(subjects) }
     }
 
+    // Filtros de disciplinas
     @Test fun `filterSubjects sem filtro retorna todas`() {
         val s1 = Subject(name = "Math", semester = "2025.1")
         val s2 = Subject(name = "Physics", semester = "2025.2")
@@ -60,6 +63,7 @@ class HomePresenterTest {
         assertEquals("Mathematics", result.first().name)
     }
 
+    // Semestres disponiveis
     @Test fun `getSemesters retorna semestres distintos ordenados`() {
         val subjects = listOf(
             Subject(semester = "2025.2"),
@@ -76,6 +80,7 @@ class HomePresenterTest {
         assertEquals(listOf("2025.1"), result)
     }
 
+    // Tarefas pendentes
     @Test fun `loadPendingTasks passa somente tarefas pendentes para a view`() {
         val tasks = listOf(
             Task(title = "T1", status = "Pendente"),

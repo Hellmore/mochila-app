@@ -44,6 +44,7 @@ import mochila_app.composeapp.generated.resources.Res
 import mochila_app.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.painterResource
 
+// Paleta da tela de cadastro de tarefa
 private val fundoTela = Color(0xFFF8F8F8)
 private val laranjaHeader = Color(0xFFFFBA5E)
 private val rosa = Color(0xFFFF6694)
@@ -174,6 +175,7 @@ private fun DesktopProfileStrip(
     }
 }
 
+// Formulario de nova tarefa ou edicao
 @Composable
 fun TaskRegisterScreen(
     userId: Int,
@@ -590,6 +592,7 @@ fun TaskRegisterScreen(
             contentScale = ContentScale.Crop,
             alpha = 0.50f,
         )
+        // Layout desktop com faixa lateral ou mobile
         val wide = maxWidth >= 700.dp
         if (wide) {
             Row(Modifier.fillMaxSize()) {
@@ -849,6 +852,7 @@ private fun BlockerTaskDropdown(
     }
 }
 
+// Campo de texto com borda rosa padrao do formulario
 @Composable
 private fun FieldRoxo(
     valor: String,

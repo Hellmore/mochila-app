@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.sp
 
 private val warningRed = Color(0xFFD61E1E)
 
+// Indicador visual de limite de faltas atingido
 @Composable
 fun AbsenceLimitWarningIcon(
     modifier: Modifier = Modifier,

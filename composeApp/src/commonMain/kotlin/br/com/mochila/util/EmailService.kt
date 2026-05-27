@@ -5,8 +5,10 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.util.Properties
 
+// Envio de e-mails via API SendGrid
 object EmailService {
 
+    // Credenciais lidas de arquivo ou variaveis de ambiente
     private val config: Properties by lazy { loadConfig() }
 
     val apiKey: String
@@ -38,6 +40,7 @@ object EmailService {
         return props
     }
 
+    // E-mail de confirmacao de cadastro
     fun sendVerificationEmail(toEmail: String, code: String): Boolean {
         if (!isConfigured) {
             println("⚠️ SendGrid não configurado. Verifique sendgrid.properties.")
@@ -47,6 +50,7 @@ object EmailService {
         return sendEmail(toEmail, "Confirme seu cadastro - Mochila Hub", html)
     }
 
+    // E-mail de recuperacao de senha
     fun sendRecoveryEmail(toEmail: String, code: String): Boolean {
         if (!isConfigured) {
             println("⚠️ SendGrid não configurado. Crie sendgrid.properties com SENDGRID_API_KEY e SENDGRID_SENDER_EMAIL.")

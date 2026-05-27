@@ -9,6 +9,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
+// Testa cadastro, edicao e exclusao de tarefas
 class TaskRegisterPresenterTest {
 
     private val view = mockk<TaskRegisterView>(relaxed = true)
@@ -22,6 +23,7 @@ class TaskRegisterPresenterTest {
 
     private val validTask = Task(id = 1, title = "Estudar", description = "Revisar conteúdo")
 
+    // Validacao de campos
     @Test fun `titulo em branco exibe erro de validacao`() {
         presenter.saveTask(1, validTask.copy(title = ""), false, TaskPriority.MEDIA, TaskCategory.default)
         verify { view.showValidationError(any()) }
@@ -37,6 +39,7 @@ class TaskRegisterPresenterTest {
         verify { view.showValidationError(any()) }
     }
 
+    // Salvamento de nova tarefa
     @Test fun `salvar novo com sucesso chama showSaveSuccess e navega`() {
         every { TaskRepository.insert(any(), any()) } returns 42
         presenter.saveTask(1, validTask, false, TaskPriority.ALTA, TaskCategory.FICHAMENTO)
@@ -50,6 +53,7 @@ class TaskRegisterPresenterTest {
         verify { view.navigateToTasksList() }
     }
 
+    // Edicao de tarefa existente
     @Test fun `editar com sucesso chama showSaveSuccess com isEditing true`() {
         every { TaskRepository.update(any(), any()) } returns true
         presenter.saveTask(1, validTask, true, TaskPriority.BAIXA, TaskCategory.TAREFA_DE_CASA)
@@ -68,6 +72,7 @@ class TaskRegisterPresenterTest {
         verify { view.showSaveError() }
     }
 
+    // Exclusao de tarefa
     @Test fun `deleteTask com sucesso navega para lista`() {
         every { TaskRepository.delete(any(), any()) } returns true
         presenter.deleteTask(1, 5)
@@ -81,6 +86,7 @@ class TaskRegisterPresenterTest {
         verify { view.showDeleteError() }
     }
 
+    // Carregamento para edicao
     @Test fun `loadTask com tarefa existente chama showTask`() {
         every { TaskRepository.findById(any()) } returns validTask
         presenter.loadTask(1)

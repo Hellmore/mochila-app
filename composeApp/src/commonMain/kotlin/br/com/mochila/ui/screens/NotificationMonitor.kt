@@ -23,6 +23,7 @@ private fun parseDateForMonitor(date: String): LocalDate? = runCatching {
     LocalDate(parts[2].toInt(), parts[1].toInt(), parts[0].toInt())
 }.getOrNull()
 
+// Job em background que gera notificacoes de faltas e tarefas
 @Composable
 fun NotificationMonitor(userId: Int, onChecked: () -> Unit = {}) {
     LaunchedEffect(userId) {
@@ -39,6 +40,7 @@ fun NotificationMonitor(userId: Int, onChecked: () -> Unit = {}) {
     }
 }
 
+// Gera alertas de limite e aviso de faltas
 private fun checkAbsences(userId: Int) {
     val subjects = SubjectRepository.listByUser(userId)
     val absenceCounts = FaltaRepository.countByUser(userId)
@@ -64,6 +66,7 @@ private fun checkAbsences(userId: Int) {
     }
 }
 
+// Gera alertas de tarefas vencidas e alta prioridade sem prazo
 private fun checkTasks(userId: Int) {
     val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
     println("🔔 [checkTasks] hoje=$today")

@@ -8,6 +8,7 @@ import androidx.compose.ui.window.rememberWindowState
 import br.com.mochila.data.DatabaseHelper
 import br.com.mochila.util.EmailService
 
+// Aplicacao desktop: conecta banco e abre janela maximizada
 fun main() = application {
     val conn = DatabaseHelper.connect()
     if (conn != null) {

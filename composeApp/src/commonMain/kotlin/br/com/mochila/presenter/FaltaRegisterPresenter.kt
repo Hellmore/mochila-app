@@ -7,6 +7,7 @@ import br.com.mochila.model.Falta
 import br.com.mochila.util.AbsenceLimit
 import br.com.mochila.util.DateValidator
 
+// Contrato da tela de cadastro e edicao de falta
 interface FaltaRegisterView {
     fun showFalta(falta: Falta)
     fun showValidationError(message: String)
@@ -18,18 +19,22 @@ interface FaltaRegisterView {
     fun navigateToFaltasList()
 }
 
+// Cria, edita e exclui faltas com aviso de limite
 class FaltaRegisterPresenter(private val view: FaltaRegisterView) {
 
     fun loadFalta(faltaId: Int) {
+        // Busca falta existente para edicao
         val falta = FaltaRepository.findById(faltaId)
         if (falta != null) view.showFalta(falta)
     }
 
     fun saveFalta(userId: Int, falta: Falta, displayDate: String, displayStatus: String, isEditing: Boolean) {
+        // Valida materia selecionada
         if (falta.subjectId == 0) {
             view.showValidationError("Selecione uma matéria.")
             return
         }
+        // Valida formato da data
         if (displayDate.isBlank() || !DateValidator.isValid(displayDate)) {
             view.showValidationError("Data inválida. Use DD/MM/AAAA.")
             return
@@ -37,6 +42,7 @@ class FaltaRegisterPresenter(private val view: FaltaRegisterView) {
         val dbDate = FaltaRepository.formatDateForDb(displayDate)
         val dbStatus = if (displayStatus == "Não Justificada") "Nao Justificada" else displayStatus
         val toSave = falta.copy(date = dbDate, status = dbStatus)
+        // Insere ou atualiza no repositorio
         val success = if (isEditing) FaltaRepository.update(userId, toSave)
         else FaltaRepository.insert(userId, toSave)
         if (success) {
@@ -49,11 +55,13 @@ class FaltaRegisterPresenter(private val view: FaltaRegisterView) {
         }
     }
 
+    // Verifica se o limite de faltas da materia foi atingido
     private fun maybeWarnAbsenceLimit(userId: Int, subjectId: Int) {
         val subject = SubjectRepository.findById(subjectId) ?: run {
             view.navigateToFaltasList()
             return
         }
+        // Conta faltas da materia e compara com o limite
         val count = FaltaRepository.countBySubject(userId, subjectId)
         if (AbsenceLimit.isAtOrOverLimit(count, subject)) {
             val max = AbsenceLimit.maxAllowedAbsences(subject)
@@ -66,6 +74,7 @@ class FaltaRegisterPresenter(private val view: FaltaRegisterView) {
     }
 
     fun deleteFalta(userId: Int, faltaId: Int) {
+        // Remove a falta do banco
         val success = FaltaRepository.delete(userId, faltaId)
         if (success) {
             LogRepository.insertAcao(userId, "EXCLUIR_FALTA", "falta", faltaId)

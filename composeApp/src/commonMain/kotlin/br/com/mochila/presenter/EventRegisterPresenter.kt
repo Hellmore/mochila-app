@@ -5,6 +5,7 @@ import br.com.mochila.model.Event
 import br.com.mochila.model.EventCategory
 import br.com.mochila.util.DateValidator
 
+// Contrato da tela de cadastro e edicao de evento
 interface EventRegisterView {
     fun showEvent(event: Event)
     fun showValidationError(message: String)
@@ -15,14 +16,17 @@ interface EventRegisterView {
     fun navigateToEventsList()
 }
 
+// Cria, edita e exclui eventos
 class EventRegisterPresenter(private val view: EventRegisterView) {
 
     fun loadEvent(eventId: Int) {
+        // Busca evento existente para edicao
         val event = EventRepository.findById(eventId)
         if (event != null) view.showEvent(event)
     }
 
     fun saveEvent(userId: Int, event: Event, isEditing: Boolean, category: EventCategory) {
+        // Valida titulo obrigatorio
         if (event.title.isBlank()) {
             view.showValidationError("Nome do evento é obrigatório.")
             return
@@ -32,6 +36,7 @@ class EventRegisterPresenter(private val view: EventRegisterView) {
         } else {
             EventRepository.formatEventDateForDisplay(event.eventDate)
         }
+        // Valida formato da data do evento
         if (displayDate.isBlank() || !DateValidator.isValid(displayDate)) {
             view.showValidationError("Data inválida. Use DD/MM/AAAA.")
             return
@@ -41,6 +46,7 @@ class EventRegisterPresenter(private val view: EventRegisterView) {
             category = category,
             reminderShown = if (isEditing) event.reminderShown else false,
         )
+        // Atualiza ou insere no repositorio
         val saved = if (isEditing) {
             EventRepository.update(userId, toSave)
         } else {
@@ -55,6 +61,7 @@ class EventRegisterPresenter(private val view: EventRegisterView) {
     }
 
     fun deleteEvent(userId: Int, eventId: Int) {
+        // Remove o evento do banco
         val success = EventRepository.delete(userId, eventId)
         if (success) {
             view.showDeleteSuccess()

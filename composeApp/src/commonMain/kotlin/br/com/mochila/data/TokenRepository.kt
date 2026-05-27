@@ -3,8 +3,10 @@ package br.com.mochila.data
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 
+// Persistencia de tokens de recuperacao de senha
 object TokenRepository {
 
+    // Salva token com validade de 15 minutos
     fun saveToken(email: String, token: String): Boolean {
         val conn = DatabaseHelper.connect() ?: return false
         return try {
@@ -23,6 +25,7 @@ object TokenRepository {
         }
     }
 
+    // Valida token nao expirado e marca como usado
     fun validateAndConsumeToken(email: String, token: String): Boolean {
         val conn = DatabaseHelper.connect() ?: return false
         return try {

@@ -9,6 +9,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
+// Testa CRUD e consultas de disciplinas
 class SubjectRepositoryTest : RepositoryTestBase() {
 
     private val userId = 1
@@ -29,6 +30,7 @@ class SubjectRepositoryTest : RepositoryTestBase() {
         semester = semester,
     )
 
+    // Insercao e listagem
     @Test fun `insert retorna id gerado`() {
         val id = SubjectRepository.insert(userId, sampleSubject())
         assertNotNull(id)
@@ -45,6 +47,7 @@ class SubjectRepositoryTest : RepositoryTestBase() {
         assertEquals(0, SubjectRepository.listByUser(userId).size)
     }
 
+    // Busca por id
     @Test fun `findById retorna disciplina correta`() {
         SubjectRepository.insert(userId, sampleSubject("Física"))
         val all = SubjectRepository.listByUser(userId)
@@ -57,6 +60,7 @@ class SubjectRepositoryTest : RepositoryTestBase() {
         assertNull(SubjectRepository.findById(99999))
     }
 
+    // Atualizacao e exclusao
     @Test fun `update altera nome da disciplina`() {
         SubjectRepository.insert(userId, sampleSubject("Antes"))
         val subj = SubjectRepository.listByUser(userId).first()
@@ -75,6 +79,7 @@ class SubjectRepositoryTest : RepositoryTestBase() {
         assertFalse(SubjectRepository.delete(userId, 99999))
     }
 
+    // Campos especificos e semestres
     @Test fun `insert e findById persistem aula_semana`() {
         val id = SubjectRepository.insert(userId, sampleSubject().copy(weeklyClasses = 3))!!
         val found = SubjectRepository.findById(id)

@@ -2,10 +2,12 @@ package br.com.mochila.data
 
 import br.com.mochila.model.AdminUserStats
 
+// Operacoes de administracao de usuarios
 object AdminRepository {
 
     const val ADMIN_SECRET_CODE = "mochila@adm2025"
 
+    // Verifica se usuario e administrador
     fun isAdmin(userId: Int): Boolean {
         val rows = DatabaseHelper.executeQuery(
             "SELECT id_adm FROM administrador WHERE id_usuario = ?",
@@ -14,18 +16,21 @@ object AdminRepository {
         return rows.isNotEmpty()
     }
 
+    // Promove usuario a administrador
     fun promoteToAdmin(userId: Int): Boolean =
         DatabaseHelper.executeUpdate(
             "INSERT OR IGNORE INTO administrador (id_usuario) VALUES (?)",
             listOf(userId),
         )
 
+    // Remove privilegio de administrador
     fun demoteFromAdmin(userId: Int): Boolean =
         DatabaseHelper.executeUpdate(
             "DELETE FROM administrador WHERE id_usuario = ?",
             listOf(userId),
         )
 
+    // Conta registros do usuario em tarefas, disciplinas, faltas e eventos
     fun getUserStats(targetUserId: Int): AdminUserStats {
         val conn = DatabaseHelper.connect() ?: return AdminUserStats(0, 0, 0, 0)
         return try {

@@ -27,6 +27,7 @@ private fun parseDdMmYyyy(date: String): LocalDate? = runCatching {
     LocalDate(parts[2].toInt(), parts[1].toInt(), parts[0].toInt())
 }.getOrNull()
 
+// Alerta em tela cheia quando prazo da tarefa e hoje ou amanha
 @Composable
 fun TaskReminderMonitor(userId: Int) {
     var shownIds by remember { mutableStateOf(setOf<Int>()) }

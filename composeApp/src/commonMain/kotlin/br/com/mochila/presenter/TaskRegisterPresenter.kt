@@ -6,6 +6,7 @@ import br.com.mochila.model.TaskCategory
 import br.com.mochila.model.TaskPriority
 import br.com.mochila.util.DateValidator
 
+// Contrato da tela de cadastro e edicao de tarefa
 interface TaskRegisterView {
     fun showTask(task: Task)
     fun showValidationError(message: String)
@@ -16,9 +17,11 @@ interface TaskRegisterView {
     fun navigateToTasksList()
 }
 
+// Cria, edita e exclui tarefas
 class TaskRegisterPresenter(private val view: TaskRegisterView) {
 
     fun loadTask(taskId: Int) {
+        // Busca tarefa existente para edicao
         val task = TaskRepository.findById(taskId)
         if (task != null) {
             view.showTask(task)
@@ -32,17 +35,20 @@ class TaskRegisterPresenter(private val view: TaskRegisterView) {
         priority: TaskPriority,
         category: TaskCategory,
     ) {
+        // Valida campos obrigatorios
         if (task.title.isBlank() || task.description.isBlank()) {
             view.showValidationError("Título e descrição são obrigatórios.")
             return
         }
 
+        // Valida formato da data limite
         if (!task.dueDate.isNullOrBlank() && !DateValidator.isValid(task.dueDate)) {
             view.showValidationError("Data limite inválida.")
             return
         }
 
         val toSave = task.copy(priority = priority, category = category)
+        // Atualiza ou insere no repositorio
         val saved = if (isEditing) {
             TaskRepository.update(userId, toSave)
         } else {
@@ -58,6 +64,7 @@ class TaskRegisterPresenter(private val view: TaskRegisterView) {
     }
 
     fun deleteTask(userId: Int, taskId: Int) {
+        // Remove a tarefa do banco
         val success = TaskRepository.delete(userId, taskId)
         if (success) {
             view.showDeleteSuccess()

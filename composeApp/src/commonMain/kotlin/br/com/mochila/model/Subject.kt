@@ -1,8 +1,9 @@
 package br.com.mochila.model
 
-/** RGB sem canal alpha (ex.: 0x38B6FF); exibição usa opacidade total. */
+// Cor padrao das disciplinas (RGB compactado)
 const val DEFAULT_SUBJECT_COLOR_RGB = 0x38B6FF
 
+// Disciplina com periodo, frequencia e cor
 data class Subject(
     val id: Int = 0,
     val name: String = "",

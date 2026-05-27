@@ -6,13 +6,7 @@ import org.junit.Before
 import java.sql.Connection
 import java.sql.DriverManager
 
-/**
- * Base class for repository integration tests using an in-memory SQLite database.
- *
- * Uses shared-cache URI mode so the in-memory DB stays alive across multiple
- * connections (repositories call DatabaseHelper.connect() which opens/closes
- * one connection per operation).
- */
+// Base para testes de repositorio com banco SQLite em memoria
 abstract class RepositoryTestBase {
 
     private lateinit var holderConn: Connection
@@ -116,6 +110,7 @@ abstract class RepositoryTestBase {
         """.trimIndent()
     }
 
+    // Cria schema e mock do DatabaseHelper antes de cada teste
     @Before
     open fun setUpBase() {
         holderConn = DriverManager.getConnection(DB_URL)
@@ -127,6 +122,7 @@ abstract class RepositoryTestBase {
         every { DatabaseHelper.connect() } answers { DriverManager.getConnection(DB_URL) }
     }
 
+    // Limpa tabelas, fecha conexao e remove mocks apos cada teste
     @After
     open fun tearDownBase() {
         if (::holderConn.isInitialized && !holderConn.isClosed) {

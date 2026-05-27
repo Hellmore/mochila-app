@@ -42,6 +42,7 @@ import mochila_app.composeapp.generated.resources.Res
 import mochila_app.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.painterResource
 
+// Paleta da lista de faltas
 private val faltaFundoTela = Color(0xFFF8F8F8)
 private val faltaLaranja = Color(0xFFFFBA5E)
 private val faltaRosa = Color(0xFFFF6694)
@@ -195,6 +196,7 @@ private fun FaltaFilterDropdown(
     }
 }
 
+// Card de falta com aviso de limite na disciplina
 @Composable
 private fun FaltaCard(
     falta: Falta,
@@ -281,6 +283,7 @@ private fun FaltaCard(
     }
 }
 
+// Tela principal do registro de faltas
 @Composable
 fun FaltaListScreen(
     userId: Int,

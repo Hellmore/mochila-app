@@ -23,10 +23,12 @@ import mochila_app.composeapp.generated.resources.Res
 import mochila_app.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.painterResource
 
+// Paleta do painel administrativo
 private val adminRosa   = Color(0xFFFF6694)
 private val adminFundo  = Color(0xFFF8F8F8)
 private val adminLaranja = Color(0xFFFFBA5E)
 
+// Menu principal do administrador
 @Composable
 fun AdminPanelScreen(
     onNavigateToUsers: () -> Unit,
@@ -110,6 +112,7 @@ fun AdminPanelScreen(
     }
 }
 
+// Faixa lateral com logo e perfil do admin
 @Composable
 internal fun AdminSidebar(modifier: Modifier = Modifier) {
     val user = UserSession.currentUser

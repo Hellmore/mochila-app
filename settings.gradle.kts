@@ -1,6 +1,8 @@
+// Nome do projeto e modulo unico da aplicacao
 rootProject.name = "mochila-app"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
+// Repositorios para plugins Gradle
 pluginManagement {
     repositories {
         google {
@@ -15,6 +17,7 @@ pluginManagement {
     }
 }
 
+// Repositorios para dependencias dos modulos
 dependencyResolutionManagement {
     repositories {
         google {

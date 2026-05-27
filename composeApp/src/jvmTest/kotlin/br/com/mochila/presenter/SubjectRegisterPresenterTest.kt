@@ -7,6 +7,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
+// Testa cadastro, edicao e validacao de disciplinas
 class SubjectRegisterPresenterTest {
 
     private val view = mockk<SubjectRegisterView>(relaxed = true)
@@ -30,6 +31,7 @@ class SubjectRegisterPresenterTest {
         semester = "2025.1",
     )
 
+    // Validacao de campos obrigatorios
     @Test fun `campos em branco exibem erro de validacao`() {
         presenter.saveSubject(1, validSubject.copy(name = ""), false)
         verify { view.showValidationError(any()) }
@@ -60,6 +62,7 @@ class SubjectRegisterPresenterTest {
         verify { view.showValidationError(any()) }
     }
 
+    // Salvamento de nova disciplina
     @Test fun `salvar novo com sucesso persiste aula_semana e navega`() {
         every { SubjectRepository.insert(any(), any()) } returns 12
         presenter.saveSubject(1, validSubject, false)
@@ -70,6 +73,7 @@ class SubjectRegisterPresenterTest {
         verify { view.navigateToHome() }
     }
 
+    // Edicao de disciplina existente
     @Test fun `editar com sucesso persiste aula_semana`() {
         every { SubjectRepository.update(any(), any()) } returns true
         presenter.saveSubject(1, validSubject.copy(id = 5), true)
@@ -80,6 +84,7 @@ class SubjectRegisterPresenterTest {
         verify { view.navigateToHome() }
     }
 
+    // Exclusao de disciplina
     @Test fun `deleteSubject com sucesso navega`() {
         every { SubjectRepository.delete(any(), any()) } returns true
         presenter.deleteSubject(1, 5)
@@ -93,12 +98,14 @@ class SubjectRegisterPresenterTest {
         verify { view.showSaveError() }
     }
 
+    // Carregamento para edicao
     @Test fun `loadSubjectForEdit retorna disciplina do repositorio`() {
         every { SubjectRepository.findById(5) } returns validSubject.copy(id = 5)
         val result = presenter.loadSubjectForEdit(5)
         kotlin.test.assertEquals(5, result?.id)
     }
 
+    // Falhas ao salvar
     @Test fun `salvar novo com falha exibe erro`() {
         every { SubjectRepository.insert(any(), any()) } returns null
         presenter.saveSubject(1, validSubject, false)
@@ -113,6 +120,7 @@ class SubjectRegisterPresenterTest {
         verify(exactly = 0) { view.navigateToHome() }
     }
 
+    // Validacao de campos individuais em branco
     @Test fun `teacher em branco exibe erro de validacao`() {
         presenter.saveSubject(1, validSubject.copy(teacher = ""), false)
         verify { view.showValidationError(any()) }

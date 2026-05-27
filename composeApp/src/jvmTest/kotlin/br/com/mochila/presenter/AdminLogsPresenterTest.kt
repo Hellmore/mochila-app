@@ -8,6 +8,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
+// Testa carregamento de logs de acao e erro na tela admin
 class AdminLogsPresenterTest {
 
     private val view = mockk<AdminLogsView>(relaxed = true)
@@ -16,6 +17,7 @@ class AdminLogsPresenterTest {
     @Before fun setUp() { mockkObject(LogRepository) }
     @After  fun tearDown() { unmockkAll() }
 
+    // Logs de acao
     @Test fun `loadLogsAcao repassa resultado do repositorio para a view`() {
         val logs = listOf(
             LogAcao(1, 1, "Ana", "CRIAR_TAREFA", null, "tarefa", null, "2025-01-01")
@@ -31,6 +33,7 @@ class AdminLogsPresenterTest {
         verify { view.showLogsAcao(emptyList()) }
     }
 
+    // Logs de erro
     @Test fun `loadLogsErro repassa resultado do repositorio para a view`() {
         val erros = listOf(
             LogErro(1, 1, "Ana", "Modulo", "Erro", "2025-01-01")

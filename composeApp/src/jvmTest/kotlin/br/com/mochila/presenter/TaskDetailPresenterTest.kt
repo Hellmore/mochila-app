@@ -7,6 +7,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
+// Testa detalhe, edicao e exclusao de tarefas
 class TaskDetailPresenterTest {
 
     private val view = mockk<TaskDetailView>(relaxed = true)
@@ -17,6 +18,7 @@ class TaskDetailPresenterTest {
 
     private val task = Task(id = 3, title = "Prova")
 
+    // Carregamento da tarefa
     @Test fun `loadTask encontrado exibe tarefa`() {
         every { TaskRepository.findById(3) } returns task
         presenter.loadTask(3)
@@ -29,11 +31,13 @@ class TaskDetailPresenterTest {
         verify { view.showTaskNotFound() }
     }
 
+    // Navegacao para edicao
     @Test fun `onEditClicked navega para edicao`() {
         presenter.onEditClicked(task)
         verify { view.navigateToEdit(task) }
     }
 
+    // Exclusao de tarefa
     @Test fun `onDeleteConfirmed com sucesso navega para lista`() {
         every { TaskRepository.delete(any(), any()) } returns true
         presenter.onDeleteConfirmed(1, task)

@@ -11,6 +11,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
+// Testa CRUD de tarefas e persistencia de categoria e prioridade
 class TaskRepositoryTest : RepositoryTestBase() {
 
     private val userId = 1
@@ -24,6 +25,7 @@ class TaskRepositoryTest : RepositoryTestBase() {
     private fun sampleTask(title: String = "Estudar") =
         Task(title = title, description = "Descrição", status = "Pendente")
 
+    // Insercao e listagem
     @Test fun `insert retorna id gerado`() {
         val id = TaskRepository.insert(userId, sampleTask())
         assertNotNull(id)
@@ -42,6 +44,7 @@ class TaskRepositoryTest : RepositoryTestBase() {
         assertEquals(0, tasks.size)
     }
 
+    // Busca por id
     @Test fun `findById retorna tarefa correta`() {
         TaskRepository.insert(userId, sampleTask("Estudar Kotlin"))
         val tasks = TaskRepository.listByUser(userId)
@@ -54,6 +57,7 @@ class TaskRepositoryTest : RepositoryTestBase() {
         assertNull(TaskRepository.findById(99999))
     }
 
+    // Atualizacao e exclusao
     @Test fun `update altera titulo`() {
         TaskRepository.insert(userId, sampleTask("Antes"))
         val task = TaskRepository.listByUser(userId).first()
