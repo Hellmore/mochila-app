@@ -7,6 +7,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.verticalScroll
@@ -16,21 +17,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import br.com.mochila.data.SubjectRepository
-import br.com.mochila.data.TaskRepository
+import br.com.mochila.data.EventRepository
 import br.com.mochila.data.UserSession
-import br.com.mochila.model.Task
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import br.com.mochila.presenter.TaskDetailPresenter
-import br.com.mochila.presenter.TaskDetailView
+import br.com.mochila.model.Event
+import br.com.mochila.presenter.EventDetailPresenter
+import br.com.mochila.presenter.EventDetailView
 import br.com.mochila.ui.screens.components.BackButton
 import br.com.mochila.ui.screens.components.ProfileAvatar
 import kotlinx.datetime.Clock
@@ -40,83 +38,77 @@ import kotlinx.datetime.toLocalDateTime
 import mochila_app.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.painterResource
 
-// Tela de visualizacao e edicao de uma tarefa
+private val edFundo = Color(0xFFF8F8F8)
+private val edLaranja = Color(0xFFFFBA5E)
+private val edRosa = Color(0xFFFF6694)
+
+private val edMonthNames = listOf(
+    "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+    "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
+)
+
+private val edReminderLabels = mapOf(
+    null to "Nenhum",
+    5 to "5 Minutos antes",
+    10 to "10 Minutos antes",
+    30 to "30 Minutos antes",
+    60 to "1 Hora antes",
+)
+
+private fun edFormatDate(date: LocalDate): String {
+    val dd = date.dayOfMonth.toString().padStart(2, '0')
+    val mon = edMonthNames[date.monthNumber - 1]
+    val yy = (date.year % 100).toString().padStart(2, '0')
+    return "$dd $mon $yy"
+}
+
+private fun edRgbToColor(rgb: Int): Color {
+    val r = ((rgb shr 16) and 0xFF) / 255f
+    val g = ((rgb shr 8) and 0xFF) / 255f
+    val b = (rgb and 0xFF) / 255f
+    return Color(r, g, b)
+}
+
+// Tela de visualizacao dos dados de um evento
 @Composable
-fun TaskDetailScreen(
+fun EventDetailScreen(
     userId: Int,
-    taskId: Int,
-    onNavigateToEdit: (Task) -> Unit,
+    eventId: Int,
+    onNavigateToEdit: (Event) -> Unit,
     onNavigateToHome: () -> Unit,
-    onNavigateToTasksList: () -> Unit,
+    onNavigateToEventsList: () -> Unit,
     onNavigateToAccountSettings: () -> Unit,
     onBack: () -> Unit,
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
 ) {
-    // Paleta e estado da tela
-    val fundoTela = Color(0xFFF8F8F8)
-    val laranjaHeader = Color(0xFFFFBA5E)
-    val rosa = Color(0xFFFF6694)
-
-    var task by remember { mutableStateOf<Task?>(null) }
-    var blockerTitle by remember { mutableStateOf<String?>(null) }
-    var subjectName by remember { mutableStateOf<String?>(null) }
+    var event by remember { mutableStateOf<Event?>(null) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
 
     val presenter = remember {
-        object : TaskDetailView {
-            override fun showTask(t: Task) { task = t }
-            override fun showTaskNotFound() {}
+        object : EventDetailView {
+            override fun showEvent(e: Event) { event = e }
+            override fun showEventNotFound() {}
             override fun showDeleteSuccess() {}
             override fun showDeleteError() {}
-            override fun navigateToTasksList() { onNavigateToTasksList() }
-            override fun navigateToEdit(t: Task) { onNavigateToEdit(t) }
+            override fun navigateToEventsList() { onNavigateToEventsList() }
+            override fun navigateToEdit(e: Event) { onNavigateToEdit(e) }
             override fun navigateBack() { onBack() }
-        }.let { view -> TaskDetailPresenter(view) }
+        }.let { EventDetailPresenter(it) }
     }
 
-    LaunchedEffect(taskId) {
-        presenter.loadTask(taskId)
-    }
-
-    LaunchedEffect(task?.blockers) {
-        val blockerId = task?.blockers?.toIntOrNull()
-        blockerTitle = if (blockerId != null) {
-            withContext(Dispatchers.IO) { TaskRepository.findById(blockerId) }?.title
-        } else null
-    }
-
-    LaunchedEffect(task?.subjectId) {
-        val sid = task?.subjectId
-        subjectName = if (sid != null) {
-            withContext(Dispatchers.IO) { SubjectRepository.findById(sid) }?.name
-        } else null
-    }
-
-    val monthNamesPt = remember {
-        listOf(
-            "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-            "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
-        )
-    }
-
-    fun formatDatePt(date: LocalDate): String {
-        val dd = date.dayOfMonth.toString().padStart(2, '0')
-        val mon = monthNamesPt[date.monthNumber - 1]
-        val yy = (date.year % 100).toString().padStart(2, '0')
-        return "$dd $mon $yy"
-    }
+    LaunchedEffect(eventId) { presenter.loadEvent(eventId) }
 
     val user = UserSession.currentUser
     val displayName = user?.name.orEmpty()
     val today = remember { Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date }
-    val dateLabel = remember(today) { formatDatePt(today) }
+    val dateLabel = remember(today) { edFormatDate(today) }
 
     @Composable
     fun FormLabel(text: String) {
         Text(
             text = text,
-            color = rosa,
+            color = edRosa,
             fontSize = 12.sp,
             fontWeight = FontWeight.Medium,
             lineHeight = 20.sp,
@@ -134,16 +126,16 @@ fun TaskDetailScreen(
             colors = OutlinedTextFieldDefaults.colors(
                 focusedContainerColor = Color.White,
                 unfocusedContainerColor = Color.White,
-                focusedBorderColor = rosa,
-                unfocusedBorderColor = rosa,
-                focusedTextColor = rosa,
-                unfocusedTextColor = rosa,
+                focusedBorderColor = edRosa,
+                unfocusedBorderColor = edRosa,
+                focusedTextColor = edRosa,
+                unfocusedTextColor = edRosa,
                 cursorColor = Color.Transparent,
             ),
             textStyle = LocalTextStyle.current.copy(
                 fontSize = 12.sp,
                 fontWeight = FontWeight.ExtraLight,
-                color = rosa,
+                color = edRosa,
             ),
             shape = RoundedCornerShape(7.dp),
             modifier = Modifier.heightIn(min = 46.dp).fillMaxWidth(),
@@ -156,7 +148,7 @@ fun TaskDetailScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp))
-                .background(laranjaHeader)
+                .background(edLaranja)
                 .padding(vertical = 20.dp, horizontal = 22.dp),
         ) {
             Row(
@@ -209,52 +201,11 @@ fun TaskDetailScreen(
     }
 
     @Composable
-    fun BottomBar() {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp),
-            horizontalArrangement = Arrangement.Center,
-        ) {
-            Row(
-                modifier = Modifier
-                    .background(rosa.copy(alpha = 0.95f), RoundedCornerShape(8.dp))
-                    .padding(horizontal = 20.dp),
-                horizontalArrangement = Arrangement.spacedBy(5.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                IconButton(onClick = { showMenu = true }) {
-                    Image(
-                        painter = painterResource(Res.drawable.menu),
-                        contentDescription = "Menu",
-                        modifier = Modifier.size(16.dp),
-                        colorFilter = ColorFilter.tint(Color.White),
-                    )
-                }
-                IconButton(onClick = onNavigateToTasksList) {
-                    Image(
-                        painter = painterResource(Res.drawable.add),
-                        contentDescription = "Lista de tarefas",
-                        modifier = Modifier.size(16.dp),
-                        colorFilter = ColorFilter.tint(Color.White),
-                    )
-                }
-                IconButton(onClick = onNavigateToHome) {
-                    Image(
-                        painter = painterResource(Res.drawable.home),
-                        contentDescription = "Início",
-                        modifier = Modifier.size(16.dp),
-                        colorFilter = ColorFilter.tint(Color.White),
-                    )
-                }
-            }
-        }
-    }
-
-    @Composable
     fun DesktopSidebar() {
         Box(
             modifier = Modifier
                 .fillMaxHeight()
-                .background(rosa),
+                .background(edRosa),
         ) {
             Column(
                 modifier = Modifier.align(Alignment.Center).fillMaxWidth(),
@@ -306,60 +257,104 @@ fun TaskDetailScreen(
     }
 
     @Composable
+    fun BottomBar() {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp),
+            horizontalArrangement = Arrangement.Center,
+        ) {
+            Row(
+                modifier = Modifier
+                    .background(edRosa.copy(alpha = 0.95f), RoundedCornerShape(8.dp))
+                    .padding(horizontal = 20.dp),
+                horizontalArrangement = Arrangement.spacedBy(5.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                IconButton(onClick = { showMenu = true }) {
+                    Image(
+                        painter = painterResource(Res.drawable.menu),
+                        contentDescription = "Menu",
+                        modifier = Modifier.size(16.dp),
+                        colorFilter = ColorFilter.tint(Color.White),
+                    )
+                }
+                IconButton(onClick = onNavigateToEventsList) {
+                    Image(
+                        painter = painterResource(Res.drawable.add),
+                        contentDescription = "Lista de eventos",
+                        modifier = Modifier.size(16.dp),
+                        colorFilter = ColorFilter.tint(Color.White),
+                    )
+                }
+                IconButton(onClick = onNavigateToHome) {
+                    Image(
+                        painter = painterResource(Res.drawable.home),
+                        contentDescription = "Início",
+                        modifier = Modifier.size(16.dp),
+                        colorFilter = ColorFilter.tint(Color.White),
+                    )
+                }
+            }
+        }
+    }
+
+    @Composable
     fun ContentBody(modifier: Modifier = Modifier, fieldsMaxWidth: Dp? = null) {
         val widthCap = fieldsMaxWidth?.let { Modifier.widthIn(max = it) } ?: Modifier
         Box(modifier = modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
-            task?.let { t ->
+            event?.let { e ->
                 Column(
                     modifier = widthCap
                         .fillMaxWidth()
                         .verticalScroll(rememberScrollState())
                         .padding(horizontal = 36.dp, vertical = 20.dp),
                 ) {
-                    Text(
-                        text = "Detalhes da Tarefa",
-                        color = laranjaHeader,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.SemiBold,
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(16.dp)
+                                .clip(CircleShape)
+                                .background(edRgbToColor(e.colorRgb)),
+                        )
+                        Text(
+                            text = "Detalhes do Evento",
+                            color = edLaranja,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
                     Spacer(Modifier.height(20.dp))
 
-                    FormLabel("Título:")
-                    FieldDisplay(t.title)
+                    FormLabel("Nome do evento:")
+                    FieldDisplay(e.title)
                     Spacer(Modifier.height(14.dp))
 
-                    FormLabel("Descrição:")
-                    FieldDisplay(t.description.ifBlank { "Sem descrição" })
-                    Spacer(Modifier.height(14.dp))
-
-                    FormLabel("Blocker:")
-                    FieldDisplay(blockerTitle ?: "Nenhuma")
-                    Spacer(Modifier.height(14.dp))
-
-                    FormLabel("Data limite:")
-                    FieldDisplay(t.dueDate ?: "Não definida")
-                    Spacer(Modifier.height(14.dp))
-
-                    FormLabel("Disciplina:")
-                    FieldDisplay(subjectName ?: "Nenhuma")
-                    Spacer(Modifier.height(14.dp))
-
-                    FormLabel("Status:")
-                    FieldDisplay(t.status)
-                    Spacer(Modifier.height(14.dp))
-
-                    FormLabel("Prioridade:")
-                    FieldDisplay(t.priority.label)
+                    FormLabel("Matéria:")
+                    FieldDisplay(e.subjectName ?: "Nenhuma")
                     Spacer(Modifier.height(14.dp))
 
                     FormLabel("Categoria:")
-                    FieldDisplay(t.category.label)
+                    FieldDisplay(e.category.label)
+                    Spacer(Modifier.height(14.dp))
+
+                    FormLabel("Data:")
+                    FieldDisplay(EventRepository.formatEventDateForDisplay(e.eventDate))
+                    Spacer(Modifier.height(14.dp))
+
+                    FormLabel("Descrição:")
+                    FieldDisplay(e.description.orEmpty().ifBlank { "Sem descrição" })
+                    Spacer(Modifier.height(14.dp))
+
+                    FormLabel("Lembrete:")
+                    FieldDisplay(edReminderLabels[e.reminderMinutes] ?: "Nenhum")
 
                     Spacer(Modifier.height(24.dp))
 
                     Button(
-                        onClick = { presenter.onEditClicked(t) },
-                        colors = ButtonDefaults.buttonColors(containerColor = rosa, contentColor = Color.White),
+                        onClick = { presenter.onEditClicked(e) },
+                        colors = ButtonDefaults.buttonColors(containerColor = edRosa, contentColor = Color.White),
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier.align(Alignment.CenterHorizontally).fillMaxWidth(0.75f),
                     ) {
@@ -385,22 +380,22 @@ fun TaskDetailScreen(
     }
 
     if (showDeleteDialog) {
-        task?.let { t ->
+        event?.let { e ->
             AlertDialog(
                 onDismissRequest = { showDeleteDialog = false },
-                title = { Text("Excluir tarefa", fontWeight = FontWeight.Bold, fontSize = 18.sp) },
-                text = { Text("Tem certeza que deseja excluir \"${t.title}\"?", fontSize = 14.sp) },
+                title = { Text("Excluir evento", fontWeight = FontWeight.Bold, fontSize = 18.sp) },
+                text = { Text("Tem certeza que deseja excluir \"${e.title}\"? Esta ação não pode ser desfeita.", fontSize = 14.sp) },
                 confirmButton = {
                     TextButton(onClick = {
                         showDeleteDialog = false
-                        presenter.onDeleteConfirmed(userId, t)
+                        presenter.onDeleteConfirmed(userId, e)
                     }) {
                         Text("Excluir", color = Color(0xFFD32F2F), fontWeight = FontWeight.Bold)
                     }
                 },
                 dismissButton = {
                     TextButton(onClick = { showDeleteDialog = false }) {
-                        Text("Cancelar", color = rosa)
+                        Text("Cancelar", color = edRosa)
                     }
                 },
                 shape = RoundedCornerShape(12.dp),
@@ -410,7 +405,7 @@ fun TaskDetailScreen(
     }
 
     BoxWithConstraints(
-        modifier = Modifier.fillMaxSize().background(fundoTela),
+        modifier = Modifier.fillMaxSize().background(edFundo),
     ) {
         Image(
             painter = painterResource(Res.drawable.background),
@@ -419,8 +414,6 @@ fun TaskDetailScreen(
             contentScale = ContentScale.Crop,
             alpha = 0.50f,
         )
-
-        // Layout responsivo desktop ou mobile
         val wide = maxWidth >= 700.dp
         if (wide) {
             Row(Modifier.fillMaxSize()) {
@@ -432,7 +425,7 @@ fun TaskDetailScreen(
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 16.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        BackButton(onBack = onBack, backgroundColor = rosa.copy(alpha = 0.92f), iconTint = Color.White)
+                        BackButton(onBack = onBack, backgroundColor = edRosa.copy(alpha = 0.92f), iconTint = Color.White)
                         Spacer(Modifier.weight(1f))
                         Text(text = dateLabel, color = Color(0xFF333333), fontSize = 13.sp, fontWeight = FontWeight.Medium)
                         Spacer(Modifier.width(6.dp))
@@ -440,7 +433,7 @@ fun TaskDetailScreen(
                             painter = painterResource(Res.drawable.menu_icon_today),
                             contentDescription = "Calendário",
                             modifier = Modifier.size(22.dp),
-                            colorFilter = ColorFilter.tint(rosa),
+                            colorFilter = ColorFilter.tint(edRosa),
                         )
                     }
                     ContentBody(modifier = Modifier.weight(1f), fieldsMaxWidth = 600.dp)
@@ -460,10 +453,9 @@ fun TaskDetailScreen(
         MenuScreen(
             onCloseMenu = { showMenu = false },
             onNavigateToHome = { showMenu = false; onNavigateToHome() },
-            onNavigateToTasksList = { showMenu = false; onNavigateToTasksList() },
+            onNavigateToTasksList = { showMenu = false },
             onNavigateToAccountSettings = { showMenu = false; onNavigateToAccountSettings() },
-            onLogout = { showMenu = false; onLogout() }
+            onLogout = { showMenu = false; onLogout() },
         )
     }
 }
-

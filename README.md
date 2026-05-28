@@ -8,6 +8,7 @@ Aplicativo **Mochila Hub** em [Kotlin Multiplatform](https://kotlinlang.org/docs
 - [Stack](#stack)
 - [Pré-requisitos](#pré-requisitos)
 - [Configuração do Android Studio](#configuração-do-android-studio)
+- [Configuração do SendGrid (e-mail)](#configuração-do-sendgrid-e-mail)
 - [Como rodar](#como-rodar)
 - [Testes e verificação](#testes-e-verificação)
 - [Estrutura do repositório](#estrutura-do-repositório)
@@ -52,6 +53,20 @@ Cliente multiplataforma com UI em Compose, persistência local (SQLite) e recurs
 6. **Executar o desktop (JVM)** — Se não existir configuração pronta: `Run` → `Edit Configurations…` → `+` → **Gradle** → selecione o projeto Gradle **`composeApp`** na árvore → em **Run** / *Tasks* use `:composeApp:run` (ou `composeApp:run`). Salve e execute para abrir a janela **Mochila Hub**.
 
 7. **Plugins úteis** — O suporte a **Kotlin** e **Compose** já vem integrado; para fluxos **Kotlin Multiplatform**, confira na `Settings` → `Plugins` se há atualizações do ecossistema JetBrains recomendadas para a sua versão do Studio.
+
+## Configuração do SendGrid (e-mail)
+
+O envio de e-mails (verificação de conta e recuperação de senha) usa a API do [SendGrid](https://sendgrid.com). Para que esses fluxos funcionem localmente, crie o arquivo `composeApp/sendgrid.properties` com suas credenciais:
+
+```properties
+SENDGRID_API_KEY=sua_chave_aqui
+SENDGRID_SENDER_EMAIL=seu_email_aqui
+SENDGRID_SENDER_NAME=Mochila Hub
+```
+
+> **Importante:** esse arquivo esta listado no `.gitignore` e **nunca deve ser commitado**. Para referencia, o repositorio inclui `composeApp/sendgrid.properties.example` com o formato esperado.
+
+Se o arquivo nao existir (ou as variaveis de ambiente `SENDGRID_API_KEY` e `SENDGRID_SENDER_EMAIL` nao estiverem definidas), o app inicializa normalmente, mas os fluxos de e-mail ficam desabilitados — `EmailService.isConfigured` retornara `false`.
 
 ## Como rodar
 

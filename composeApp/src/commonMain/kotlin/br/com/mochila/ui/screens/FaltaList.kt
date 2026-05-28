@@ -291,7 +291,7 @@ fun FaltaListScreen(
     onOpenMenu: () -> Unit,
     onBack: () -> Unit,
     onNavigateToAdd: () -> Unit,
-    onNavigateToFaltaEdit: (Int) -> Unit,
+    onNavigateToFaltaDetail: (Int) -> Unit,
     onNavigateToAccountSettings: () -> Unit,
     onLogout: () -> Unit,
     initialSubjectFilter: String = "Todos",
@@ -310,7 +310,7 @@ fun FaltaListScreen(
         FaltaListPresenter(object : FaltaListView {
             override fun showFaltas(faltas: List<Falta>) {}
             override fun showEmptyState() {}
-            override fun navigateToFaltaEdit(faltaId: Int) {}
+            override fun navigateToFaltaDetail(faltaId: Int) {}
         })
     }
 
@@ -322,7 +322,7 @@ fun FaltaListScreen(
         object : FaltaListView {
             override fun showFaltas(list: List<Falta>) { faltas = list }
             override fun showEmptyState() { faltas = emptyList() }
-            override fun navigateToFaltaEdit(faltaId: Int) { onNavigateToFaltaEdit(faltaId) }
+            override fun navigateToFaltaDetail(faltaId: Int) { onNavigateToFaltaDetail(faltaId) }
         }.let { FaltaListPresenter(it) }
     }
 

@@ -91,7 +91,7 @@ fun HomeScreen(
     onNavigateToFaltasList: (String) -> Unit,
     onNavigateToEventsList: () -> Unit,
     onNavigateToTaskDetail: (Int) -> Unit = {},
-    onNavigateToEventEdit: (Int) -> Unit = {},
+    onNavigateToEventDetail: (Int) -> Unit = {},
     onNavigateToAccountSettings: () -> Unit,
     onLogout: () -> Unit,
     notifVersion: Int = 0,
@@ -176,7 +176,7 @@ fun HomeScreen(
                 onNavigateToTaskDetail = onNavigateToTaskDetail,
                 onNavigateToFaltasList = onNavigateToFaltasList,
                 onNavigateToEventsList = onNavigateToEventsList,
-                onNavigateToEventEdit = onNavigateToEventEdit,
+                onNavigateToEventDetail = onNavigateToEventDetail,
                 onNavigateToAccountSettings = onNavigateToAccountSettings,
                 unreadCount = unreadCount,
                 onOpenNotifications = { showNotificationPanel = true },
@@ -208,7 +208,7 @@ fun HomeScreen(
                 onNavigateToTaskDetail = onNavigateToTaskDetail,
                 onNavigateToFaltasList = onNavigateToFaltasList,
                 onNavigateToEventsList = onNavigateToEventsList,
-                onNavigateToEventEdit = onNavigateToEventEdit,
+                onNavigateToEventDetail = onNavigateToEventDetail,
                 onNavigateToAccountSettings = onNavigateToAccountSettings,
                 unreadCount = unreadCount,
                 onOpenNotifications = { showNotificationPanel = true },
@@ -251,7 +251,7 @@ private fun HomeMobileLayout(
     onNavigateToFaltasList: (String) -> Unit,
     onNavigateToEventsList: () -> Unit,
     onNavigateToTaskDetail: (Int) -> Unit = {},
-    onNavigateToEventEdit: (Int) -> Unit = {},
+    onNavigateToEventDetail: (Int) -> Unit = {},
     onNavigateToAccountSettings: () -> Unit,
     unreadCount: Int = 0,
     onOpenNotifications: () -> Unit = {},
@@ -281,7 +281,7 @@ private fun HomeMobileLayout(
             onNavigateToTaskDetail = onNavigateToTaskDetail,
             onNavigateToFaltasList = onNavigateToFaltasList,
             onNavigateToEventsList = onNavigateToEventsList,
-            onNavigateToEventEdit = onNavigateToEventEdit,
+            onNavigateToEventDetail = onNavigateToEventDetail,
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
@@ -315,7 +315,7 @@ private fun HomeDesktopLayout(
     onNavigateToFaltasList: (String) -> Unit,
     onNavigateToEventsList: () -> Unit,
     onNavigateToTaskDetail: (Int) -> Unit = {},
-    onNavigateToEventEdit: (Int) -> Unit = {},
+    onNavigateToEventDetail: (Int) -> Unit = {},
     onNavigateToAccountSettings: () -> Unit,
     unreadCount: Int = 0,
     onOpenNotifications: () -> Unit = {},
@@ -444,7 +444,7 @@ private fun HomeDesktopLayout(
                 onNavigateToTaskDetail = onNavigateToTaskDetail,
                 onNavigateToFaltasList = onNavigateToFaltasList,
                 onNavigateToEventsList = onNavigateToEventsList,
-                onNavigateToEventEdit = onNavigateToEventEdit,
+                onNavigateToEventDetail = onNavigateToEventDetail,
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
@@ -477,7 +477,7 @@ private fun HomeDashboardContent(
     onNavigateToTaskDetail: (Int) -> Unit,
     onNavigateToFaltasList: (String) -> Unit,
     onNavigateToEventsList: () -> Unit,
-    onNavigateToEventEdit: (Int) -> Unit,
+    onNavigateToEventDetail: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val selectedDate = weekDays.getOrNull(selectedDayIndex)
@@ -563,7 +563,7 @@ private fun HomeDashboardContent(
                 }
                 EventsRow(
                     events = upcomingEvents,
-                    onCardClick = onNavigateToEventEdit,
+                    onCardClick = onNavigateToEventDetail,
                 )
             }
         }

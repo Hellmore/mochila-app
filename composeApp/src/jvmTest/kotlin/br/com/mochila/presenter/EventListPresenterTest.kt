@@ -37,9 +37,9 @@ class EventListPresenterTest {
     }
 
     // Navegacao
-    @Test fun `onEventClicked navega para edicao`() {
+    @Test fun `onEventClicked navega para detalhes`() {
         presenter.onEventClicked(3)
-        verify { view.navigateToEventEdit(3) }
+        verify { view.navigateToEventDetail(3) }
     }
 
     // Filtros

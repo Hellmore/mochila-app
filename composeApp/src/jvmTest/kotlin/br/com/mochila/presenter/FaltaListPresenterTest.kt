@@ -32,9 +32,9 @@ class FaltaListPresenterTest {
     }
 
     // Navegacao
-    @Test fun `onFaltaClicked navega para edicao`() {
+    @Test fun `onFaltaClicked navega para detalhes`() {
         presenter.onFaltaClicked(4)
-        verify { view.navigateToFaltaEdit(4) }
+        verify { view.navigateToFaltaDetail(4) }
     }
 
     // Filtros

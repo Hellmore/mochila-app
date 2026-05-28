@@ -140,9 +140,9 @@ fun App() {
                                 },
                                 onNavigateToFaltasList = { name -> faltaSubjectFilter = name; navigateTo("faltas_list") },
                                 onNavigateToEventsList = { navigateTo("events_list") },
-                                onNavigateToEventEdit = { id ->
+                                onNavigateToEventDetail = { id ->
                                     selectedEventId = id
-                                    navigateTo("event_edit")
+                                    navigateTo("event_detail")
                                 },
                                 onNavigateToAccountSettings = { navigateTo("account_settings") },
                                 onLogout = { logout() },
@@ -336,13 +336,33 @@ fun App() {
                                 onOpenMenu = { openMenu() },
                                 onBack = { goBack() },
                                 onNavigateToAdd = { navigateTo("event_register") },
-                                onNavigateToEventEdit = { id ->
+                                onNavigateToEventDetail = { id ->
                                     selectedEventId = id
-                                    navigateTo("event_edit")
+                                    navigateTo("event_detail")
                                 },
                                 onNavigateToAccountSettings = { navigateTo("account_settings") },
                                 onLogout = { logout() },
                             )
+                        } ?: logout()
+                    }
+
+                    "event_detail" -> {
+                        currentUserId?.let { userId ->
+                            selectedEventId?.let { eid ->
+                                EventDetailScreen(
+                                    userId = userId,
+                                    eventId = eid,
+                                    onNavigateToEdit = { event ->
+                                        selectedEventId = event.id
+                                        navigateTo("event_edit")
+                                    },
+                                    onNavigateToHome = { navigateTo("home") },
+                                    onNavigateToEventsList = { navigateTo("events_list") },
+                                    onNavigateToAccountSettings = { navigateTo("account_settings") },
+                                    onBack = { goBack() },
+                                    onLogout = { logout() },
+                                )
+                            } ?: goBack()
                         } ?: logout()
                     }
 
@@ -368,14 +388,34 @@ fun App() {
                                 onOpenMenu = { openMenu() },
                                 onBack = { goBack() },
                                 onNavigateToAdd = { navigateTo("falta_register") },
-                                onNavigateToFaltaEdit = { id ->
+                                onNavigateToFaltaDetail = { id ->
                                     selectedFaltaId = id
-                                    navigateTo("falta_edit")
+                                    navigateTo("falta_detail")
                                 },
                                 onNavigateToAccountSettings = { navigateTo("account_settings") },
                                 onLogout = { logout() },
                                 initialSubjectFilter = faltaSubjectFilter,
                             )
+                        } ?: logout()
+                    }
+
+                    "falta_detail" -> {
+                        currentUserId?.let { userId ->
+                            selectedFaltaId?.let { fid ->
+                                FaltaDetailScreen(
+                                    userId = userId,
+                                    faltaId = fid,
+                                    onNavigateToEdit = { falta ->
+                                        selectedFaltaId = falta.id
+                                        navigateTo("falta_edit")
+                                    },
+                                    onNavigateToHome = { navigateTo("home") },
+                                    onNavigateToFaltasList = { navigateTo("faltas_list") },
+                                    onNavigateToAccountSettings = { navigateTo("account_settings") },
+                                    onBack = { goBack() },
+                                    onLogout = { logout() },
+                                )
+                            } ?: goBack()
                         } ?: logout()
                     }
 
