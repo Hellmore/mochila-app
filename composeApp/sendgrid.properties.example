@@ -1,0 +1,3 @@
+SENDGRID_API_KEY=sua_chave_aqui
+SENDGRID_SENDER_EMAIL=seu_email_aqui
+SENDGRID_SENDER_NAME=Mochila Hub

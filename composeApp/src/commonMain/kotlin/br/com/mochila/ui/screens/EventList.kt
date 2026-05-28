@@ -348,7 +348,7 @@ fun EventListScreen(
     onOpenMenu: () -> Unit,
     onBack: () -> Unit,
     onNavigateToAdd: () -> Unit,
-    onNavigateToEventEdit: (Int) -> Unit,
+    onNavigateToEventDetail: (Int) -> Unit,
     onNavigateToAccountSettings: () -> Unit,
     onLogout: () -> Unit,
 ) {
@@ -365,7 +365,7 @@ fun EventListScreen(
     val filterPresenter = remember { EventListPresenter(object : EventListView {
         override fun showEvents(list: List<Event>) {}
         override fun showEmptyState() {}
-        override fun navigateToEventEdit(eventId: Int) {}
+        override fun navigateToEventDetail(eventId: Int) {}
     }) }
 
     val filteredEvents = remember(events, subjectFilter, monthFilter) {
@@ -376,7 +376,7 @@ fun EventListScreen(
         object : EventListView {
             override fun showEvents(list: List<Event>) { events = list }
             override fun showEmptyState() { events = emptyList() }
-            override fun navigateToEventEdit(eventId: Int) { onNavigateToEventEdit(eventId) }
+            override fun navigateToEventDetail(eventId: Int) { onNavigateToEventDetail(eventId) }
         }.let { EventListPresenter(it) }
     }
 

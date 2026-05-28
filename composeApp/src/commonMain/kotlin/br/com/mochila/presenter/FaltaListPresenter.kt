@@ -7,7 +7,7 @@ import br.com.mochila.model.Falta
 interface FaltaListView {
     fun showFaltas(faltas: List<Falta>)
     fun showEmptyState()
-    fun navigateToFaltaEdit(faltaId: Int)
+    fun navigateToFaltaDetail(faltaId: Int)
 }
 
 // Carrega faltas do usuario e aplica filtros
@@ -20,7 +20,7 @@ class FaltaListPresenter(private val view: FaltaListView) {
     }
 
     fun onFaltaClicked(faltaId: Int) {
-        view.navigateToFaltaEdit(faltaId)
+        view.navigateToFaltaDetail(faltaId)
     }
 
     // Filtra faltas por materia e status

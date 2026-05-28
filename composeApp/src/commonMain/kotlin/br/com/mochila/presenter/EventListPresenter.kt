@@ -7,7 +7,7 @@ import br.com.mochila.model.Event
 interface EventListView {
     fun showEvents(events: List<Event>)
     fun showEmptyState()
-    fun navigateToEventEdit(eventId: Int)
+    fun navigateToEventDetail(eventId: Int)
 }
 
 // Carrega eventos do usuario e aplica filtros
@@ -20,7 +20,7 @@ class EventListPresenter(private val view: EventListView) {
     }
 
     fun onEventClicked(eventId: Int) {
-        view.navigateToEventEdit(eventId)
+        view.navigateToEventDetail(eventId)
     }
 
     // Filtra eventos por materia e mes

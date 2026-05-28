@@ -538,7 +538,7 @@ fun EventRegisterScreen(
                 FormLabel("Nome do evento:")
                 FieldRoxo(
                     valor = title,
-                    onChange = { if (it.length <= 50) title = it },
+                    onChange = { if (it.length <= 60) title = it },
                     trailing = {
                         Box(
                             modifier = Modifier
@@ -579,7 +579,7 @@ fun EventRegisterScreen(
                 FormLabel("Descrição:")
                 FieldLaranja(
                     valor = description,
-                    onChange = { if (it.length <= 200) description = it },
+                    onChange = { if (it.length <= 250) description = it },
                     minHeight = 100.dp,
                 )
 
@@ -870,11 +870,11 @@ private fun FieldLaranja(
             unfocusedContainerColor = Color.White,
             focusedBorderColor = laranjaHeader,
             unfocusedBorderColor = laranjaHeader,
-            focusedTextColor = Color(0xFF333333),
-            unfocusedTextColor = Color(0xFF333333),
+            focusedTextColor = Color(0xFF9E9E9E),
+            unfocusedTextColor = Color(0xFF9E9E9E),
             cursorColor = laranjaHeader,
         ),
-        textStyle = LocalTextStyle.current.copy(fontSize = 12.sp, color = Color(0xFF333333)),
+        textStyle = LocalTextStyle.current.copy(fontSize = 12.sp, color = Color(0xFF9E9E9E)),
         shape = RoundedCornerShape(7.dp),
         modifier = modifier.heightIn(min = minHeight).fillMaxWidth(),
     )

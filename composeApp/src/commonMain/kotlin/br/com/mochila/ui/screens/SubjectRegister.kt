@@ -597,7 +597,7 @@ fun SubjectRegisterScreen(
             Spacer(Modifier.height(14.dp))
 
             FormLabel("Professor:")
-            FieldRoxo(valor = teacher, onChange = { if (it.length <= 30) teacher = it })
+            FieldRoxo(valor = teacher, onChange = { if (it.length <= 60) teacher = it })
 
             Spacer(Modifier.height(14.dp))
 
