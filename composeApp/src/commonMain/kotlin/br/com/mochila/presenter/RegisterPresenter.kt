@@ -5,6 +5,8 @@ import br.com.mochila.data.LogRepository
 import br.com.mochila.data.UserRepository
 import br.com.mochila.model.User
 import br.com.mochila.util.TempEmailValidator
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 // Contrato da tela de cadastro de usuario
 interface RegisterView {
@@ -49,22 +51,27 @@ class RegisterPresenter(private val view: RegisterView) {
         }
 
         // Insere o usuario no banco
-        val success = UserRepository.insert(User(name = name, email = email, password = password))
+        val success = withContext(Dispatchers.IO) {
+            UserRepository.insert(User(name = name, email = email, password = password))
+        }
 
         if (success) {
-            val newUser = UserRepository.findByEmail(email)
+            val newUser = withContext(Dispatchers.IO) { UserRepository.findByEmail(email) }
             if (newUser != null) {
-                LogRepository.insertAcao(newUser.id, "CADASTRO", "usuario", newUser.id)
-                // Promove a admin se o codigo secreto for informado
-                if (adminCode.isNotBlank() && adminCode == AdminRepository.ADMIN_SECRET_CODE) {
-                    AdminRepository.promoteToAdmin(newUser.id)
-                    LogRepository.insertAcao(newUser.id, "ADMIN_PROMOVER_ADMIN", "administrador", newUser.id, "Via código secreto")
+                withContext(Dispatchers.IO) {
+                    LogRepository.insertAcao(newUser.id, "CADASTRO", "usuario", newUser.id)
+                    if (adminCode.isNotBlank() && adminCode == AdminRepository.ADMIN_SECRET_CODE) {
+                        AdminRepository.promoteToAdmin(newUser.id)
+                        LogRepository.insertAcao(newUser.id, "ADMIN_PROMOVER_ADMIN", "administrador", newUser.id, "Via código secreto")
+                    }
                 }
             }
             view.showRegisterSuccess()
             view.navigateToEmailVerify(email)
         } else {
-            LogRepository.insertErro("RegisterPresenter", "Erro ao cadastrar e-mail: $email")
+            withContext(Dispatchers.IO) {
+                LogRepository.insertErro("RegisterPresenter", "Erro ao cadastrar e-mail: $email")
+            }
             view.showRegisterError("Erro ao cadastrar usuário. Verifique se o e-mail já existe.")
         }
     }

@@ -38,7 +38,7 @@ object SubjectRepository {
                  hora_aula, aula_semana, semestre, cor_rgb)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """
-            val stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)
+            val stmt = conn.prepareStatement(sql)
             stmt.setInt(1, userId)
             stmt.setString(2, subject.name)
             stmt.setString(3, subject.teacher)
@@ -50,10 +50,10 @@ object SubjectRepository {
             stmt.setString(9, subject.semester)
             stmt.setInt(10, subject.colorRgb)
             stmt.executeUpdate()
-            val keys = stmt.generatedKeys
-            val newId = if (keys.next()) keys.getInt(1) else null
-            keys.close()
             stmt.close()
+            val rs = conn.createStatement().executeQuery("SELECT last_insert_rowid()")
+            val newId = if (rs.next()) rs.getInt(1).takeIf { it > 0 } else null
+            rs.close()
             if (newId != null) {
                 println("✅ Disciplina cadastrada: ${subject.name} (ID=$newId) para o usuário ID=$userId")
             }

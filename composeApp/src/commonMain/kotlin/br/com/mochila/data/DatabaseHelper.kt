@@ -8,12 +8,12 @@ import java.sql.*
 // Acesso centralizado ao SQLite: conexao, migracoes e execucao de SQL
 object DatabaseHelper {
 
-    private const val DB_NAME = "mochila.db"
+    private val dbPath get() = "${AppDataDir.resolve()}/mochila.db"
 
     // Abre conexao e garante schema inicializado
     fun connect(): Connection? {
         return try {
-            val conn = DriverManager.getConnection("jdbc:sqlite:$DB_NAME")
+            val conn = DriverManager.getConnection(jdbcConnectionUrl(dbPath))
             initializeDatabase(conn)
             conn
         } catch (e: Exception) {
@@ -25,26 +25,23 @@ object DatabaseHelper {
     // Cria tabelas na primeira execucao e aplica migracoes incrementais
     private fun initializeDatabase(conn: Connection) {
         try {
-            val meta = conn.metaData
-            val rs: ResultSet = meta.getTables(null, null, "usuario", null)
+            val rs: ResultSet = conn.createStatement()
+                .executeQuery("SELECT name FROM sqlite_master WHERE type='table' AND name='usuario'")
+            val tableExists = rs.next()
+            rs.close()
 
-            if (!rs.next()) {
+            if (!tableExists) {
                 println("🧱 Criando estrutura inicial do banco...")
 
-                val resourceUrl = this::class.java.getResource("/files/db_init.sql")
-                println("🔍 Caminho do recurso: $resourceUrl")
-
-                val script = resourceUrl?.readText()
+                val script = readDbInitScript()
                 if (script != null) {
-                    val stmt = conn.createStatement()
-                    
-                    script.split(';').forEach { sqlStatement ->
-                        if (sqlStatement.trim().isNotEmpty()) {
-                            stmt.addBatch(sqlStatement)
+                    splitSqlStatements(script).forEach { sqlStatement ->
+                        try {
+                            conn.createStatement().use { it.execute(sqlStatement) }
+                        } catch (e: Exception) {
+                            println("⚠️ SQL init skipped: ${e.message?.take(80)}")
                         }
                     }
-                    stmt.executeBatch()
-                    stmt.close()
                     println("✅ Banco inicializado com sucesso!")
                 } else {
                     println("⚠️ Arquivo db_init.sql não encontrado nos recursos.")
@@ -53,7 +50,6 @@ object DatabaseHelper {
                 println("📚 Banco já inicializado.")
             }
 
-            rs.close()
             runMigrations(conn)
         } catch (e: Exception) {
             e.printStackTrace()
@@ -400,6 +396,30 @@ object DatabaseHelper {
         file.delete()
     }
 
+    // Divide script SQL em statements individuais respeitando blocos BEGIN...END (triggers)
+    private fun splitSqlStatements(script: String): List<String> {
+        val statements = mutableListOf<String>()
+        var depth = 0
+        val current = StringBuilder()
+
+        for (line in script.lines()) {
+            val upper = line.trim().uppercase().trimEnd(';')
+            when (upper) {
+                "BEGIN" -> depth++
+                "END" -> if (depth > 0) depth--
+            }
+            current.appendLine(line)
+            if (depth == 0 && line.trim().endsWith(";")) {
+                val stmt = current.toString().trim().trimEnd(';').trim()
+                if (stmt.isNotEmpty() && !stmt.startsWith("--")) statements.add(stmt)
+                current.clear()
+            }
+        }
+        val last = current.toString().trim().trimEnd(';').trim()
+        if (last.isNotEmpty() && !last.startsWith("--")) statements.add(last)
+        return statements
+    }
+
     // Executa SELECT parametrizado e retorna linhas como mapas
     fun executeQuery(sql: String, params: List<Any> = emptyList()): List<Map<String, Any?>> {
         val conn = connect() ?: return emptyList()
@@ -447,7 +467,7 @@ object DatabaseHelper {
             e.printStackTrace()
             false
         } finally {
-            close()
+            try { conn.close() } catch (_: Exception) {}
         }
     }
 
