@@ -2,6 +2,7 @@ package br.com.mochila.presenter
 
 import br.com.mochila.data.UserRepository
 import io.mockk.*
+import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -16,19 +17,19 @@ class LoginPresenterTest {
     @After  fun tearDown() { unmockkAll() }
 
     // Validacao de campos obrigatorios
-    @Test fun `email em branco exibe erro e nao navega`() {
+    @Test fun `email em branco exibe erro e nao navega`() = runTest {
         presenter.login("", "senha")
         verify { view.showError(any()) }
         verify(exactly = 0) { view.navigateToHome(any()) }
     }
 
-    @Test fun `senha em branco exibe erro`() {
+    @Test fun `senha em branco exibe erro`() = runTest {
         presenter.login("a@b.com", "")
         verify { view.showError(any()) }
     }
 
     // Credenciais invalidas
-    @Test fun `email inexistente e senha nula exibem erro de credenciais`() {
+    @Test fun `email inexistente e senha nula exibem erro de credenciais`() = runTest {
         every { UserRepository.emailExists(any()) } returns false
         every { UserRepository.validateLogin(any(), any()) } returns null
         presenter.login("x@x.com", "senha")
@@ -36,7 +37,7 @@ class LoginPresenterTest {
         verify(exactly = 0) { view.navigateToHome(any()) }
     }
 
-    @Test fun `email existe mas senha incorreta exibe erro de senha`() {
+    @Test fun `email existe mas senha incorreta exibe erro de senha`() = runTest {
         every { UserRepository.emailExists(any()) } returns true
         every { UserRepository.validateLogin(any(), any()) } returns null
         presenter.login("x@x.com", "errada")
@@ -44,7 +45,7 @@ class LoginPresenterTest {
     }
 
     // Email nao verificado
-    @Test fun `email nao verificado exibe erro de verificacao`() {
+    @Test fun `email nao verificado exibe erro de verificacao`() = runTest {
         every { UserRepository.emailExists(any()) } returns true
         every { UserRepository.validateLogin(any(), any()) } returns 1
         every { UserRepository.isEmailVerified(any()) } returns false
@@ -54,7 +55,7 @@ class LoginPresenterTest {
     }
 
     // Login bem sucedido
-    @Test fun `login valido navega para home com userId correto`() {
+    @Test fun `login valido navega para home com userId correto`() = runTest {
         every { UserRepository.emailExists(any()) } returns true
         every { UserRepository.validateLogin(any(), any()) } returns 42
         every { UserRepository.isEmailVerified(any()) } returns true
