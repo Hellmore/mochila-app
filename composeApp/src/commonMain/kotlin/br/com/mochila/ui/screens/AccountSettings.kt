@@ -23,7 +23,7 @@ import br.com.mochila.presenter.AccountSettingsPresenter
 import br.com.mochila.presenter.AccountSettingsView
 import br.com.mochila.ui.screens.components.BackButton
 import br.com.mochila.ui.screens.components.ProfileAvatar
-import br.com.mochila.ui.screens.components.pickImageFile
+import br.com.mochila.ui.screens.components.rememberImagePickerLauncher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -60,6 +60,14 @@ fun AccountSettingsScreen(
     var redeemMessage     by remember { mutableStateOf<String?>(null) }
     var redeemSuccess     by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
+
+    val pickImage = rememberImagePickerLauncher(userId) { path ->
+        coroutineScope.launch {
+            withContext(Dispatchers.IO) { UserRepository.updatePhoto(userId, path) }
+            photoPath = path
+            UserSession.updatePhoto(path)
+        }
+    }
 
     // Presenter para carregar, salvar e excluir conta
     val presenter = remember {
@@ -152,14 +160,7 @@ fun AccountSettingsScreen(
                             Spacer(Modifier.height(4.dp))
                         }
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            TextButton(onClick = {
-                                coroutineScope.launch {
-                                    val path = pickImageFile(userId) ?: return@launch
-                                    withContext(Dispatchers.IO) { UserRepository.updatePhoto(userId, path) }
-                                    photoPath = path
-                                    UserSession.updatePhoto(path)
-                                }
-                            }) {
+                            TextButton(onClick = { pickImage() }) {
                                 Text("Alterar foto", color = Color.White, fontSize = 12.sp)
                             }
                             if (photoPath != null) {
@@ -357,14 +358,9 @@ fun AccountSettingsScreen(
                 ProfileAvatar(name = name, photoPath = photoPath, size = 100.dp, accentColor = rosa, onClick = {})
                 Spacer(modifier = Modifier.height(4.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    TextButton(onClick = {
-                        coroutineScope.launch {
-                            val path = pickImageFile(userId) ?: return@launch
-                            withContext(Dispatchers.IO) { UserRepository.updatePhoto(userId, path) }
-                            photoPath = path
-                            UserSession.updatePhoto(path)
-                        }
-                    }) { Text("Alterar foto", color = rosa, fontSize = 12.sp) }
+                    TextButton(onClick = { pickImage() }) {
+                        Text("Alterar foto", color = rosa, fontSize = 12.sp)
+                    }
                     if (photoPath != null) {
                         TextButton(onClick = {
                             coroutineScope.launch {

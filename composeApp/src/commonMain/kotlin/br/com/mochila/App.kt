@@ -61,9 +61,13 @@ fun App() {
 
     // Sincroniza UserSession quando o usuario autenticado muda
     LaunchedEffect(currentUserId) {
-        val uid = currentUserId ?: return@LaunchedEffect
-        val user = withContext(Dispatchers.IO) { UserRepository.findById(uid) }
-        if (user != null) UserSession.set(user)
+        try {
+            val uid = currentUserId ?: return@LaunchedEffect
+            val user = withContext(Dispatchers.IO) { UserRepository.findById(uid) }
+            if (user != null) UserSession.set(user)
+        } catch (e: Throwable) {
+            println("⚠️ App LaunchedEffect erro: ${e::class.simpleName}: ${e.message}")
+        }
     }
 
     MaterialTheme {

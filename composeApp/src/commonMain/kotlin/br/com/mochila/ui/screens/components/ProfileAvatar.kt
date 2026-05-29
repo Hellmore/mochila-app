@@ -26,8 +26,11 @@ import br.com.mochila.data.UserSession
 // Selecao e decodificacao de foto por plataforma
 expect fun pickImageFile(userId: Int): String?
 
-
 expect fun decodeProfilePhotoPainter(photoPath: String): Painter?
+
+// Retorna lambda que abre o seletor de imagem; callback recebe o caminho local salvo
+@Composable
+expect fun rememberImagePickerLauncher(userId: Int, onPicked: (String) -> Unit): () -> Unit
 
 // Avatar circular com foto ou inicial do nome
 @Composable

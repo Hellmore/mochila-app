@@ -40,7 +40,7 @@ object TaskRepository {
                  blockers, data_limite, id_disciplina)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """
-            val stmt: PreparedStatement = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)
+            val stmt: PreparedStatement = conn.prepareStatement(sql)
             stmt.setInt(1, userId)
             stmt.setString(2, task.title)
             stmt.setString(3, task.description)
@@ -50,15 +50,11 @@ object TaskRepository {
             stmt.setString(7, task.blockers)
             stmt.setString(8, task.dueDate)
             if (task.subjectId != null) stmt.setInt(9, task.subjectId) else stmt.setNull(9, java.sql.Types.INTEGER)
-            val rows = stmt.executeUpdate()
-            val newId = if (rows > 0) {
-                stmt.generatedKeys.use { keys ->
-                    if (keys.next()) keys.getInt(1) else null
-                }
-            } else {
-                null
-            }
+            stmt.executeUpdate()
             stmt.close()
+            val rs = conn.createStatement().executeQuery("SELECT last_insert_rowid()")
+            val newId = if (rs.next()) rs.getInt(1).takeIf { it > 0 } else null
+            rs.close()
             if (newId != null) {
                 println("✅ Tarefa cadastrada: ${task.title} (ID=$newId, User ID=$userId)")
             }

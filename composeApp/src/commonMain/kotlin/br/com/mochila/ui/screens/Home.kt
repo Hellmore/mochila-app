@@ -116,24 +116,33 @@ fun HomeScreen(
 
     // Carrega dados principais do usuario ao abrir ou atualizar
     LaunchedEffect(userId, dataRefreshKey) {
-        subjects = SubjectRepository.listByUser(userId)
-        tasks = TaskRepository.listByUser(userId)
-            .filter { it.status == "Pendente" || it.status == "Em andamento" }
-        absencesBySubject = FaltaRepository.countByUser(userId)
-        upcomingEvents = EventRepository.listByUser(userId)
-            .filter { event ->
+        try {
+            val s = withContext(Dispatchers.IO) { SubjectRepository.listByUser(userId) }
+            val t = withContext(Dispatchers.IO) { TaskRepository.listByUser(userId) }
+            val a = withContext(Dispatchers.IO) { FaltaRepository.countByUser(userId) }
+            val e = withContext(Dispatchers.IO) { EventRepository.listByUser(userId) }
+            subjects = s
+            tasks = t.filter { it.status == "Pendente" || it.status == "Em andamento" }
+            absencesBySubject = a
+            upcomingEvents = e.filter { event ->
                 event.status == "Agendado" &&
                     EventRepository.parseEventDateTime(event.eventDate)
                         ?.date?.let { d -> d >= today } == true
-            }
-            .take(3)
+            }.take(3)
+        } catch (e: Throwable) {
+            println("⚠️ HomeScreen erro ao carregar dados: ${e::class.simpleName}: ${e.message}")
+        }
     }
 
     // Atualiza lista de notificacoes quando a versao muda
     LaunchedEffect(userId, notifRefreshKey, notifVersion) {
-        val loaded = withContext(Dispatchers.IO) { NotificationRepository.listByUser(userId) }
-        println("🔔 [HomeScreen] notifVersion=$notifVersion → ${loaded.size} notificações carregadas")
-        notifications = loaded
+        try {
+            val loaded = withContext(Dispatchers.IO) { NotificationRepository.listByUser(userId) }
+            println("🔔 [HomeScreen] notifVersion=$notifVersion → ${loaded.size} notificações carregadas")
+            notifications = loaded
+        } catch (e: Throwable) {
+            println("⚠️ HomeScreen notif erro: ${e::class.simpleName}: ${e.message}")
+        }
     }
 
     // Recarrega notificacoes a cada minuto

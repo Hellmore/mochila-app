@@ -1,6 +1,13 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.gradle.language.jvm.tasks.ProcessResources
+import java.util.Properties
+
+// Credenciais do SendGrid embutidas no APK em tempo de compilacao
+val sendgridProps = Properties().apply {
+    val f = rootProject.file("composeApp/sendgrid.properties")
+    if (f.exists()) f.inputStream().use { load(it) }
+}
 
 // Modulo Kotlin Multiplatform: Android + desktop JVM com Compose
 plugins {
@@ -26,6 +33,7 @@ kotlin {
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
+            implementation("org.sqldroid:sqldroid:1.0.3")
         }
 
         commonMain.dependencies {
@@ -35,14 +43,17 @@ kotlin {
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
+            implementation(compose.materialIconsExtended)
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
 
-            
-            implementation("org.xerial:sqlite-jdbc:3.45.3.0")
-
-            
             implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
+        }
+
+        jvmMain.dependencies {
+            implementation(compose.desktop.currentOs)
+            implementation(libs.kotlinx.coroutinesSwing)
+            implementation("org.xerial:sqlite-jdbc:3.45.3.0")
         }
 
         commonTest.dependencies {
@@ -55,10 +66,6 @@ kotlin {
             implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
         }
 
-        jvmMain.dependencies {
-            implementation(compose.desktop.currentOs)
-            implementation(libs.kotlinx.coroutinesSwing)
-        }
     }
 }
 
@@ -67,12 +74,20 @@ android {
     namespace = "br.com.mochila"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
+    buildFeatures {
+        buildConfig = true
+    }
+
     defaultConfig {
         applicationId = "br.com.mochila"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
         versionName = "1.0"
+
+        buildConfigField("String", "SENDGRID_API_KEY",    "\"${sendgridProps.getProperty("SENDGRID_API_KEY", "")}\"")
+        buildConfigField("String", "SENDGRID_SENDER_EMAIL", "\"${sendgridProps.getProperty("SENDGRID_SENDER_EMAIL", "")}\"")
+        buildConfigField("String", "SENDGRID_SENDER_NAME",  "\"${sendgridProps.getProperty("SENDGRID_SENDER_NAME", "Mochila Hub")}\"")
     }
 
     packaging {

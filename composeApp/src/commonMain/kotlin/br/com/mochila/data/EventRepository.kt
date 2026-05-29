@@ -61,7 +61,7 @@ object EventRepository {
                  id_disciplina, cor_rgb, lembrete_minutos, lembrete_exibido)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
             """.trimIndent()
-            val stmt: PreparedStatement = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)
+            val stmt: PreparedStatement = conn.prepareStatement(sql)
             stmt.setInt(1, userId)
             stmt.setString(2, event.title)
             stmt.setString(3, event.description)
@@ -71,15 +71,11 @@ object EventRepository {
             if (event.subjectId != null) stmt.setInt(7, event.subjectId) else stmt.setNull(7, java.sql.Types.INTEGER)
             stmt.setInt(8, event.colorRgb)
             if (event.reminderMinutes != null) stmt.setInt(9, event.reminderMinutes) else stmt.setNull(9, java.sql.Types.INTEGER)
-            val rows = stmt.executeUpdate()
-            val newId = if (rows > 0) {
-                stmt.generatedKeys.use { keys ->
-                    if (keys.next()) keys.getInt(1) else null
-                }
-            } else {
-                null
-            }
+            stmt.executeUpdate()
             stmt.close()
+            val rs = conn.createStatement().executeQuery("SELECT last_insert_rowid()")
+            val newId = if (rs.next()) rs.getInt(1).takeIf { it > 0 } else null
+            rs.close()
             newId
         } catch (e: Exception) {
             println("⚠️ Erro ao inserir evento: ${e.message}")

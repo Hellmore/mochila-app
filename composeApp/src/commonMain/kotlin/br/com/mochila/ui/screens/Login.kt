@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.com.mochila.presenter.LoginPresenter
 import br.com.mochila.presenter.LoginView
+import kotlinx.coroutines.launch
 import mochila_app.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.painterResource
 
@@ -43,13 +44,31 @@ fun LoginScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var isLoading by remember { mutableStateOf(false) }
+
+    val scope = rememberCoroutineScope()
 
     // Presenter conectado a interface LoginView
     val presenter = remember {
         object : LoginView {
-            override fun showError(message: String) { errorMessage = message }
-            override fun navigateToHome(userId: Int) { onLoginSuccess(userId) }
+            override fun showError(message: String) { errorMessage = message; isLoading = false }
+            override fun navigateToHome(userId: Int) { isLoading = false; onLoginSuccess(userId) }
         }.let { view -> LoginPresenter(view) }
+    }
+
+    fun doLogin() {
+        if (isLoading) return
+        isLoading = true
+        errorMessage = null
+        scope.launch {
+            try {
+                presenter.login(email, password)
+            } catch (e: Throwable) {
+                println("⚠️ Erro não tratado no login: ${e::class.simpleName}: ${e.message}")
+                errorMessage = "Erro ao fazer login. Tente novamente."
+                isLoading = false
+            }
+        }
     }
 
     BoxWithConstraints(
@@ -113,7 +132,7 @@ fun LoginScreen(
                             .verticalScroll(rememberScrollState())
                             .onKeyEvent {
                                 if (it.type == KeyEventType.KeyDown && it.key == Key.Enter) {
-                                    presenter.login(email, password)
+                                    doLogin()
                                     true
                                 } else false
                             },
@@ -178,7 +197,7 @@ fun LoginScreen(
                         Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             // Botoes de login, recuperacao e cadastro
                             OutlinedButton(
-                                onClick = { presenter.login(email, password) },
+                                onClick = { doLogin() },
                                 shape = RoundedCornerShape(8.dp),
                                 border = BorderStroke(1.dp, rosa),
                                 colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.White, contentColor = rosa),
@@ -226,7 +245,7 @@ fun LoginScreen(
                     .verticalScroll(rememberScrollState())
                     .onKeyEvent {
                         if (it.type == KeyEventType.KeyDown && it.key == Key.Enter) {
-                            presenter.login(email, password)
+                            doLogin()
                             true
                         } else false
                     },
@@ -305,7 +324,7 @@ fun LoginScreen(
 
                 Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedButton(
-                        onClick = { presenter.login(email, password) },
+                        onClick = { doLogin() },
                         shape = RoundedCornerShape(8.dp),
                         border = BorderStroke(1.dp, rosa),
                         colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.White, contentColor = rosa),

@@ -1,44 +1,16 @@
 package br.com.mochila.util
 
-import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
-import java.util.Properties
 
 // Envio de e-mails via API SendGrid
 object EmailService {
 
-    // Credenciais lidas de arquivo ou variaveis de ambiente
-    private val config: Properties by lazy { loadConfig() }
-
-    val apiKey: String
-        get() = System.getenv("SENDGRID_API_KEY")?.takeIf { it.isNotBlank() }
-            ?: config.getProperty("SENDGRID_API_KEY", "")
-
-    val senderEmail: String
-        get() = System.getenv("SENDGRID_SENDER_EMAIL")?.takeIf { it.isNotBlank() }
-            ?: config.getProperty("SENDGRID_SENDER_EMAIL", "")
-
-    private val senderName: String
-        get() = System.getenv("SENDGRID_SENDER_NAME")?.takeIf { it.isNotBlank() }
-            ?: config.getProperty("SENDGRID_SENDER_NAME", "Mochila Hub")
+    val apiKey: String get() = sendGridApiKey()
+    val senderEmail: String get() = sendGridSenderEmail()
+    private val senderName: String get() = sendGridSenderName()
 
     val isConfigured: Boolean get() = apiKey.isNotBlank() && senderEmail.isNotBlank()
-
-    private fun loadConfig(): Properties {
-        val props = Properties()
-        val candidates = listOf(
-            File("sendgrid.properties"),
-            File("../sendgrid.properties")
-        )
-        val found = candidates.firstOrNull { it.exists() }
-        if (found != null) {
-            try { found.inputStream().use { props.load(it) } } catch (e: Exception) {
-                println("⚠️ Erro ao ler sendgrid.properties: ${e.message}")
-            }
-        }
-        return props
-    }
 
     // E-mail de confirmacao de cadastro
     fun sendVerificationEmail(toEmail: String, code: String): Boolean {

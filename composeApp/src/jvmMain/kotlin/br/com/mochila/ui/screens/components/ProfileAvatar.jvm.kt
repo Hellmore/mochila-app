@@ -1,5 +1,6 @@
 package br.com.mochila.ui.screens.components
 
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.loadImageBitmap
@@ -33,4 +34,13 @@ actual fun decodeProfilePhotoPainter(photoPath: String): Painter? {
     return runCatching {
         BitmapPainter(loadImageBitmap(File(photoPath).inputStream()))
     }.getOrNull()
+}
+
+// No desktop abre o FileDialog sincrono e chama o callback com o caminho copiado
+@Composable
+actual fun rememberImagePickerLauncher(userId: Int, onPicked: (String) -> Unit): () -> Unit {
+    return {
+        val path = pickImageFile(userId)
+        if (path != null) onPicked(path)
+    }
 }
