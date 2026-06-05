@@ -2,10 +2,8 @@ package br.com.mochila.presenter
 
 import br.com.mochila.data.AdminRepository
 import br.com.mochila.data.LogRepository
-import br.com.mochila.data.TokenRepository
 import br.com.mochila.data.UserRepository
 import br.com.mochila.model.User
-import br.com.mochila.util.EmailService
 import br.com.mochila.util.TempEmailValidator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -67,11 +65,6 @@ class RegisterPresenter(private val view: RegisterView) {
                         LogRepository.insertAcao(newUser.id, "ADMIN_PROMOVER_ADMIN", "administrador", newUser.id, "Via código secreto")
                     }
                 }
-            }
-            val code = (100000..999999).random().toString()
-            val tokenSaved = withContext(Dispatchers.IO) { TokenRepository.saveToken(email, code) }
-            if (tokenSaved) {
-                withContext(Dispatchers.IO) { EmailService.sendVerificationEmail(email, code) }
             }
             view.showRegisterSuccess()
             view.navigateToEmailVerify(email)

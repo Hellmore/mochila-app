@@ -27,7 +27,7 @@ class EmailVerificationPresenter {
 // Envia codigo de recuperacao de senha por e-mail
 class RecoveryPresenter {
 
-    suspend fun sendRecoveryCode(email: String, confirmEmail: String): String? {
+    fun sendRecoveryCode(email: String, confirmEmail: String): String? {
         val trimmedEmail = email.trim()
         val trimmedConfirm = confirmEmail.trim()
 

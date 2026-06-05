@@ -5,7 +5,6 @@ import br.com.mochila.data.UserRepository
 import br.com.mochila.model.User
 import br.com.mochila.util.EmailService
 import io.mockk.*
-import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -24,28 +23,28 @@ class RecoveryPresenterTest {
     @After fun tearDown() { unmockkAll() }
 
     // Envio do codigo de recuperacao
-    @Test fun `sendRecoveryCode com campos em branco retorna erro`() = runTest {
+    @Test fun `sendRecoveryCode com campos em branco retorna erro`() {
         val result = RecoveryPresenter().sendRecoveryCode("", "a@b.com")
         assertNotNull(result)
     }
 
-    @Test fun `sendRecoveryCode com emails diferentes retorna erro`() = runTest {
+    @Test fun `sendRecoveryCode com emails diferentes retorna erro`() {
         val result = RecoveryPresenter().sendRecoveryCode("a@b.com", "c@d.com")
         assertNotNull(result)
     }
 
-    @Test fun `sendRecoveryCode com email nao cadastrado retorna erro`() = runTest {
+    @Test fun `sendRecoveryCode com email nao cadastrado retorna erro`() {
         every { UserRepository.emailExists(any()) } returns false
         every { EmailService.isConfigured } returns true
         val result = RecoveryPresenter().sendRecoveryCode("a@b.com", "a@b.com")
         assertNotNull(result)
     }
 
-    @Test fun `sendRecoveryCode com sucesso retorna null`() = runTest {
+    @Test fun `sendRecoveryCode com sucesso retorna null`() {
         every { UserRepository.emailExists(any()) } returns true
         every { EmailService.isConfigured } returns true
         every { TokenRepository.saveToken(any(), any()) } returns true
-        coEvery { EmailService.sendRecoveryEmail(any(), any()) } returns true
+        every { EmailService.sendRecoveryEmail(any(), any()) } returns true
         val result = RecoveryPresenter().sendRecoveryCode("a@b.com", "a@b.com")
         assertNull(result)
     }
