@@ -4,6 +4,7 @@ import br.com.mochila.data.LogRepository
 import br.com.mochila.data.TokenRepository
 import br.com.mochila.data.UserRepository
 import br.com.mochila.util.EmailService
+import br.com.mochila.util.PasswordHash
 
 // Valida codigo de verificacao de e-mail no cadastro
 class EmailVerificationPresenter {
@@ -96,6 +97,9 @@ class NewPasswordPresenter {
         // Busca usuario e atualiza senha
         val user = UserRepository.findByEmail(email.trim())
             ?: return "Usuário não encontrado."
+
+        if (PasswordHash.verify(newPassword, user.password))
+            return "A nova senha não pode ser igual à senha anterior."
 
         if (!UserRepository.update(user.id, user.name, user.email, newPassword))
             return "Erro ao atualizar a senha. Tente novamente."

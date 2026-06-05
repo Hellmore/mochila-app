@@ -2,6 +2,7 @@ package br.com.mochila.presenter
 
 import br.com.mochila.data.LogRepository
 import br.com.mochila.data.UserRepository
+import br.com.mochila.util.PasswordHash
 
 // Contrato da tela de alteracao de senha logado
 interface SignedRecoveryView {
@@ -26,7 +27,7 @@ class SignedRecoveryPresenter(private val view: SignedRecoveryView) {
             return
         }
         // Valida senha atual informada
-        if (user.password != currentPassword) {
+        if (!PasswordHash.verify(currentPassword, user.password)) {
             view.showValidationError("Senha atual incorreta.")
             return
         }
@@ -38,6 +39,11 @@ class SignedRecoveryPresenter(private val view: SignedRecoveryView) {
         // Valida coincidencia das novas senhas
         if (newPassword != confirmPassword) {
             view.showValidationError("As senhas não coincidem.")
+            return
+        }
+        // Valida que a nova senha e diferente da atual
+        if (PasswordHash.verify(newPassword, user.password)) {
+            view.showValidationError("A nova senha não pode ser igual à senha atual.")
             return
         }
         // Atualiza senha no repositorio
